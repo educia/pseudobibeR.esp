@@ -30,7 +30,7 @@ pronoun_matchlist:
   - moi-même
   - nous
   - nous-mêmes
-  - "on"
+  - on
   - se
   - soi
   - s'
@@ -68,7 +68,7 @@ impersonal_verbs:
   - tonner
   - geler
   - faire # ex : il fait froid
-  - s'agir # ex : il s’agit de
+  - s’agir # ex : il s’agit de
   - y avoir # ex : il y a
 linking_matchlist:
   - être

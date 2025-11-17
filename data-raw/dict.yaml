@@ -187,8 +187,6 @@ f_49_emphatics:
 f_50_discourse_particles:
   - bien
   - de_toute_façon
-  - encore
-  - maintenant
   - alors
   - donc
   - du_coup
@@ -196,12 +194,15 @@ f_50_discourse_particles:
   - bref
   - en_fait
   - eh_bien
+  - hé
+  - ha 
+  - ho
+  - ô
   - hein
   - euh
 f_51_demonstratives:
   - cela
   - ceux
-  - ceux-ci
   - ce
   - cette
   - ces
@@ -258,7 +259,7 @@ f_55_verb_public:
   - suggérer
   - commenter
   - raconter
-f_56_verb_private:
+f_56_verb_private: # = verbs of mental processes / internal states
   - anticiper
   - apprendre
   - assumer
@@ -269,30 +270,20 @@ f_56_verb_private:
   - croire
   - décider
   - découvrir
-  - démontrer
   - déterminer
   - deviner
-  - dire
   - douter
-  - entendre
   - espérer
   - estimer
   - imaginer
-  - impliquer
-  - indiquer
-  - montrer
   - oublier
   - penser
-  - prouver
   - rappeler
   - réaliser
   - reconnaître
-  - révéler
-  - sentir
-  - signifier
+  - sentir # je sens que...
   - supposer
-  - trouver
-  - voir
+  - trouver # je trouve que...
   - constater
   - pressentir
   - prévoir
