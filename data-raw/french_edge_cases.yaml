@@ -1,0 +1,119 @@
+edge_cases:
+
+  # Support Verb Constructions (SVC) ("Syntactic Variation of Support Verb Constructions", Laporte et al. 2009)
+  # ex : faire une suggestion (do a suggestion), affronter un problème (face a problem), donner une réponse (give an answer)...
+
+  svc_passive_postnominal:
+    - Un entretien a été accordé au journaliste.
+    - Une réponse a été donnée aux étudiants.
+    - Un soutien a été apporté à l'équipe.
+
+  svc_relative_clauses:
+    - Les répercussions qu’aura l’événement sont difficiles à anticiper.
+    - La décision qu’a prise le comité a surpris tout le monde.
+    - L’attention qu’a portée Marie à la question est remarquable.
+
+  svc_ambiguous:
+    - Il débat depuis une heure.                                  # débat = verb
+    - Le débat a duré trois heures.                               # débat = noun
+    - Les nouvelles données utilisées sont récentes.              # donnéees = noun ("data")
+    - Les nouvelles données par Marie étaient surprenantes.       # données = participial
+
+
+  # Tough Constructions & Pseudo-Relatives (' "Bridging the gap" between French tough-constructions and pseudo-relatives', Hénot-Mortier 2024)
+
+  tough_à_gapped:
+    - Jean est difficile à convaincre. # adj + prep "à" + inf
+    - "*Jean est facile à partir en vacances."
+    - Jean est facile à faire partir en vacances. # rare but correct = check what's after 1st inf
+
+  tough_de_impersonal:   # "il" impersonal + prep "de" + inf
+    - Il est facile de convaincre Jean.
+
+  tough_à_gapped_passive:
+    - Cette décision sera difficile à faire accepter au comité. # to detect passive structure
+
+  tough_de_impersonal_complementizer_que: # de in impersonal TCs, optionally preceded by the complementizer "que" (rare, higher register) (Tough-construction “de” suivi d'un complémentiseur “que” (registre soutenu))
+    - c'est dur, c'est difficile que de voir ici et là son pouvoir d'achat affaibli
+    - il est aisé que de tomber immédiatement sous le charme de cet homme
+    - mais, après, c'est difficile que de s'avouer qu'on est capable de le faire
+
+  tough_with_experiencer_shift: 
+    - Pour Marie, ce problème est difficile à résoudre.
+    - Pour lui, cette décision est facile à accepter.
+
+  pseudo_relatives:
+    - Jean voit Marie, la fille qui danse.
+    - Jean la voit, qui danse.
+    - Jean voit que Marie danse.
+    - Jean voit Marie danser.
+
+  pseudo_relative_with_tense_variation:
+    - Il aperçoit Jeanne qui allait partir.
+    - Nous avons surpris Paul qui avait menti.
+    - Elle regarde le train qui va arriver.
+
+  pseudo_relative_with_subject_gap:
+    - Je l’ai trouvé qui pleurait.
+    - Ils l’ont surpris qui fuyait.
+    - Elle les a entendus qui arrivaient.
+
+ # Auxiliary Tests
+
+  aux_reflexive_clitics:
+    - Il s’est levé.
+    - Elle s’est lavée.
+    - On s’est parlé hier.
+
+  aux_complex_clitic: # double pronoun
+    - Ils se sont embrassés.  
+    - Je m’étais déjà souvenu de ce moment.
+    - Nous nous sommes rendus compte de l’erreur.
+
+  aux_negation:
+    - Elle ne s’est pas levée ce matin.
+    - Ils n’ont pas mangé ce gâteau.
+    - Je ne suis pas arrivé à l’heure.
+
+  aux_tense_variation:
+    - Elle sera tombée si elle ne fait pas attention.
+    - S’ils avaient parlé, ils auraient été entendus.
+    - Nous avions déjà lu ce livre quand il a été publié.
+
+  aux_question_form: 
+    - Est-elle déjà arrivée ?  
+    - Ont-ils mangé ?  
+    - Te serais-tu levé si je t’avais réveillé ?
+
+
+# Combinatory Edge Cases
+
+  combined_svc_tough:
+    - La décision est difficile à prendre en compte.
+    - Cette mesure est facile à mettre en application.
+    - L'aide est difficile à apporter dans ce contexte.
+
+  combined_svc_pseudo_relative:
+    - Elle a accordé une attention qu’on ne voyait jamais auparavant.
+    - Ils ont porté un jugement qu’on trouve rarement.
+    - Il a donné une explication qui surprend tout le monde.
+
+  impersonal_constructions:
+    - Il pleut à verse, ce qui est difficile à prévoir.
+    - Il neige suffisamment pour compliquer le déplacement.
+    - Il gèle encore, ce qui rend les routes dangereuses.
+
+  clefts_focus:
+    - C’est une réponse qu’il a donnée hier.
+    - C’est un entretien qu’on lui a accordé.
+    - C’est une tâche qui est difficile à accomplir.
+
+  argument_structure_variation:
+    - Marie a donné une explication aux étudiants.
+    - Aux étudiants, Marie a donné une explication.
+    - Une explication a été donnée par Marie aux étudiants.
+
+  pronoun_interference:
+    - Elle leur a donné une explication qu’ils n’ont pas comprise.
+    - On l’a trouvé qui s’enfuyait.
+    - Je les ai vus qui arrivaient.
