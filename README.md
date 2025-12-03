@@ -358,12 +358,12 @@ The package extracts 67 linguistic features organized into 16 categories based o
 | f\_09\_pronoun_it                                  | il (explétif / non référentiel) / le (ex : nous le sommes, il l'est...)                                                                                  |
 | f\_10\_demonstrative_pronoun                       | celui, celle, ceux, celles                                                                                                                               |
 | f\_11\_indefinite_pronoun                          | quelqu’un, rien, tout, certains…                                                                                                                         |
-| f\_12\_proverb_do                                  | verbe “faire” employé pro-verbalement (ex : “Je le fais”)                                                                                                |
+| f\_12\_proverb_do                                  | verbe “faire” employé pro-verbalement (ex : “Je le fais”, “Il l'a pris”)                                                                                                |
 | **D. Questions**                                     |                                                                                                                                                          |
 | f\_13\_wh_question                                 | qui, que, quoi, où, quand, comment, pourquoi                                                                                                             |
 | **E. Nominal forms**                                 |                                                                                                                                                          |
 | f\_14\_nominalization                              | liste de suffixe : [référence PDF](https://facmed.univ-constantine3.dz/wp-content/uploads/2024/01/La-nominalisation-des-verbes-daction.pdf)             |
-| f\_15\_gerunds                                     | en travaillant, en mangeant... EN + VBE-ant / verbe -> nom                                                                                               |
+| f\_15\_gerunds                                     | en travaillant, en mangeant...                                                                                               |
 | f\_16\_other_nouns                                 | autres noms                                                                                                                                              |
 | **F. Passives**                                      |                                                                                                                                                          |
 | f\_17\_agentless_passives                          | “est mangé”, sans “par…”                                                                                                                                 |
@@ -375,16 +375,16 @@ The package extracts 67 linguistic features organized into 16 categories based o
 | f\_21\_that_verb_comp                              | “que” après verbe (“Je crois que…”)                                                                                                                      |
 | f\_22\_that_adj_comp                               | “content que”, “heureux que…”                                                                                                                            |
 | f\_23\_wh_clause                                   | “ce que”, “ce qui”, “ce dont…”                                                                                                                           |
-| f\_24\_infinitives                                 | """VERB[Inf]”"                                                                                                                                           |
+| f\_24\_infinitives                                 | verbes à l'infinitif                                                                                                                                          |
 | f\_25\_present_participle                          | “En mangeant, il partit”                                                                                                                                 |
 | f\_26\_past_participle                             | “Construit en un jour…”                                                                                                                                  |
-| f\_27\_past_participle_whiz                        | “la maison construite hier”                                                                                                                              |
-| f\_28\_present_participle_whiz                     | “les enfants jouant dehors”                                                                                                                              |
+| f\_27\_past_participle_whiz                        | “la maison construite hier est magnifique”                                                                                                                              |
+| f\_28\_present_participle_whiz                     | “les enfants jouant dehors sont bruyants”                                                                                                                              |
 | f\_29\_that_subj                                   | “le chien qui m’a mordu”                                                                                                                                 |
 | f\_30\_that_obj                                    | “le chien que j’ai vu”                                                                                                                                   |
-| f\_31\_wh_subj                                     | “l’homme qui…”                                                                                                                                           |
-| f\_32\_wh_obj                                      | “la femme que…”                                                                                                                                          |
-| f\_33\_pied_piping                                 | “la manière dont”, “le lieu dans lequel…”                                                                                                                |
+| f\_31\_wh_subj                                     | “les candidats, lesquels réussissent…”                                                                                                                                           |
+| f\_32\_wh_obj                                      | “les raisons dont il parle…”                                                                                                                                          |
+| f\_33\_pied_piping                                 | “c'est... dont”, “voici... dans lequel…”                                                                                                                |
 | f\_34\_sentence_relatives                          | “..., ce qui est étrange.”                                                                                                                               |
 | f\_35\_because                                     | “parce que, puisque, car”                                                                                                                                |
 | f\_36\_though                                      | “bien que, quoique, même si”                                                                                                                             |
@@ -392,8 +392,8 @@ The package extracts 67 linguistic features organized into 16 categories based o
 | f\_38\_other_adv_sub                               | “comme, tandis que, alors que, lorsque”                                                                                                                  |
 | **I. Prepositional phrases, adjectives and adverbs** |                                                                                                                                                          |
 | f\_39\_prepositions                                | à, de, en, sur, sous, pour, avec…                                                                                                                        |
-| f\_40\_adj_attr                                    | ADJ avant ou après le nom                                                                                                                                |
-| f\_41\_adj_pred                                    | “Le chat est noir.”                                                                                                                                      |
+| f\_40\_adj_attr                                    | "c'est une belle maison."                                                                                                                                |
+| f\_41\_adj_pred                                    | “le chat est noir”                                                                                                                                      |
 | f\_42\_adverbs                                     | tout, très, rapidement…                                                                                                                                  |
 | **J. Lexical specificity**                           |                                                                                                                                                          |
 | f\_43\_type_token                                  | ratio types/tokens                                                                                                                                       |
@@ -416,7 +416,7 @@ The package extracts 67 linguistic features organized into 16 categories based o
 | f\_57\_verb_suasive                                | ordonner, proposer, insister                                                                                                                             |
 | f\_58\_verb_seem                                   | sembler, paraître                                                                                                                                        |
 | **N. Reduced forms and dispreferred structures**     |                                                                                                                                                          |
-| f\_59\_contractions                                | (n’existe pas vraiment ; “p’tit”, “t’es” à l'oral ?)                                                                                                     |
+| f\_59\_contractions                                | (n’existe pas vraiment ; “p’tit”, “t’es”, “t’as”... à l'oral)                                                                                                     |
 | f\_60\_that_deletion                               | suppression de “que” (“je pense il vient”)                                                                                                               |
 | f\_61\_stranded_preposition                        | Pour qui est-ce que tu as fait le gâteau? / L’homme que tu parles avec (exemples non standard en anglais : "Who did you bake that cake for?", "That's the person I'm having trouble with.") |
 | f\_62\_split_infinitive                            | “de vraiment comprendre”                                                                                                                                 |
@@ -426,7 +426,7 @@ The package extracts 67 linguistic features organized into 16 categories based o
 | f\_65\_clausal_coordination                        | “et” entre propositions indépendantes                                                                                                                    |
 | **P. Negation**                                      |                                                                                                                                                          |
 | f\_66\_neg_synthetic                               | “Aucune réponse n’est bonne”                                                                                                                             |
-| f\_67\_neg_analytic                                | “ne … pas / plus / jamais”                                                                                                                               |
+| f\_67\_neg_analytic                                | “ne/n'/Ø … pas / plus / jamais”                                                                                                                               |
 
 ## Contributing
 
