@@ -3,9 +3,12 @@
   count: 1.0
 - feature: f_01_past_tense
   example: Nous avions déjà terminé quand elle arriva.
-  count: 1.0
+  count: 2.0
 - feature: f_01_past_tense
   example: Le chat a marché lentement dans la rue.
+  count: 1.0
+- feature: f_01_past_tense #
+  example: Aujourd'hui encore, il dit qu’il est parti le lendemain.
   count: 1.0
 - feature: f_02_perfect_aspect
   example: J'ai fini mon travail.
@@ -14,8 +17,11 @@
   example: Elle était partie avant midi.
   count: 1.0
 - feature: f_02_perfect_aspect
-  example: J'ai écrit cette phrase.
+  example: J’ai écrit cette phrase.
   count: 1.0
+- feature: f_02_perfect_aspect #
+  example: La porte est fermée depuis ce matin. # X a été
+  count: 0.0
 - feature: f_03_present_tense
   example: Je parle français couramment.
   count: 1.0
@@ -25,12 +31,15 @@
 - feature: f_03_present_tense
   example: Le renard brun rapide saute par-dessus le chien paresseux.
   count: 1.0
+- feature: f_03_present_tense #
+  example: Demain, je pars à l’aube.
+  count: 1.0
 - feature: f_04_place_adverbials
   example: Les enfants jouent dehors.
   count: 1.0
 - feature: f_04_place_adverbials
   example: Il habite loin d'ici.
-  count: 2.0
+  count: 1.0
 - feature: f_05_time_adverbials
   example: Je viendrai demain matin.
   count: 1.0
@@ -43,23 +52,35 @@
 - feature: f_06_first_person_pronouns
   example: Mon frère et moi avons visité le musée.
   count: 2.0
+- feature: f_06_first_person_pronouns
+  example: Je lui ai dit ce que j'avais fait.
+  count: 2.0
 - feature: f_07_second_person_pronouns
   example: Tu viens avec nous ce soir?
   count: 1.0
 - feature: f_07_second_person_pronouns
   example: Vous avez raison sur ce point.
   count: 1.0
+- feature: f_07_second_person_pronouns
+  example: Tu dis que vous êtes sortis ?
+  count: 2.0
 - feature: f_08_third_person_pronouns
   example: Elle lui a donné son livre.
   count: 2.0
 - feature: f_08_third_person_pronouns
   example: Ils sont partis sans eux.
   count: 2.0
+- feature: f_08_third_person_pronouns  #
+  example: Il lui a dit qu'elle avait réussi.
+  count: 3.0
 - feature: f_09_pronoun_it
   example: Il pleut depuis ce matin.
   count: 1.0
 - feature: f_09_pronoun_it
   example: Il y a trois ans, nous habitions à Paris.
+  count: 1.0
+- feature: f_09_pronoun_it #
+  example: Il est clair qu'il est censé.
   count: 1.0
 - feature: f_10_demonstrative_pronoun
   example: Celui-ci est plus grand que celui-là.
@@ -68,7 +89,7 @@
   example: Celles qui sont arrivées en retard ont manqué le début.
   count: 1.0
 - feature: f_10_demonstrative_pronoun
-  example: Cela est une phrase d'exemple.
+  example: Cela est une phrase d’exemple.
   count: 1.0
 - feature: f_11_indefinite_pronouns
   example: Quelqu'un a frappé à la porte.
@@ -82,14 +103,20 @@
 - feature: f_12_proverb_do
   example: Elle travaille dur, comme nous le faisons tous.
   count: 1.0
-- feature: f_13_wh_question
-  example: Qui a pris mon stylo?
+- feature: f_12_proverb_do #
+  example: Il voulait arrêter de manger gras, mais il ne l’a pas fait.
   count: 1.0
 - feature: f_13_wh_question
-  example: Où vas-tu en vacances cet été?
+  example: Qui a pris mon stylo ?
+  count: 1.0
+- feature: f_13_wh_question
+  example: Où vas-tu en vacances cet été ?
   count: 1.0
 - feature: f_13_wh_question
   example: Quand partez-vous ?
+  count: 1.0
+- feature: f_13_wh_question #
+  example: Qui est-ce qui t'a dit cela ?
   count: 1.0
 - feature: f_14_nominalizations
   example: La création de cette loi a pris plusieurs mois.
@@ -97,11 +124,17 @@
 - feature: f_14_nominalizations
   example: L'amélioration est évidente.
   count: 1.0
+- feature: f_14_nominalizations #
+  example: Son passage à l’antenne a surpris tout le monde.
+  count: 1.0
 - feature: f_15_gerunds
   example: En travaillant dur, tu réussiras.
   count: 1.0
 - feature: f_15_gerunds
   example: Il est parti en chantant.
+  count: 1.0
+- feature: f_15_gerunds #
+  example: Elle a avancé en titubant légèrement.
   count: 1.0
 - feature: f_17_agentless_passives
   example: Le repas a été préparé avec soin.
@@ -112,6 +145,12 @@
 - feature: f_17_agentless_passives
   example: La tâche a été accomplie.
   count: 1.0
+- feature: f_17_agentless_passives # 
+  example: La porte est restée fermée toute la journée.
+  count: 0.0
+- feature: f_17_agentless_passives # 
+  example: Le document a été transmis hier.
+  count: 1.0
 - feature: f_18_by_passives
   example: Le roman a été écrit par Victor Hugo.
   count: 1.0
@@ -121,11 +160,20 @@
 - feature: f_18_by_passives
   example: La tâche a été accomplie par John.
   count: 1.0
+- feature: f_18_by_passives #
+  example: Le patient a été examiné par-dessus la couverture.
+  count: 0.0
+- feature: f_18_by_passives #
+  example: La photo a été prise par ce qui semblait être un drone.
+  count: 1.0
 - feature: f_19_be_main_verb
   example: Elle est médecin.
   count: 1.0
 - feature: f_19_be_main_verb
   example: Nous sommes très contents de vous voir.
+  count: 1.0
+- feature: f_19_be_main_verb #
+  example: Ce bruit est comme un avertissement.
   count: 1.0
 - feature: f_20_existential_there
   example: Il y a beaucoup de monde aujourd'hui.
@@ -136,6 +184,9 @@
 - feature: f_20_existential_there
   example: Il y a une caractéristique dans cette phrase.
   count: 1.0
+- feature: f_20_existential_there #
+  example: Il y a à peine quelqu’un ici.
+  count: 1.0
 - feature: f_21_that_verb_comp
   example: Je crois qu'il viendra demain.
   count: 1.0
@@ -144,6 +195,9 @@
   count: 1.0
 - feature: f_21_that_verb_comp
   example: J’ai dit qu’il était parti.
+  count: 1.0
+- feature: f_21_that_verb_comp #
+  example: J’imagine que ce soit possible.
   count: 1.0
 - feature: f_22_that_adj_comp
   example: Je suis content que tu sois venu.
@@ -154,17 +208,26 @@
 - feature: f_22_that_adj_comp
   example: Il est heureux que tout se soit bien passé.
   count: 1.0
+- feature: f_22_that_adj_comp #
+  example: Il est improbable que cela arrive.
+  count: 1.0
 - feature: f_23_wh_clause
   example: Je ne sais pas ce qui s'est passé.
   count: 1.0
 - feature: f_23_wh_clause
   example: Dis-moi ce que tu veux.
   count: 1.0
+- feature: f_23_wh_clause #
+  example: Explique-moi pourquoi tu es parti.
+  count: 1.0
 - feature: f_24_infinitives
   example: Je veux partir maintenant.
   count: 1.0
 - feature: f_24_infinitives
   example: Il aime lire le soir.
+  count: 1.0
+- feature: f_24_infinitives #
+  example: Il commence à douter.
   count: 1.0
 - feature: f_25_present_participle
   example: En mangeant, il lisait son journal.
@@ -174,6 +237,9 @@
   count: 1.0
 - feature: f_25_present_participle
   example: En se remplissant la bouche de biscuits, Joe est sorti en courant.
+  count: 2.0
+- feature: f_25_present_participle #
+  example: Il a perdu du temps en hésitant.
   count: 1.0
 - feature: f_26_past_participle
   example: Construit en un an, le bâtiment est impressionnant.
@@ -181,11 +247,17 @@
 - feature: f_26_past_participle
   example: Terminé en retard, le projet a dépassé le budget.
   count: 1.0
+- feature: f_26_past_participle #
+  example: Épuisé, il s’est endormi aussitôt.
+  count: 1.0
 - feature: f_27_past_participle_whiz
   example: La maison construite l'année dernière est magnifique.
   count: 1.0
 - feature: f_27_past_participle_whiz
   example: Les lettres écrites par ma grand-mère sont précieuses.
+  count: 1.0
+- feature: f_27_past_participle_whiz #
+  example: Les personnes invitées hier repartiront bientôt.
   count: 1.0
 - feature: f_28_present_participle_whiz
   example: Les enfants jouant dans le parc sont bruyants.
@@ -193,11 +265,17 @@
 - feature: f_28_present_participle_whiz
   example: La personne tenant le micro est le directeur.
   count: 1.0
+- feature: f_28_present_participle_whiz #
+  example: Les élèves révisant tard seront fatigués.
+  count: 1.0
 - feature: f_29_that_subj
   example: Le chien qui m'a mordu a été retrouvé.
   count: 1.0
 - feature: f_29_that_subj
   example: La femme qui habite ici est ma tante.
+  count: 1.0
+- feature: f_29_that_subj #
+  example: L’homme qui rit est mon oncle.
   count: 1.0
 - feature: f_30_that_obj
   example: Le livre que j'ai lu était fascinant.
@@ -205,17 +283,26 @@
 - feature: f_30_that_obj
   example: La voiture que nous avons achetée est bleue.
   count: 1.0
-- feature: f_31_wh_subj
-  example: Les candidats lesquels réussissent l'examen obtiennent le poste.
+- feature: f_30_that_obj #
+  example: Les films que j’adore passent ce soir.
   count: 1.0
 - feature: f_31_wh_subj
-  example: Les appareils lesquels fonctionnent sans arrêt surchauffent.
+  example: Les candidats, lesquels réussissent l'examen obtiennent le poste.
+  count: 1.0
+- feature: f_31_wh_subj
+  example: Les appareils, lesquels fonctionnent sans arrêt surchauffent.
+  count: 1.0
+- feature: f_31_wh_subj #
+  example: Les documents, lesquels manquent seront ajoutés.
   count: 1.0
 - feature: f_32_wh_obj
   example: Les raisons dont il parle sont claires.
   count: 1.0
 - feature: f_32_wh_obj
   example: Les projets dont nous discutons avancent vite.
+  count: 1.0
+- feature: f_32_wh_obj #
+  example: Les artistes dont je parle arrivent demain.
   count: 1.0
 - feature: f_33_pied_piping
   example: C'est la manière dont il parle.
@@ -250,6 +337,9 @@
 - feature: f_37_if
   example: À moins que tu partes maintenant, tu seras en retard.
   count: 1.0
+- feature: f_37_if #
+  example: S'il est toujours là, j'irai.
+  count: 1.0
 - feature: f_38_other_adv_sub
   example: Tandis que je travaillais, elle dormait.
   count: 1.0
@@ -261,6 +351,9 @@
   count: 1.0
 - feature: f_39_prepositions
   example: Je vais à Paris avec mon ami.
+  count: 2.0
+- feature: f_39_prepositions #
+  example: Il marche vers la sortie malgré la foule.
   count: 2.0
 - feature: f_40_adj_attr
   example: C'est une belle maison.
@@ -308,7 +401,7 @@
   example: Elle est extrêmement intelligente.
   count: 1.0
 - feature: f_49_emphatics
-  example: C'est vraiment magnifique!
+  example: C'est vraiment magnifique !
   count: 1.0
 - feature: f_49_emphatics
   example: Il a beaucoup travaillé pour réussir.
@@ -331,17 +424,29 @@
 - feature: f_52_modal_possibility
   example: Il pourrait pleuvoir cet après-midi.
   count: 1.0
+- feature: f_52_modal_possibility #
+  example: Il se pourrait que je vienne demain.
+  count: 1.0
 - feature: f_53_modal_necessity
   example: Tu dois finir tes devoirs.
   count: 1.0
 - feature: f_53_modal_necessity
   example: Il faut partir maintenant.
   count: 1.0
+- feature: f_53_modal_necessity #
+  example: Il est nécessaire de se faire aider.
+  count: 1.0
 - feature: f_54_modal_predictive
   example: Je vais aller au marché.
   count: 1.0
 - feature: f_54_modal_predictive
   example: Il sera là dans une heure.
+  count: 1.0
+- feature: f_54_modal_predictive #
+  example: Nous verrons cela.
+  count: 1.0
+- feature: f_54_modal_predictive #
+  example: Il risque de pleuvoir ce soir.
   count: 1.0
 - feature: f_55_verb_public
   example: Il a affirmé que c'était vrai.
@@ -367,6 +472,12 @@
 - feature: f_58_verb_seem
   example: Elle paraît heureuse.
   count: 1.0
+- feature: f_59_contractions #
+  example: Il est p'tit lui.
+  count: 1.0
+- feature: f_59_contractions #
+  example: T'es sûr de toi ?
+  count: 1.0
 - feature: f_60_that_deletion
   example: Je pense il viendra demain.
   count: 1.0
@@ -375,6 +486,9 @@
   count: 1.0
 - feature: f_60_that_deletion
   example: On suppose ça a fonctionné.
+  count: 1.0
+- feature: f_60_that_deletion #
+  example: Ça se voit il est sérieux.
   count: 1.0
 - feature: f_61_stranded_preposition
   example: Pour qui est-ce que tu as fait le gâteau?
@@ -386,19 +500,22 @@
   example: J'essaie de vraiment comprendre le problème.
   count: 1.0
 - feature: f_62_split_infinitive
-  example: Elle a promis de ne jamais oublier.
+  example: Elle a très certainement promis de ne jamais oublier.
   count: 1.0
 - feature: f_63_split_auxiliary
   example: Il a probablement été vu hier.
   count: 1.0
-- feature: f_63_split_auxiliary
-  example: Elle a certainement terminé son travail.
+- feature: f_63_split_auxiliary #
+  example: Elle a très certainement terminé son travail.
   count: 1.0
 - feature: f_64_phrasal_coordination
   example: J'ai acheté des pommes et des oranges.
   count: 1.0
 - feature: f_64_phrasal_coordination
   example: C'est grand et beau.
+  count: 1.0
+- feature: f_64_phrasal_coordination #
+  example: De tels actes et de tels propos sont inacceptables.
   count: 1.0
 - feature: f_65_clausal_coordination
   example: Il pleut et nous restons à l'intérieur.
@@ -417,4 +534,10 @@
   count: 1.0
 - feature: f_67_neg_analytic
   example: Elle n'est jamais venue ici.
+  count: 1.0
+- feature: f_67_neg_analytic #
+  example: Il parle jamais de ça.
+  count: 1.0
+- feature: f_67_neg_analytic #
+  example: Je suis pas sortie hier.
   count: 1.0
