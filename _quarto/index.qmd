@@ -1,0 +1,41 @@
+---
+title: "Welcome"
+page-layout: article
+author:
+    - David Brown
+    - Marina Seghier
+    - Alice Millour
+---
+
+# `pseudobibeR.fr`
+
+`pseudobibeR.fr` extracts Douglas Biber's multidimensional features from French texts that have already been tagged and dependency-parsed. The package mirrors the English-centric `pseudobiber`, but swaps in French heuristics, dictionaries, and edge cases created by researchers at Paris 8 University, as well as discovered while working with both the Chambers & Le Baron's academic corpus and a purpose-built corpus of spoken French, French tweets, and French fiction.
+
+## Why use pseudobibeR.fr?
+
+- **Purpose-built heuristics.** Feature detectors borrow from Biber's
+	cross-linguistic descriptions but encode French-specific cues (e.g.
+	relative pronouns, modal periphrases, stranded prepositions). See the complete [list of 67 features](feature-categories.qmd) with French equivalents and examples.
+- **Dataset-backed validation.** Each heuristic is illustrated inside
+	the package's `french_examples` dataset and mirrored in
+	`tests/testthat`, so you can inspect concrete sentences while refining
+	your own corpora.
+- **Tidy, opinionated output.** Results are returned as one row per
+	document with both raw counts and optional normalized rates, ready for
+	downstream modeling or visualization.
+
+## Workflow at a glance
+
+1. Parse your corpus with either spaCy (via `spacyr`) or udpipe. Ensure
+	 you request POS tags, morphological features, and dependency arcs.
+2. Call `biber(tokens)` to compute 67 feature families plus lexical
+	 richness metrics.
+3. Join any project metadata, normalize counts with `normalize_counts()`,
+	 and visualize/register-space positions as needed.
+
+## Getting Started
+
+New to the package? Start with the [Getting Started](vignettes/getting-started.qmd) vignette for a complete workflow walkthrough. For detailed examples with real corpora, see:
+
+- [Cross-Parser Validation](vignettes/parser-validation.qmd) - Demonstrates MDA with multi-register French corpus
+- [Chambers–Le Baron Walkthrough](vignettes/chambers-corpus.qmd) - Analyzes disciplinary variation in academic French

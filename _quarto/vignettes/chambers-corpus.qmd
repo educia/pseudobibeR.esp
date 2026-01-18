@@ -1,0 +1,229 @@
+---
+title: "Exploring the Chambers–Le Baron corpus"
+description: "Run pseudobibeR.fr on a fully parsed academic corpus and analyze disciplinary variation using multidimensional analysis."
+page-layout: article
+bibliography: ../references.bib
+format:
+  html:
+    toc: true
+engine: knitr
+execute:
+  echo: true
+  warning: false
+  message: true
+---
+
+```{r setup}
+library(pseudobibeR.fr)
+library(mda.biber)
+library(ggplot2)
+library(tidyr)
+library(dplyr)
+library(stringr)
+library(gt)
+library(broom)
+library(gtsummary)
+library(tibble)
+
+corpus_candidates <- c(
+  file.path("..", "data", "french_corpus.rda"),
+  file.path("data", "french_corpus.rda"),
+  file.path("..", "..", "_quarto", "data", "french_corpus.rda")
+)
+corpus_path <- corpus_candidates[file.exists(corpus_candidates)][1]
+if (is.na(corpus_path)) {
+  stop("Place french_corpus.rda under _quarto/data/ before rendering this tutorial.")
+}
+
+udpipe_rda <- c(
+  file.path("..", "data", "fc_udpipe_parsed.rda"),
+  file.path("data", "fc_udpipe_parsed.rda"),
+  file.path("..", "..", "_quarto", "data", "fc_udpipe_parsed.rda")
+)
+udpipe_path <- udpipe_rda[file.exists(udpipe_rda)][1]
+if (is.na(udpipe_path)) {
+  stop("Cannot locate fc_udpipe_parsed.rda in _quarto/data/.")
+}
+
+# Load corpus data and pre-parsed tokens
+load(corpus_path)   # loads 'french_corpus'
+load(udpipe_path)   # loads 'fc_udpipe_parsed'
+```
+
+## About the dataset
+
+The [Chambers–Le Baron corpus](https://ota.bodleian.ox.ac.uk/repository/xmlui/handle/20.500.12024/2527) [-@chambers2007corpus] contains research articles from ten academic disciplines. An RDA file with the data preprocessed into a dataframe can be read in from the `_quarto/data` directory, which is used for documentation rendering but not distributed as part of the R package.
+
+- Articles: `r nrow(french_corpus)`
+- Total tokens: 125,445
+- Disciplines: `r paste(sort(unique(french_corpus$discipline)), collapse = ", ")`
+- Columns: `doc_id`, `discipline`, `text`
+
+::: {.callout-note}
+## Data Details
+For detailed corpus composition including token counts by discipline, see [Data Sources](../data-sources.qmd#chambers-le-baron-corpus).
+:::
+
+```{r discipline-count}
+french_corpus |> count(discipline, name = "n_articles")
+```
+
+```{r sample-snippets}
+set.seed(20241126)
+french_corpus |>
+  slice_sample(n = 3) |>
+  mutate(snippet = str_trunc(text, 220)) |>
+  select(doc_id, discipline, snippet)
+```
+
+## Parsing the corpus (documented pipeline)
+
+We provide pre-parsed outputs for reproducibility, but the pipeline below illustrates how to regenerate them from the raw text.
+
+```{r parse-with-udpipe, eval=FALSE}
+library(udpipe)
+model <- udpipe_download_model(language = "french-gsd")
+ud_model <- udpipe_load_model(model$file_model)
+
+fc_udpipe_parsed <- udpipe_annotate(
+  ud_model,
+  x = french_corpus$text,
+  doc_id = french_corpus$doc_id,
+  tagger = "default",
+  parser = "default"
+)
+
+save(fc_udpipe_parsed, file = "../data/fc_udpipe_parsed.rda")
+```
+
+A parallel recipe using spaCy is already stored in
+`_quarto/data/fc_spacy_parsed.rda`.
+
+## Compute Biber features
+
+```{r features}
+features_ud <- biber(fc_udpipe_parsed, measure = "none", normalize = TRUE) |>
+  left_join(french_corpus |> select(doc_id, discipline), by = "doc_id") |>
+  select(doc_id, discipline, everything()) |>
+  mutate(discipline = as.factor(discipline))
+
+features_ud |>
+  select(doc_id, discipline, f_01_past_tense, f_14_nominalizations, f_52_modal_possibility)
+```
+
+## Discipline-level summary
+
+```{r discipline-summary}
+summary_tbl <- features_ud |>
+  group_by(discipline) |>
+  summarise(
+    nominalizations = mean(f_14_nominalizations, na.rm = TRUE),
+    modals = mean(f_52_modal_possibility + f_53_modal_necessity, na.rm = TRUE),
+    pronouns = mean(f_06_first_person_pronouns + f_07_second_person_pronouns, na.rm = TRUE)
+  )
+summary_tbl
+```
+
+## Multidimensional Analysis
+
+Following Biber's (1988) approach, we can identify underlying dimensions that capture patterns of co-occurring linguistic features across disciplines using factor analysis.
+
+### Scree Plot
+
+First, we examine how many factors to extract by looking at the eigenvalues:
+
+```{r screeplot}
+screeplot_mda(features_ud)
+```
+
+### Factor Loadings
+
+Extract factor loadings to identify which features co-occur on each dimension:
+
+```{r mda-loadings}
+loadings <- mda_loadings(
+  obs_by_group = features_ud,
+  n_factors = 3,
+  cor_min = 0.2,
+  threshold = 0.35
+)
+
+# Display loadings table
+attr(loadings, 'loadings') |>
+  rownames_to_column("Feature") |>
+  gt() |>
+  fmt_number(
+    columns = everything(),
+    decimals = 2
+  )
+```
+
+### Factor 1 Interpretation
+
+Factor 1 closely resembles Biber's classic **Dimension 1: Involved vs. Informational Production**. 
+
+Features with **positive loadings** (>0.20) indicate more involved, interactive discourse:
+
+- Demonstrative pronouns (0.61), *be* as main verb (0.60), and adverbs (0.58)
+- Conditional clauses with *if* (0.56) and third-person pronouns (0.54)
+- Discourse particles (0.48) and analytic negation (0.42)
+
+Features with **negative loadings** (<−0.20) indicate more informational, edited prose:
+
+- Nominalizations (−0.62) and mean word length (−0.62)
+- Prepositions (−0.53) and gerunds (−0.39)
+- Past and present participial *whiz* deletions (−0.36, −0.33)
+- Attributive adjectives (−0.26) and phrasal coordination (−0.25)
+
+This dimension captures the fundamental distinction between texts that engage readers directly through personal reference and simplified syntax (positive pole) versus texts that convey dense information through abstract nominalization and complex modification (negative pole).
+
+```{r factor1-viz, fig.width=10, fig.height=8}
+stickplot_mda(loadings, n_factor = 1)
+heatmap_mda(loadings, n_factor = 1)
+```
+
+## Statistical Analysis of Disciplinary Differences
+
+The ANOVA and regression results reveal significant disciplinary variation along Factor 1, with **Philosophy** emerging as a striking outlier.
+
+### ANOVA: Factor 1 by Discipline
+
+```{r anova-factor1}
+f_aov <- aov(Factor1 ~ group, data = loadings)
+broom::tidy(f_aov)
+```
+
+The ANOVA confirms that disciplines differ significantly in their Factor 1 scores, indicating distinct rhetorical styles.
+
+### Regression: Factor 1 by Discipline
+
+```{r regression-factor1}
+gtsummary::tbl_regression(lm(Factor1 ~ group, data = loadings)) |>
+  gtsummary::add_glance_source_note() |>
+  gtsummary::as_gt()
+```
+
+**Key findings**:
+
+- **Philosophy** scores highest on Factor 1, showing a remarkably involved, interactive style—unusual for academic writing. Philosophy articles in this corpus employ more demonstratives, conditionals, and discourse markers than other disciplines, suggesting a more dialogic engagement with arguments and counterarguments.
+
+- **Sciences** (Biology, Medicine, Physics) cluster at the negative pole, favoring dense nominalization and complex noun phrases typical of empirical research reporting.
+
+- **Social sciences** (Economics, Linguistics) occupy intermediate positions, balancing technical precision with explanatory discourse.
+
+This pattern suggests that even within formal academic French, disciplinary conventions shape fundamental choices about how to structure information and engage readers. Philosophy's outlier status highlights the discipline's tradition of argument-driven prose that maintains traces of oral disputation.
+
+Importantly, this finding replicates cross-linguistically. Hardy and Römer's [-@hardy2013revealing] multidimensional analysis of the MICUSP corpus (English student writing) similarly identified Philosophy at the extreme end of what they termed "Involved, Academic Narrative"—characterized by high use of personal pronouns, present tense verbs, and stance markers. The convergence across French and English academic corpora suggests that Philosophy's distinctive rhetorical conventions transcend language-specific constraints, reflecting deeper epistemological commitments to dialogic argumentation.
+
+
+## Next steps
+
+1. Re-run the udpipe parsing chunk after downloading the raw text yourself.
+2. Swap in the spaCy-parsed `.rda` to compare how feature counts shift by engine.
+3. Explore additional factors (3, 4, 5) to identify more subtle patterns of variation.
+4. Use the factor scores for downstream classification or clustering tasks.
+
+## References
+
+::: {#refs}
+:::

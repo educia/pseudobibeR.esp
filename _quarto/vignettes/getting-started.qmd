@@ -1,0 +1,263 @@
+---
+title: "Getting Started with pseudobibeR.fr"
+author: "David West Brown"
+format: html
+execute:
+  warning: false
+  message: false
+  eval: false
+---
+
+## Introduction
+
+`pseudobibeR.fr` provides tools for multidimensional analysis (MDA) of French register variation based on Biber's (1988) feature framework. The package extracts 66 linguistic features from parsed French text and performs factor analysis to identify underlying dimensions of variation across text types (registers).
+
+### What is Multidimensional Analysis?
+
+MDA reveals systematic patterns of linguistic co-occurrence that characterize different registers (spoken conversation, academic writing, news, fiction, etc.). Rather than analyzing features in isolation, MDA identifies **dimensions** - groups of features that vary together because they serve similar communicative functions.
+
+For example, personal pronouns, contractions, and present tense tend to co-occur in interactive, spoken registers, while nominalizations, prepositions, and longer words cluster in informational, written registers.
+
+## Installation
+
+```{r}
+# Install from GitHub
+# devtools::install_github("username/pseudobibeR.fr")
+
+# Load the package
+library(pseudobibeR.fr)
+library(dplyr)
+```
+
+## Choosing a Parser: UDPipe vs. spaCy
+
+Before extracting features, you need to parse your French text using a dependency parser. `pseudobibeR.fr` supports both **UDPipe** and **spaCy**.
+
+### Our Recommendation: UDPipe
+
+**We recommend using UDPipe unless you have specific reasons to use spaCy.**
+
+**Why UDPipe?**
+
+- **Simplicity**: Pure R implementation with no Python dependencies
+- **Installation**: Single command (`udpipe::udpipe_download_model("french")`)
+- **Reliability**: No reticulate/Python environment complications
+- **Performance**: Slightly higher dimensional R² (0.715 vs 0.703)
+- **Factor structure**: Cleaner separation of perfect aspect and passive constructions
+
+**When to use spaCy:**
+
+- You're already using spaCy in your analysis pipeline
+- You need spaCy's additional NLP capabilities (named entity recognition, etc.)
+- You prefer spaCy's parsing for other reasons
+
+**Both parsers are scientifically valid:** Our [cross-parser validation](parser-validation.qmd) demonstrates that UDPipe and spaCy produce nearly identical MDA results (R² difference of only 0.012), with the same factor structure and register rankings. You can confidently choose based on technical convenience rather than validity concerns.
+
+## Basic Workflow
+
+### Step 1: Parse Your Text with UDPipe
+
+```{r}
+library(udpipe)
+
+# Download French model (only needed once)
+udpipe_download_model(language = "french")
+
+# Load the model
+french_model <- udpipe_load_model("french-gsd-ud-2.5-191206.udpipe")
+
+# Your corpus as a data frame with doc_id and text columns
+corpus <- data.frame(
+  doc_id = c("doc1", "doc2", "doc3"),
+  text = c(
+    "Bonjour! Comment allez-vous aujourd'hui?",
+    "Les résultats de l'analyse démontrent une corrélation significative.",
+    "Marie m'a dit qu'elle viendrait demain."
+  ),
+  register = c("spoken", "academic", "fiction")
+)
+
+# Parse the corpus
+parsed <- udpipe_annotate(
+  french_model,
+  x = corpus$text,
+  doc_id = corpus$doc_id
+) |>
+  as.data.frame()
+```
+
+### Step 2: Extract Biber Features
+
+```{r}
+# Extract all 66 features, normalized per 1,000 words
+features <- biber(parsed, measure = "none", normalize = TRUE)
+
+# Join with register labels
+features <- features |>
+  left_join(corpus |> select(doc_id, register), by = "doc_id") |>
+  select(doc_id, register, everything()) |>
+  mutate(register = as.factor(register))
+
+# View feature counts
+head(features)
+```
+
+### Step 3: Perform Multidimensional Analysis
+
+```{r}
+# Extract factor loadings (3 factors, loading threshold 0.35)
+loadings <- mda_loadings(
+  obs_by_group = features,
+  n_factors = 3,
+  cor_min = 0.2,
+  threshold = 0.35
+)
+
+# View the loadings table
+attr(loadings, 'loadings')
+
+# Create visualizations
+screeplot_mda(features)                    # Eigenvalues
+stickplot_mda(loadings, n_factor = 1)      # Register positions on Factor 1
+heatmap_mda(loadings, n_factor = 1)        # Register clustering
+```
+
+### Step 4: Statistical Analysis
+
+```{r}
+# ANOVA: Test for register differences
+f_aov <- aov(Factor1 ~ group, data = loadings)
+summary(f_aov)
+
+# Linear regression
+f_lm <- lm(Factor1 ~ group, data = loadings)
+summary(f_lm)
+
+# Post-hoc comparisons
+TukeyHSD(f_aov)
+```
+
+## Understanding the Output
+
+### Feature Extraction
+
+The `biber()` function returns a data frame with:
+
+- `doc_id`: Document identifier
+- `f_01_past_tense` through `f_67_neg_analytic`: 66 feature counts
+- Normalized to per 1,000 words (when `normalize = TRUE`)
+
+### Factor Loadings
+
+The `mda_loadings()` function performs:
+
+1. **Correlation matrix**: Computes correlations between features (minimum `cor_min`)
+2. **Factor analysis**: Extracts `n_factors` using principal components
+3. **Rotation**: Varimax rotation for interpretability
+4. **Loading matrix**: Features × Factors with loadings > `threshold`
+
+The output includes:
+
+- `loadings`: Factor loading matrix (features as rows, factors as columns)
+- Individual documents with factor scores in columns `Factor1`, `Factor2`, etc.
+- `group`: Register labels for visualization
+
+### Interpreting Factor 1
+
+In French (like English), Factor 1 typically represents **Interactional vs. Information Production**:
+
+**Positive pole (Interactional):**
+- Personal pronouns (je, tu, il)
+- Questions, discourse particles
+- Contractions (p'tit, m'sieur)
+- Clausal coordination
+- Registers: Spoken, fiction (dialogue)
+
+**Negative pole (Informational):**
+- Nouns, nominalizations
+- Prepositions, long words
+- Passives, participles
+- Registers: Academic, news, Wikipedia
+
+## Working with Your Own Data
+
+### Data Structure Requirements
+
+Your parsed data frame must include these columns:
+
+- `doc_id`: Unique document identifier
+- `token`: Word token
+- `lemma`: Lemmatized form
+- `upos` (UDPipe) or `pos` (spaCy): Universal POS tag
+- `dep_rel`: Dependency relation
+- `head_token_id`: Head token ID
+
+### Handling NA Values
+
+Some features may produce `NA` for very short documents. Use `replace_nas()`:
+
+```{r}
+features <- replace_nas(features, replace_with = 0)
+```
+
+### Filtering Registers
+
+For MDA, consider:
+
+- **Minimum document length**: Exclude very short texts (< 50 words)
+- **Register balance**: Ensure adequate representation
+- **Outliers**: Check for extreme feature values (normalization artifacts)
+
+## Example: Register Comparison
+
+```{r}
+# Compare spoken vs. academic on Factor 1
+loadings |>
+  filter(group %in% c("spoken", "academic")) |>
+  group_by(group) |>
+  summarise(
+    mean_F1 = mean(Factor1),
+    sd_F1 = sd(Factor1),
+    n = n()
+  )
+
+# T-test
+t.test(Factor1 ~ group, 
+       data = filter(loadings, group %in% c("spoken", "academic")))
+```
+
+## Alternative Parser: Using spaCy
+
+If you prefer spaCy:
+
+```{r}
+library(reticulate)
+library(spacyr)
+
+# Initialize spaCy (only once per session)
+spacy_initialize(model = "fr_core_news_lg")
+
+# Parse corpus
+parsed_spacy <- spacy_parse(
+  corpus$text,
+  doc_id = corpus$doc_id,
+  dependency = TRUE,
+  lemma = TRUE,
+  pos = TRUE
+)
+
+# Extract features (same workflow)
+features_spacy <- biber(parsed_spacy, measure = "none", normalize = TRUE)
+```
+
+## Next Steps
+
+- **[Parser Validation](parser-validation.qmd)**: See evidence for cross-parser consistency
+- **[Feature Categories](../feature-categories.qmd)**: Detailed descriptions of all 66 features
+- **Package documentation**: `?biber`, `?mda_loadings`, `?stickplot_mda`
+
+## References
+
+Biber, D. (1988). *Variation across speech and writing*. Cambridge University Press.
+
+Friginal, E., & Hardy, J. A. (2014). *Corpus-based sociolinguistics: A guide for students*. Routledge.

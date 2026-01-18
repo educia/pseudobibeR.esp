@@ -1,0 +1,43 @@
+bibliography: references.bib
+project:
+  type: website
+  output-dir: _site
+
+website:
+  title: "pseudobibeR.fr"
+  description: "Douglas Biber feature extraction for French corpora."
+  page-navigation: true
+  favicon: "favicon.ico"
+  navbar:
+    background: light
+    pinned: true
+    logo: logo.png
+    left:
+      - text: Overview
+        file: index.qmd
+      - text: Vignettes
+        menu:
+          - text: Getting Started
+            file: vignettes/getting-started.qmd
+          - text: Cross-Parser Validation
+            file: vignettes/parser-validation.qmd
+          - text: Chambers–Le Baron Walkthrough
+            file: vignettes/chambers-corpus.qmd
+      - text: Learn more
+        menu:
+          - text: "Biber features"
+            file: feature-categories.qmd
+          - text: "Data sources"
+            file: data-sources.qmd
+          - text: "pseudobibeR for English"
+            href: https://cran.r-project.org/web/packages/pseudobibeR/index.html
+            target: _blank
+    right:
+      - icon: github
+        href: https://github.com/browndw/pseudobibeR.fr
+        aria-label: pseudobibeR.fr on GitHub
+
+format:
+  html:
+    toc: false
+    theme: cosmo

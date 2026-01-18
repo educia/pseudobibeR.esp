@@ -1,0 +1,205 @@
+---
+title: "Data Sources"
+page-layout: article
+execute:
+  warning: false
+  message: false
+---
+
+This page describes the French corpora used in the package vignettes and available in the `data-raw/corpus-data/` directory as both RDA and Parquet files.
+
+## Overview
+
+The package uses two main corpus collections:
+
+1. **Chambers–Le Baron Corpus** (academic French, 159 documents)
+2. **French Register Corpus** (multi-register, 9,310 documents across 6 registers)
+
+## Chambers–Le Baron Corpus
+
+**Source:** [Oxford Text Archive](https://ota.bodleian.ox.ac.uk/repository/xmlui/handle/20.500.12024/2527)
+
+**Description:** A specialized corpus of French academic writing spanning 10 disciplines. This corpus is used in the [Chambers–Le Baron Walkthrough](vignettes/chambers-corpus.qmd) vignette to demonstrate disciplinary variation in French academic discourse.
+
+**Composition:**
+
+- **Documents:** 159 research articles
+- **Total tokens:** 125,445
+- **Disciplines:** Economics, History, Information and Communication, Law, Linguistics/Language Learning, Literature, Media/Culture, Philosophy, Social Anthropology, Social Sciences
+- **Text type:** Published academic research articles
+
+```{r}
+#| echo: false
+#| eval: true
+
+library(dplyr)
+library(gt)
+
+# Discipline breakdown with token counts
+tibble::tribble(
+  ~Discipline, ~Documents, ~Tokens, ~`Mean tokens/doc`,
+  "Economics", "16", "12,185", "762",
+  "History", "13", "10,411", "801",
+  "Information and Communication", "15", "11,639", "776",
+  "Law", "19", "15,147", "797",
+  "Linguistics/Language Learning", "15", "11,588", "773",
+  "Literature", "20", "16,191", "810",
+  "Media/Culture", "18", "14,594", "811",
+  "Philosophy", "13", "10,268", "790",
+  "Social Anthropology", "13", "10,279", "791",
+  "Social Sciences", "17", "13,143", "773"
+) |>
+  gt() |>
+  tab_header(
+    title = "Chambers–Le Baron Corpus by Discipline"
+  ) |>
+  cols_align(
+    align = "left",
+    columns = Discipline
+  ) |>
+  cols_align(
+    align = "right",
+    columns = c(Documents, Tokens, `Mean tokens/doc`)
+  )
+```
+
+**Files:**
+
+- `french_corpus.rda` / `french_corpus.parquet`
+- `fc_udpipe_parsed.rda` / `fc_spacy_parsed.rda` (pre-parsed versions in `_quarto/data/`)
+
+## French Register Corpus
+
+**Description:** A multi-register corpus compiled to validate feature extraction across diverse text types and demonstrate register variation in French. This corpus is used in the [Cross-Parser Validation](vignettes/parser-validation.qmd) vignette.
+
+**Composition:**
+
+- **Total documents:** 9,310
+- **Total words:** ~1.4 million
+- **Registers:** 6 (academic, fiction, news, spoken, twitter, wikipedia)
+
+```{r}
+#| echo: false
+#| eval: true
+
+library(dplyr)
+library(gt)
+
+# Register breakdown with token counts
+tibble::tribble(
+  ~Register, ~Documents, ~Tokens, ~`Mean tokens/doc`, ~Description,
+  "Academic", "159", "125,445", "789", "Research articles (Chambers–Le Baron corpus)",
+  "Fiction", "46", "397,777", "8,647", "Literary texts sampled by line chunks (150 lines per file)",
+  "News", "503", "362,136", "720", "Journalistic articles (Chambers-Rostand corpus)",
+  "Spoken", "87", "160,026", "1,839", "Oral narratives (French Oral Narrative Corpus)",
+  "Twitter", "7,197", "199,263", "28", "French tweets (excluded from MDA due to extreme brevity)",
+  "Wikipedia", "1,318", "370,282", "281", "Wikipedia articles"
+) |>
+  gt() |>
+  tab_header(
+    title = "French Register Corpus Composition"
+  ) |>
+  cols_align(
+    align = "left",
+    columns = c(Register, Description)
+  ) |>
+  cols_align(
+    align = "right",
+    columns = c(Documents, Tokens, `Mean tokens/doc`)
+  )
+```
+
+### Register Details
+
+#### Academic (159 documents)
+
+Subset of the Chambers–Le Baron corpus representing formal academic prose across multiple disciplines.
+
+#### Fiction (46 documents)
+
+**Sampling method:** Line-based sampling from 100 French literary texts
+
+- Extracted 150-line chunks from diverse fiction sources
+- Ensures variety across authors and periods
+- Avoids over-representation from single long novels
+
+#### News (503 documents)
+
+**Source:** [Chambers-Rostand Corpus of Journalistic French](https://ota.bodleian.ox.ac.uk/repository/xmlui/handle/20.500.12024/2491)
+
+Contemporary French journalism covering various topics and publication outlets.
+
+#### Spoken (87 documents)
+
+**Source:** [French Oral Narrative Corpus](https://ota.bodleian.ox.ac.uk/repository/xmlui/handle/20.500.12024/2555)
+
+Transcribed oral narratives representing conversational French. Includes features typical of spoken interaction: filled pauses, discourse particles, informal contractions.
+
+#### Twitter (7,197 documents)
+
+**Note:** Excluded from multidimensional analyses due to extreme brevity (mean 22 words/document), which creates normalization artifacts when computing features per 1,000 words.
+
+French tweets collected to represent informal digital communication.
+
+#### Wikipedia (1,318 documents)
+
+French Wikipedia articles representing informational but accessible encyclopedic prose. More formal than conversational registers but less technical than academic writing.
+
+## Data Files
+
+All corpora are stored in `data-raw/corpus-data/` in two formats:
+
+**Parquet format** (recommended for large datasets):
+```
+french_corpus.parquet             # Chambers–Le Baron corpus
+french_register_corpus.parquet    # Multi-register corpus
+```
+
+**RDA format** (R-native):
+```
+french_corpus.rda
+french_register_corpus.rda
+```
+
+**Pre-parsed versions** for documentation rendering (in `_quarto/data/`):
+```
+fc_udpipe_parsed.rda    # Chambers–Le Baron parsed with UDPipe
+fc_spacy_parsed.rda     # Chambers–Le Baron parsed with spaCy
+fr_features_ud.rda      # Extracted features (UDPipe)
+fr_features_spacy.rda   # Extracted features (spaCy)
+```
+
+## Usage in Vignettes
+
+### Getting Started
+Uses synthetic examples to demonstrate basic workflow without requiring corpus data.
+
+### Cross-Parser Validation
+Uses the **French Register Corpus** (excluding Twitter) to compare UDPipe and spaCy parsers across 5 registers: academic, fiction, news, spoken, wikipedia.
+
+### Chambers–Le Baron Walkthrough
+Uses the **Chambers–Le Baron Corpus** to analyze disciplinary variation in French academic writing.
+
+## Citations
+
+When using these corpora in research, please cite:
+
+**Chambers–Le Baron Corpus:**
+> Chambers, A., & Le Baron, M. (2007). *A Corpus of Academic French*. Oxford Text Archive. [https://ota.bodleian.ox.ac.uk/repository/xmlui/handle/20.500.12024/2527](https://ota.bodleian.ox.ac.uk/repository/xmlui/handle/20.500.12024/2527)
+
+**French Oral Narrative Corpus:**
+> Université catholique de Louvain. *French Oral Narrative Corpus*. Oxford Text Archive. [https://ota.bodleian.ox.ac.uk/repository/xmlui/handle/20.500.12024/2555](https://ota.bodleian.ox.ac.uk/repository/xmlui/handle/20.500.12024/2555)
+
+**Chambers-Rostand Corpus:**
+> Chambers, A., & Rostand, C. *Chambers-Rostand Corpus of Journalistic French*. Oxford Text Archive. [https://ota.bodleian.ox.ac.uk/repository/xmlui/handle/20.500.12024/2491](https://ota.bodleian.ox.ac.uk/repository/xmlui/handle/20.500.12024/2491)
+
+## Accessing the Data
+
+The corpora are **not distributed with the package** due to size and licensing considerations. They are used for documentation and validation purposes, with pre-computed feature extractions stored in `_quarto/data/` for vignette rendering.
+
+For researchers interested in replicating analyses:
+
+1. Download corpora from Oxford Text Archive (links above)
+2. Place raw text files in `data-raw/corpus-data/`
+3. Use parsing scripts in `data-raw/` to regenerate parsed versions
+4. Extract features using `biber()` function
