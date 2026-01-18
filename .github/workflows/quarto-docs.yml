@@ -37,6 +37,7 @@ jobs:
             any::gt
             any::gtsummary
             any::broom
+            any::broom.helpers
             any::ggplot2
             any::tidyr
             any::dplyr
