@@ -48,25 +48,29 @@ if (is.na(udpipe_path)) {
 # Load corpus data and pre-parsed tokens
 load(corpus_path)   # loads 'french_corpus'
 load(udpipe_path)   # loads 'fc_udpipe_parsed'
+
+# Ensure french_corpus is a proper data frame (not tibble) to avoid vctrs issues
+french_corpus <- as.data.frame(french_corpus)
 ```
 
 ## About the dataset
 
 The [Chambers–Le Baron corpus](https://ota.bodleian.ox.ac.uk/repository/xmlui/handle/20.500.12024/2527) [-@chambers2007corpus] contains research articles from ten academic disciplines. An RDA file with the data preprocessed into a dataframe can be read in from the `_quarto/data` directory, which is used for documentation rendering but not distributed as part of the R package.
 
-- Articles: `r nrow(french_corpus)`
-- Total tokens: 125,445
-- Disciplines: `r paste(sort(unique(french_corpus$discipline)), collapse = ", ")`
-- Columns: `doc_id`, `discipline`, `text`
-
-::: {.callout-note}
-## Data Details
-For detailed corpus composition including token counts by discipline, see [Data Sources](../data-sources.qmd#chambers-le-baron-corpus).
-:::
-
 ```{r discipline-count}
 french_corpus |> count(discipline, name = "n_articles")
 ```
+
+::: {.callout-note}
+## Summary
+
+- **Articles**: `r nrow(french_corpus)`
+- **Total tokens**: 125,445
+- **Disciplines**: `r nrow(count(french_corpus, discipline))`
+- **Columns**: `doc_id`, `discipline`, `text`
+
+For detailed corpus composition including token counts by discipline, see [Data Sources](../data-sources.qmd#chambers-le-baron-corpus).
+:::
 
 ```{r sample-snippets}
 set.seed(20241126)
