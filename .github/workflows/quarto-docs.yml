@@ -69,4 +69,5 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
           publish_dir: _quarto/_site
+          destination_dir: docs
           force_orphan: true
