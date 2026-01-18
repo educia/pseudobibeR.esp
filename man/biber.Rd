@@ -74,7 +74,10 @@ typical French cues for the feature. The repository file
 
 \describe{
 \item{f_01_past_tense}{Verbs in a past-tense form (e.g., \emph{il parlait}).}
-\item{f_02_perfect_aspect}{Perfect aspect built with auxiliaries such as \emph{avoir} or \emph{etre} plus a past participle (e.g., \emph{j'ai fini}).}
+\item{f_02_perfect_aspect}{
+Perfect aspect built with auxiliaries such as \emph{avoir} or \emph{etre}
+plus a past participle (e.g., \emph{j'ai fini}).
+}
 \item{f_03_present_tense}{Finite verbs in the present tense (e.g., \emph{nous parlons}).}
 }
 }
@@ -92,7 +95,10 @@ typical French cues for the feature. The repository file
 \describe{
 \item{f_06_first_person_pronouns}{First-person pronouns (e.g., \emph{je}, \emph{nous}).}
 \item{f_07_second_person_pronouns}{Second-person pronouns (e.g., \emph{tu}, \emph{vous}).}
-\item{f_08_third_person_pronouns}{Third-person personal pronouns other than expletives (e.g., \emph{il}, \emph{elle}, \emph{ils}).}
+\item{f_08_third_person_pronouns}{
+Third-person personal pronouns other than expletives
+(e.g., \emph{il}, \emph{elle}, \emph{ils}).
+}
 \item{f_09_pronoun_it}{Impersonal or expletive subjects (e.g., \emph{il} in \emph{il faut} or \emph{il pleut}).}
 \item{f_10_demonstrative_pronoun}{Standalone demonstratives that replace a noun (e.g., \emph{celui-ci}).}
 \item{f_11_indefinite_pronouns}{Indefinite pronouns (e.g., \emph{quelqu'un}, \emph{personne}).}
@@ -120,7 +126,10 @@ typical French cues for the feature. The repository file
 
 \describe{
 \item{f_17_agentless_passives}{Passive clauses without an explicit agent (e.g., \emph{La decision a ete prise}).}
-\item{f_18_by_passives}{Passive clauses with an expressed agent (e.g., \emph{La decision a ete prise par le directeur}).}
+\item{f_18_by_passives}{
+Passive clauses with an expressed agent
+(e.g., \emph{La decision a ete prise par le directeur}).
+}
 }
 }
 
@@ -136,19 +145,34 @@ typical French cues for the feature. The repository file
 
 \describe{
 \item{f_21_that_verb_comp}{Verb complements introduced by \emph{que} (e.g., \emph{je pense qu'il vient}).}
-\item{f_22_that_adj_comp}{Adjectival complements introduced by \emph{que} (e.g., \emph{je suis heureux que tu sois la}).}
+\item{f_22_that_adj_comp}{
+Adjectival complements introduced by \emph{que}
+(e.g., \emph{je suis heureux que tu sois la}).
+}
 \item{f_23_wh_clause}{\emph{wh}-clauses such as \emph{ce que}, \emph{ce qui}.}
 \item{f_24_infinitives}{Infinitival clauses.}
 \item{f_25_present_participle}{Adverbial clauses headed by a present participle (e.g., \emph{en chantant}).}
 \item{f_26_past_participle}{Adverbial clauses headed by a past participle (e.g., \emph{construit en un an}).}
-\item{f_27_past_participle_whiz}{Post-nominal reduced relatives with past participles (e.g., \emph{la maison construite en 2020}).}
-\item{f_28_present_participle_whiz}{Post-nominal reduced relatives with present participles (e.g., \emph{les enfants jouant dans le parc}).}
+\item{f_27_past_participle_whiz}{
+Post-nominal reduced relatives with past participles
+(e.g., \emph{la maison construite en 2020}).
+}
+\item{f_28_present_participle_whiz}{
+Post-nominal reduced relatives with present participles
+(e.g., \emph{les enfants jouant dans le parc}).
+}
 \item{f_29_that_subj}{Subject relatives introduced by \emph{qui} following a noun.}
 \item{f_30_that_obj}{Object relatives introduced by \emph{que}.}
 \item{f_31_wh_subj}{Subject relatives with \emph{lequel/laquelle/...}.}
 \item{f_32_wh_obj}{Object relatives with \emph{dont}, \emph{lequel/laquelle/...}.}
-\item{f_33_pied_piping}{Pied-piping relatives including the preposition (e.g., \emph{la maniere dans laquelle il procede}).}
-\item{f_34_sentence_relatives}{Sentence relatives such as \emph{ce qui} following a clause (e.g., \emph{Il a reussi, ce qui est remarquable}).}
+\item{f_33_pied_piping}{
+Pied-piping relatives including the preposition
+(e.g., \emph{la maniere dans laquelle il procede}).
+}
+\item{f_34_sentence_relatives}{
+Sentence relatives such as \emph{ce qui} following a clause
+(e.g., \emph{Il a reussi, ce qui est remarquable}).
+}
 \item{f_35_because}{Causal subordinates (e.g., \emph{parce que}, \emph{car}).}
 \item{f_36_though}{Concessive subordinates (e.g., \emph{bien que}, \emph{meme si}).}
 \item{f_37_if}{Conditional subordinates (e.g., \emph{si}, \emph{a moins que}).}
@@ -229,15 +253,44 @@ typical French cues for the feature. The repository file
 
 \describe{
 \item{f_66_neg_synthetic}{Synthetic negation with determiners or adjectives (e.g., \emph{aucun}, \emph{nul}).}
-\item{f_67_neg_analytic}{Analytic negation with \emph{ne} ... adverb (e.g., \emph{ne ... pas}, \emph{ne ... jamais}).}
+\item{f_67_neg_analytic}{
+Analytic negation with \emph{ne} ... adverb
+(e.g., \emph{ne ... pas}, \emph{ne ... jamais}).
+}
 }
 }
 }
 \examples{
-# Parse the example documents provided with the package
+# Basic usage with pre-parsed samples
 biber(udpipe_samples)
-
 biber(spacy_samples)
+
+# Get raw counts instead of normalized rates
+raw_features <- biber(udpipe_samples, normalize = FALSE)
+head(raw_features[, 1:5])
+
+# Use different type-token ratio measures
+features_ttr <- biber(udpipe_samples, measure = "TTR")
+features_mattr <- biber(udpipe_samples, measure = "MATTR")
+
+# Skip type-token ratio calculation
+features_no_ttr <- biber(udpipe_samples, measure = "none")
+
+\dontrun{
+# Parse your own French text with udpipe
+library(udpipe)
+udmodel <- udpipe_load_model("french-gsd-ud-2.5-191206.udpipe")
+my_text <- "Voici un exemple de texte en français."
+parsed <- udpipe_annotate(udmodel, my_text, parser = "default", tagger = "default")
+features <- biber(parsed)
+
+# Or with spacyr (requires Python and spaCy installation)
+library(spacyr)
+spacy_initialize(model = "fr_core_news_sm")
+parsed_sp <- spacy_parse("Voici un exemple de texte.", dependency = TRUE, tag = TRUE, pos = TRUE)
+features_sp <- biber(parsed_sp)
+spacy_finalize()
+}
 }
 \references{
 Biber, Douglas (1985). "Investigating macroscopic textual
