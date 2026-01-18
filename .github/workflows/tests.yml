@@ -25,6 +25,13 @@ jobs:
           extra-packages: any::testthat, any::devtools
           needs: check
 
+      - name: Download UDPipe French model for tests
+        run: |
+          Rscript -e "
+          if (!dir.exists('tests/models')) dir.create('tests/models', recursive = TRUE)
+          udpipe::udpipe_download_model(language = 'french-gsd', model_dir = 'tests/models')
+          "
+
       - name: Run Tests
         run: |
           devtools::test(stop_on_failure = TRUE, stop_on_warning = TRUE)

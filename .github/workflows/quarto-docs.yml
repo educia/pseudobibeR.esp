@@ -1,0 +1,73 @@
+name: Build and Deploy Quarto Docs
+
+on:
+  push:
+    tags:
+      - 'v*.*'  # Triggers on version tags like v1.0.0, v1.1.0, etc.
+    paths:
+      - '_quarto/**'
+      - '.github/workflows/quarto-docs.yml'
+  workflow_dispatch:
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libcurl4-openssl-dev libssl-dev libxml2-dev libfontconfig1-dev libharfbuzz-dev libfribidi-dev
+
+      - name: Install R package dependencies
+        uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: |
+            any::devtools
+            any::mda.biber
+            any::gt
+            any::gtsummary
+            any::broom
+            any::ggplot2
+            any::tidyr
+            any::dplyr
+            any::stringr
+            any::tibble
+            any::udpipe
+            any::knitr
+            any::rmarkdown
+          cache-version: 2
+
+      - name: Install pseudobibeR.fr package
+        run: |
+          devtools::install(upgrade = "never")
+        shell: Rscript {0}
+
+      - name: Set up Quarto
+        uses: quarto-dev/quarto-actions/setup@v2
+        with:
+          version: '1.4.557'
+
+      - name: Render Quarto site
+        working-directory: _quarto
+        run: quarto render
+
+      - name: Add .nojekyll file
+        run: touch _quarto/_site/.nojekyll
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: _quarto/_site
+          force_orphan: true
