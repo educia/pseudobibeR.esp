@@ -7,28 +7,14 @@
 [![Lifecycle: stable](https://img.shields.io/badge/lifecycle-stable-brightgreen.svg)](https://lifecycle.r-lib.org/articles/stages.html#stable)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Companion package to `pseudobibeR` that targets French-language parsing
-resources and feature extraction. The code base is currently under active
-development; see `docs/french_feature_mapping.md` in the repository root for
-an overview of planned feature coverage.
+Companion package to `pseudobibeR` that targets French-language parsing resources and feature extraction. The code base is currently under active development; see `docs/french_feature_mapping.md` in the repository root for an overview of planned feature coverage.
 
-The **pseudobibeR.fr** package calculates the lexicogrammatical and functional
-features described by Biber (1985) and widely used for text-type, register, and
-genre classification tasks. While it shares the same feature catalog as the
-English-focused `pseudobibeR`, this variant relies on French-specific
-morphology provided by spaCy or udpipe. The package extracts 67 different
-linguistic features from pre-parsed text data, enabling researchers to analyze
-linguistic variation across French text types and registers.
+The **pseudobibeR.fr** package calculates the lexicogrammatical and functional features described by Biber (1985) and widely used for text-type, register, and genre classification tasks. While it shares the same feature catalog as the English-focused `pseudobibeR`, this variant relies on French-specific morphology provided by spaCy or udpipe. The package extracts 67 different linguistic features from pre-parsed text data, enabling researchers to analyze linguistic variation across French text types and registers.
 
 ## Overview
 
-This package doesn't perform part-of-speech tagging itself. Instead, it
-leverages existing high-quality taggers from [udpipe](https://bnosac.github.io/udpipe/en/)
-or [spaCy](https://spacy.io/) (via [spacyr](https://spacyr.quanteda.io/index.html))
-to extract and aggregate linguistic patterns. For French we depend heavily on
-the UD morphological features emitted by those taggers, so be sure to request
-them during parsing. The accuracy of feature extraction depends on the quality
-of the underlying part-of-speech tagging and dependency parsing.
+This package doesn't perform part-of-speech tagging itself. Instead, it leverages existing high-quality taggers from [udpipe](https://bnosac.github.io/udpipe/en/) or [spaCy](https://spacy.io/) (via [spacyr](https://spacyr.quanteda.io/index.html)) to extract and aggregate linguistic patterns. For French we depend heavily on
+the UD morphological features emitted by those taggers, so be sure to request them during parsing. The accuracy of feature extraction depends on the quality of the underlying part-of-speech tagging and dependency parsing.
 
 **Note:** Texts with irregular spellings, non-normative punctuation, or domain-specific language may produce less reliable outputs unless the taggers are specifically tuned for those purposes.
 
@@ -59,13 +45,50 @@ devtools::install_github("browndw/pseudobibeR.fr")
 
 The package provides the main function `biber()`, which takes either udpipe- or spacyr-tagged text and produces a data frame of linguistic features for each document.
 
-### Using spaCy (via spacyr)
+### Recommended: Using udpipe
+
+We recommend **udpipe** for most users due to its simplicity (pure R implementation, no Python dependencies) and reliability. Our [cross-parser validation](https://browndw.github.io/pseudobibeR.fr/vignettes/parser-validation.html) demonstrates that udpipe and spaCy produce nearly identical multidimensional analysis results (R² = 0.715 vs 0.703).
+
+```r
+library(udpipe)
+library(pseudobibeR.fr)
+
+# Download and load French model (only needed once)
+model <- udpipe_download_model(language = "french-gsd")
+ud_model <- udpipe_load_model(model$file_model)
+
+# Prepare your text data
+text_data <- data.frame(
+  doc_id = c("doc_1", "doc_2"),
+  text = c(
+    "Le rapport a été rédigé par l'équipe de recherche.",
+    "Nous aimerions clarifier ce que vous avez proposé."
+  )
+)
+
+# Parse the text
+parsed_data <- udpipe_annotate(
+  ud_model,
+  x = text_data$text,
+  doc_id = text_data$doc_id,
+  tagger = "default",
+  parser = "default"
+)
+
+# Extract features
+features <- biber(parsed_data, measure = "none", normalize = FALSE)
+print(features)
+```
+
+### Alternative: Using spaCy (via spacyr)
+
+spaCy is a good choice if you're already using it in your workflow or need its additional NLP capabilities. Both parsers are scientifically valid—see our [validation vignette](https://browndw.github.io/pseudobibeR.fr/vignettes/parser-validation.html) for detailed comparison.
 
 ```r
 library(spacyr)
 library(pseudobibeR.fr)
 
-# Initialize spaCy with the small French model
+# Initialize spaCy with the French model
 spacy_initialize(model = "fr_core_news_sm")
 
 parsed <- spacy_parse(
@@ -87,35 +110,6 @@ print(features)
 spacy_finalize()
 ```
 
-### Using udpipe
-
-```r
-library(udpipe)
-library(pseudobibeR.fr)
-
-model <- udpipe_download_model(language = "french-gsd")
-ud_model <- udpipe_load_model(model$file_model)
-
-text_data <- data.frame(
-  doc_id = c("doc_1", "doc_2"),
-  text = c(
-    "Le rapport a été rédigé par l'équipe de recherche.",
-    "Nous aimerions clarifier ce que vous avez proposé."
-  )
-)
-
-parsed_data <- udpipe_annotate(
-  ud_model,
-  x = text_data$text,
-  doc_id = text_data$doc_id,
-  tagger = "default",
-  parser = "default"
-)
-
-features <- biber(parsed_data, measure = "none", normalize = FALSE)
-print(features)
-```
-
 ### Using sample data
 
 The package includes sample data to demonstrate functionality:
@@ -135,20 +129,10 @@ head(udpipe_features)
 ## Language-specific parsing notes
 
 - **spaCy pipelines** must request morphological features: call
-  `spacy_parse(..., morph = TRUE, additional_attributes = "morph")` or the
-  feature extractor will miss tense and pronoun cues. The helper automatically
-  collapses spaCy's Python morph objects to strings, so no extra processing is
-  required after parsing.
-- **spaCy models**: `fr_core_news_sm` works for quick starts, but richer models
-  such as `fr_core_news_md` improve dependency accuracy and downstream feature
-  counts.
-- **udpipe models**: the bundled French UD model (`french-gsd-ud-2.5-191206`) is
-  used in the package data. French UD corpora rarely populate `xpos`, so the
-  feature code falls back to `upos` and morphological features exposed in the
-  `feats` column.
-- **Mixed-language corpora**: if your texts contain large amounts of English,
-  consider running the original `pseudobibeR` side-by-side; the French heuristics
-  prioritize finite verb morphology and may under-count English forms.
+  `spacy_parse(..., morph = TRUE, additional_attributes = "morph")` or the feature extractor will miss tense and pronoun cues. The helper automatically collapses spaCy's Python morph objects to strings, so no extra processing is required after parsing.
+- **spaCy models**: `fr_core_news_sm` works for quick starts, but richer models such as `fr_core_news_md` improve dependency accuracy and downstream feature counts.
+- **udpipe models**: the bundled French UD model (`french-gsd-ud-2.5-191206`) is used in the package data. French UD corpora rarely populate `xpos`, so the feature code falls back to `upos` and morphological features exposed in the `feats` column.
+- **Mixed-language corpora**: if your texts contain large amounts of English, consider running the original `pseudobibeR` side-by-side; the French heuristics prioritize finite verb morphology and may under-count English forms.
 
 ## Key Features
 
@@ -203,22 +187,33 @@ features <- biber(parsed_data,
 
 ## Development and Testing
 
-pseudobibeR.fr uses [testthat](https://testthat.r-lib.org/) for comprehensive unit testing. To avoid distributing large language models with the package, tests use pre-saved parsing outputs.
+pseudobibeR.fr uses [testthat](https://testthat.r-lib.org/) for comprehensive unit testing. All source sentences, dictionaries, and reproducible build scripts now live under `data-raw/`, while the package ships only the compiled `.rda` data in `data/` and synthetic token fixtures that are declared directly inside the test files.
 
 ### Test Structure
 
-- `tests/testthat/text-samples/samples.tsv`: Sample sentences for testing
-- `tests/testthat/text-samples/parse-samples.R`: Script to generate parsed samples  
-- `tests/testthat/text-samples/*.rds`: Saved parsing outputs for tests
+- `tests/testthat/test-french-aux-pronouns.R`: Synthetic auxiliaries/pronominal fixtures for tense, negation, and clitic logic.
+- `tests/testthat/test-french-coordination.R`: Coordination, stranded prepositions, and split infinitive coverage.
+- `tests/testthat/test-french-edge-cases.R`: UDPipe-powered regression harness fed by `data-raw/french_edge_cases.yaml` (now including modal/clitic probes).
+- `tests/testthat/test-french-examples.R`: High-level spaCy vs. UDPipe comparisons, with known parser divergences logged informationally.
+- `tests/testthat/test-french-modals.R`: Locks in the periphrastic modal detection heuristics.
+- `tests/testthat/test-french-passives-clauses.R`: Focused coverage for passives, complementizer classification, and adverbial subordinators.
+- `tests/testthat/test-french-relatives-participles.R`: Reduced relatives plus infinitive/participle heuristics kept in sync with the dictionaries.
+- `tests/testthat/test-french-udpipe.R`: Reference parse to ensure the UDPipe connector stays stable on a real model.
+- `data-raw/build_french_samples.R`: Rebuilds parsed spaCy and UDPipe examples, writing refreshed `spacy_samples.rda` and `udpipe_samples.rda` into `data/`.
+- `data-raw/build_french_dictionaries.R`: Regenerates `dict.rda`, `word_lists.rda`, and `french_examples.rda` from the YAML specifications.
+- `data-raw/french_examples.yaml`, `data-raw/dict.yaml`, `data-raw/word_lists.yaml`: Authoritative lexical resources edited by collaborators.
+- `data-raw/french_edge_cases.yaml`: Curated constructions (support-verb phrases, tough-movement, pseudo-relatives, modal/clitic probes, etc.) that feed regression tests—run `Rscript data-raw/generate_edge_case_fixture.R` after edits.
 
-### Updating Test Data
+### Updating Packaged Data or Fixtures
 
-If you modify `samples.tsv`, regenerate the parsed samples:
+If you change any YAML files or raw corpora under `data-raw/`, rerun the relevant build scripts from the project root:
 
 ```r
-# Navigate to tests/testthat/text-samples/
-source("parse-samples.R")
+source("data-raw/build_french_dictionaries.R")
+source("data-raw/build_french_samples.R") # only if sample parses need updates
 ```
+
+Commit both the edited YAML and the regenerated `.rda` artifacts so CI and downstream users stay in sync.
 
 ### Running Tests
 
@@ -268,6 +263,16 @@ package data (`dict.rda`, `word_lists.rda`, `french_examples.rda`) via the
 - `data-raw/dict.yaml`: maps each feature ID (e.g. `f_45_conjuncts`) to a list
   of underscore-separated lemmas or multiword patterns. All entries are
   lower-cased automatically; comments beginning with `#` are allowed.
+- **Important:** the extractor converts dictionary entries to lemmas via
+  [`dictionary_to_lemmas()`](R/parse_functions.R) before matching. Only the final
+  token of any multiword string is retained (underscores become spaces first),
+  so list verbs in their infinitive forms unless a downstream heuristic looks at
+  full token sequences. Complex periphrastic cues (e.g., `risquer de`, `être
+  susceptible de`) are handled directly in `block_modals_fr()` and similar
+  helpers—there is no benefit to duplicating those words in `dict.yaml`.
+- When in doubt, prefer documenting phrase-level expectations in the relevant
+  test file or helper comments rather than expanding the dictionaries with
+  surface forms that the parser never sees.
 - `data-raw/word_lists.yaml`: collects helper lists (pronouns, suffixes,
   stop-lists, etc.). Write phrases normally (`"à peine"`); the build script
   will normalize spaces to underscores as needed.
@@ -296,11 +301,21 @@ This script lowercases, de-duplicates, and saves the refreshed `dict`,
 `source("data-raw/build_french_samples.R")` if you also adjust the example
 corpora.
 
+Fixture updates:
+
+- `Rscript data-raw/generate_edge_case_fixture.R` refreshes the UDPipe-backed
+  regression baseline consumed by `tests/testthat/test-french-edge-cases.R`.
+- `source("data-raw/build_french_samples.R")` updates `spacy_samples` and
+  `udpipe_samples`, which feed other integration tests.
+
 ### 3. Validate the changes
 
 - `devtools::test()` confirms the feature detectors still pass the test suite.
 - `devtools::document()` refreshes the help topics so the packaged
   documentation reflects any newly documented lexical cues.
+- When modifying the modal dictionaries or other lemma lists, remember that the
+  synthetic tests (`tests/testthat/test-french-modals.R`, etc.) enforce the
+  expected counts—add new fixtures alongside code changes to avoid regressions.
 
 Remember to commit the updated YAML files *and* the regenerated `.rda` assets
 in `data/` so the package bundle stays in sync.
