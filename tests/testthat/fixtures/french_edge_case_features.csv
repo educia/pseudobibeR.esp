@@ -25,7 +25,6 @@
 "aux_complex_clitic","aux_complex_clitic_02","f_42_adverbs",1
 "aux_complex_clitic","aux_complex_clitic_02","f_44_mean_word_length",3.8
 "aux_complex_clitic","aux_complex_clitic_02","f_51_demonstratives",1
-"aux_complex_clitic","aux_complex_clitic_02","f_59_contractions",1
 "aux_complex_clitic","aux_complex_clitic_02","f_63_split_auxiliary",1
 "aux_complex_clitic","aux_complex_clitic_03","f_02_perfect_aspect",1
 "aux_complex_clitic","aux_complex_clitic_03","f_06_first_person_pronouns",2
@@ -33,7 +32,6 @@
 "aux_complex_clitic","aux_complex_clitic_03","f_16_other_nouns",2
 "aux_complex_clitic","aux_complex_clitic_03","f_39_prepositions",1
 "aux_complex_clitic","aux_complex_clitic_03","f_44_mean_word_length",4.85714285714286
-"aux_complex_clitic","aux_complex_clitic_03","f_59_contractions",1
 "aux_negation","aux_negation_01","f_02_perfect_aspect",1
 "aux_negation","aux_negation_01","f_08_third_person_pronouns",1
 "aux_negation","aux_negation_01","f_16_other_nouns",2
@@ -41,14 +39,12 @@
 "aux_negation","aux_negation_01","f_42_adverbs",1
 "aux_negation","aux_negation_01","f_44_mean_word_length",3.16666666666667
 "aux_negation","aux_negation_01","f_51_demonstratives",1
-"aux_negation","aux_negation_01","f_59_contractions",1
 "aux_negation","aux_negation_01","f_63_split_auxiliary",1
 "aux_negation","aux_negation_02","f_02_perfect_aspect",1
 "aux_negation","aux_negation_02","f_08_third_person_pronouns",1
 "aux_negation","aux_negation_02","f_16_other_nouns",3
 "aux_negation","aux_negation_02","f_44_mean_word_length",2.75
 "aux_negation","aux_negation_02","f_51_demonstratives",1
-"aux_negation","aux_negation_02","f_59_contractions",1
 "aux_negation","aux_negation_02","f_63_split_auxiliary",1
 "aux_negation","aux_negation_03","f_02_perfect_aspect",1
 "aux_negation","aux_negation_03","f_06_first_person_pronouns",1
@@ -57,7 +53,6 @@
 "aux_negation","aux_negation_03","f_39_prepositions",1
 "aux_negation","aux_negation_03","f_42_adverbs",1
 "aux_negation","aux_negation_03","f_44_mean_word_length",3.2
-"aux_negation","aux_negation_03","f_59_contractions",1
 "aux_negation","aux_negation_03","f_63_split_auxiliary",1
 "aux_negation","aux_negation_03","f_67_neg_analytic",1
 "aux_question_form","aux_question_form_01","f_03_present_tense",1
@@ -77,7 +72,6 @@
 "aux_question_form","aux_question_form_03","f_16_other_nouns",1
 "aux_question_form","aux_question_form_03","f_37_if",1
 "aux_question_form","aux_question_form_03","f_44_mean_word_length",3.4
-"aux_question_form","aux_question_form_03","f_59_contractions",1
 "aux_question_form","aux_question_form_03","f_60_that_deletion",1
 "aux_reflexive_clitics","aux_reflexive_clitics_01","f_02_perfect_aspect",1
 "aux_reflexive_clitics","aux_reflexive_clitics_01","f_08_third_person_pronouns",1
@@ -85,13 +79,11 @@
 "aux_reflexive_clitics","aux_reflexive_clitics_01","f_17_agentless_passives",1
 "aux_reflexive_clitics","aux_reflexive_clitics_01","f_44_mean_word_length",2.5
 "aux_reflexive_clitics","aux_reflexive_clitics_01","f_51_demonstratives",1
-"aux_reflexive_clitics","aux_reflexive_clitics_01","f_59_contractions",1
 "aux_reflexive_clitics","aux_reflexive_clitics_02","f_02_perfect_aspect",1
 "aux_reflexive_clitics","aux_reflexive_clitics_02","f_08_third_person_pronouns",1
 "aux_reflexive_clitics","aux_reflexive_clitics_02","f_16_other_nouns",2
 "aux_reflexive_clitics","aux_reflexive_clitics_02","f_17_agentless_passives",1
 "aux_reflexive_clitics","aux_reflexive_clitics_02","f_44_mean_word_length",3.5
-"aux_reflexive_clitics","aux_reflexive_clitics_02","f_59_contractions",1
 "aux_reflexive_clitics","aux_reflexive_clitics_03","f_02_perfect_aspect",1
 "aux_reflexive_clitics","aux_reflexive_clitics_03","f_05_time_adverbials",1
 "aux_reflexive_clitics","aux_reflexive_clitics_03","f_08_third_person_pronouns",1
@@ -100,7 +92,6 @@
 "aux_reflexive_clitics","aux_reflexive_clitics_03","f_42_adverbs",1
 "aux_reflexive_clitics","aux_reflexive_clitics_03","f_44_mean_word_length",3
 "aux_reflexive_clitics","aux_reflexive_clitics_03","f_55_verb_public",1
-"aux_reflexive_clitics","aux_reflexive_clitics_03","f_59_contractions",1
 "aux_tense_variation","aux_tense_variation_01","f_02_perfect_aspect",1
 "aux_tense_variation","aux_tense_variation_01","f_03_present_tense",1
 "aux_tense_variation","aux_tense_variation_01","f_08_third_person_pronouns",2
@@ -118,7 +109,6 @@
 "aux_tense_variation","aux_tense_variation_02","f_17_agentless_passives",1
 "aux_tense_variation","aux_tense_variation_02","f_44_mean_word_length",5.8
 "aux_tense_variation","aux_tense_variation_02","f_55_verb_public",1
-"aux_tense_variation","aux_tense_variation_02","f_59_contractions",1
 "aux_tense_variation","aux_tense_variation_03","f_02_perfect_aspect",2
 "aux_tense_variation","aux_tense_variation_03","f_06_first_person_pronouns",1
 "aux_tense_variation","aux_tense_variation_03","f_08_third_person_pronouns",1
@@ -137,14 +127,12 @@
 "clefts_focus","clefts_focus_01","f_19_be_main_verb",1
 "clefts_focus","clefts_focus_01","f_42_adverbs",1
 "clefts_focus","clefts_focus_01","f_44_mean_word_length",2.6
-"clefts_focus","clefts_focus_01","f_59_contractions",2
 "clefts_focus","clefts_focus_02","f_02_perfect_aspect",1
 "clefts_focus","clefts_focus_02","f_08_third_person_pronouns",2
 "clefts_focus","clefts_focus_02","f_16_other_nouns",3
 "clefts_focus","clefts_focus_02","f_19_be_main_verb",1
 "clefts_focus","clefts_focus_02","f_44_mean_word_length",3.33333333333333
 "clefts_focus","clefts_focus_02","f_57_verb_suasive",1
-"clefts_focus","clefts_focus_02","f_59_contractions",2
 "clefts_focus","clefts_focus_03","f_16_other_nouns",2
 "clefts_focus","clefts_focus_03","f_19_be_main_verb",2
 "clefts_focus","clefts_focus_03","f_23_wh_clause",1
@@ -153,7 +141,6 @@
 "clefts_focus","clefts_focus_03","f_38_other_adv_sub",1
 "clefts_focus","clefts_focus_03","f_41_adj_pred",1
 "clefts_focus","clefts_focus_03","f_44_mean_word_length",5
-"clefts_focus","clefts_focus_03","f_59_contractions",1
 "clefts_focus","clefts_focus_03","f_60_that_deletion",1
 "combined_svc_pseudo_relative","combined_svc_pseudo_relative_01","f_01_past_tense",1
 "combined_svc_pseudo_relative","combined_svc_pseudo_relative_01","f_02_perfect_aspect",1
@@ -164,7 +151,6 @@
 "combined_svc_pseudo_relative","combined_svc_pseudo_relative_01","f_42_adverbs",2
 "combined_svc_pseudo_relative","combined_svc_pseudo_relative_01","f_44_mean_word_length",4.77777777777778
 "combined_svc_pseudo_relative","combined_svc_pseudo_relative_01","f_57_verb_suasive",1
-"combined_svc_pseudo_relative","combined_svc_pseudo_relative_01","f_59_contractions",1
 "combined_svc_pseudo_relative","combined_svc_pseudo_relative_01","f_67_neg_analytic",1
 "combined_svc_pseudo_relative","combined_svc_pseudo_relative_02","f_02_perfect_aspect",1
 "combined_svc_pseudo_relative","combined_svc_pseudo_relative_02","f_03_present_tense",1
@@ -175,7 +161,6 @@
 "combined_svc_pseudo_relative","combined_svc_pseudo_relative_02","f_42_adverbs",1
 "combined_svc_pseudo_relative","combined_svc_pseudo_relative_02","f_44_mean_word_length",4.57142857142857
 "combined_svc_pseudo_relative","combined_svc_pseudo_relative_02","f_56_verb_private",1
-"combined_svc_pseudo_relative","combined_svc_pseudo_relative_02","f_59_contractions",1
 "combined_svc_pseudo_relative","combined_svc_pseudo_relative_03","f_02_perfect_aspect",1
 "combined_svc_pseudo_relative","combined_svc_pseudo_relative_03","f_03_present_tense",1
 "combined_svc_pseudo_relative","combined_svc_pseudo_relative_03","f_08_third_person_pronouns",1
@@ -211,7 +196,6 @@
 "combined_svc_tough","combined_svc_tough_03","f_41_adj_pred",1
 "combined_svc_tough","combined_svc_tough_03","f_44_mean_word_length",5.42857142857143
 "combined_svc_tough","combined_svc_tough_03","f_51_demonstratives",1
-"combined_svc_tough","combined_svc_tough_03","f_59_contractions",1
 "combined_svc_tough","combined_svc_tough_03","f_60_that_deletion",1
 "impersonal_constructions","impersonal_constructions_01","f_03_present_tense",1
 "impersonal_constructions","impersonal_constructions_01","f_08_third_person_pronouns",2
@@ -263,7 +247,6 @@
 "modal_clitic_sequences","modal_clitic_sequences_02","f_42_adverbs",2
 "modal_clitic_sequences","modal_clitic_sequences_02","f_44_mean_word_length",5.5
 "modal_clitic_sequences","modal_clitic_sequences_02","f_53_modal_necessity",1
-"modal_clitic_sequences","modal_clitic_sequences_02","f_59_contractions",1
 "modal_clitic_sequences","modal_clitic_sequences_02","f_60_that_deletion",1
 "modal_clitic_sequences","modal_clitic_sequences_03","f_03_present_tense",1
 "modal_clitic_sequences","modal_clitic_sequences_03","f_06_first_person_pronouns",1
@@ -293,13 +276,11 @@
 "modal_negated_clitics","modal_negated_clitics_02","f_42_adverbs",1
 "modal_negated_clitics","modal_negated_clitics_02","f_44_mean_word_length",4
 "modal_negated_clitics","modal_negated_clitics_02","f_52_modal_possibility",1
-"modal_negated_clitics","modal_negated_clitics_02","f_59_contractions",1
 "modal_negated_clitics","modal_negated_clitics_02","f_67_neg_analytic",1
 "modal_negated_clitics","modal_negated_clitics_03","f_06_first_person_pronouns",1
 "modal_negated_clitics","modal_negated_clitics_03","f_16_other_nouns",2
 "modal_negated_clitics","modal_negated_clitics_03","f_24_infinitives",1
 "modal_negated_clitics","modal_negated_clitics_03","f_44_mean_word_length",4.2
-"modal_negated_clitics","modal_negated_clitics_03","f_59_contractions",2
 "modal_periphrastic_necessity","modal_periphrastic_necessity_01","f_02_perfect_aspect",1
 "modal_periphrastic_necessity","modal_periphrastic_necessity_01","f_05_time_adverbials",1
 "modal_periphrastic_necessity","modal_periphrastic_necessity_01","f_08_third_person_pronouns",1
@@ -367,7 +348,6 @@
 "modal_predictive_future","modal_predictive_future_01","f_24_infinitives",1
 "modal_predictive_future","modal_predictive_future_01","f_42_adverbs",1
 "modal_predictive_future","modal_predictive_future_01","f_44_mean_word_length",5.4
-"modal_predictive_future","modal_predictive_future_01","f_59_contractions",1
 "modal_predictive_future","modal_predictive_future_01","f_60_that_deletion",1
 "modal_predictive_future","modal_predictive_future_02","f_08_third_person_pronouns",1
 "modal_predictive_future","modal_predictive_future_02","f_09_pronoun_it",1
@@ -414,7 +394,6 @@
 "pronoun_interference","pronoun_interference_01","f_14_nominalizations",1
 "pronoun_interference","pronoun_interference_01","f_16_other_nouns",2
 "pronoun_interference","pronoun_interference_01","f_44_mean_word_length",4.44444444444444
-"pronoun_interference","pronoun_interference_01","f_59_contractions",2
 "pronoun_interference","pronoun_interference_02","f_01_past_tense",1
 "pronoun_interference","pronoun_interference_02","f_02_perfect_aspect",1
 "pronoun_interference","pronoun_interference_02","f_08_third_person_pronouns",1
@@ -422,7 +401,6 @@
 "pronoun_interference","pronoun_interference_02","f_23_wh_clause",1
 "pronoun_interference","pronoun_interference_02","f_44_mean_word_length",3.5
 "pronoun_interference","pronoun_interference_02","f_56_verb_private",1
-"pronoun_interference","pronoun_interference_02","f_59_contractions",2
 "pronoun_interference","pronoun_interference_03","f_01_past_tense",1
 "pronoun_interference","pronoun_interference_03","f_02_perfect_aspect",1
 "pronoun_interference","pronoun_interference_03","f_06_first_person_pronouns",1
@@ -439,7 +417,6 @@
 "pseudo_relative_with_subject_gap","pseudo_relative_with_subject_gap_01","f_23_wh_clause",1
 "pseudo_relative_with_subject_gap","pseudo_relative_with_subject_gap_01","f_44_mean_word_length",3.75
 "pseudo_relative_with_subject_gap","pseudo_relative_with_subject_gap_01","f_56_verb_private",1
-"pseudo_relative_with_subject_gap","pseudo_relative_with_subject_gap_01","f_59_contractions",1
 "pseudo_relative_with_subject_gap","pseudo_relative_with_subject_gap_01","f_60_that_deletion",1
 "pseudo_relative_with_subject_gap","pseudo_relative_with_subject_gap_02","f_01_past_tense",1
 "pseudo_relative_with_subject_gap","pseudo_relative_with_subject_gap_02","f_02_perfect_aspect",1
@@ -447,7 +424,6 @@
 "pseudo_relative_with_subject_gap","pseudo_relative_with_subject_gap_02","f_16_other_nouns",2
 "pseudo_relative_with_subject_gap","pseudo_relative_with_subject_gap_02","f_23_wh_clause",1
 "pseudo_relative_with_subject_gap","pseudo_relative_with_subject_gap_02","f_44_mean_word_length",4.4
-"pseudo_relative_with_subject_gap","pseudo_relative_with_subject_gap_02","f_59_contractions",1
 "pseudo_relative_with_subject_gap","pseudo_relative_with_subject_gap_03","f_01_past_tense",1
 "pseudo_relative_with_subject_gap","pseudo_relative_with_subject_gap_03","f_02_perfect_aspect",1
 "pseudo_relative_with_subject_gap","pseudo_relative_with_subject_gap_03","f_08_third_person_pronouns",2
@@ -536,7 +512,6 @@
 "svc_passive_postnominal","svc_passive_postnominal_03","f_17_agentless_passives",1
 "svc_passive_postnominal","svc_passive_postnominal_03","f_39_prepositions",1
 "svc_passive_postnominal","svc_passive_postnominal_03","f_44_mean_word_length",3.33333333333333
-"svc_passive_postnominal","svc_passive_postnominal_03","f_59_contractions",1
 "svc_relative_clauses","svc_relative_clauses_01","f_14_nominalizations",2
 "svc_relative_clauses","svc_relative_clauses_01","f_16_other_nouns",2
 "svc_relative_clauses","svc_relative_clauses_01","f_19_be_main_verb",1
@@ -545,14 +520,12 @@
 "svc_relative_clauses","svc_relative_clauses_01","f_41_adj_pred",1
 "svc_relative_clauses","svc_relative_clauses_01","f_44_mean_word_length",6
 "svc_relative_clauses","svc_relative_clauses_01","f_56_verb_private",2
-"svc_relative_clauses","svc_relative_clauses_01","f_59_contractions",2
 "svc_relative_clauses","svc_relative_clauses_01","f_60_that_deletion",2
 "svc_relative_clauses","svc_relative_clauses_02","f_02_perfect_aspect",2
 "svc_relative_clauses","svc_relative_clauses_02","f_11_indefinite_pronouns",1
 "svc_relative_clauses","svc_relative_clauses_02","f_14_nominalizations",1
 "svc_relative_clauses","svc_relative_clauses_02","f_16_other_nouns",3
 "svc_relative_clauses","svc_relative_clauses_02","f_44_mean_word_length",3.22222222222222
-"svc_relative_clauses","svc_relative_clauses_02","f_59_contractions",1
 "svc_relative_clauses","svc_relative_clauses_02","f_60_that_deletion",1
 "svc_relative_clauses","svc_relative_clauses_03","f_02_perfect_aspect",1
 "svc_relative_clauses","svc_relative_clauses_03","f_14_nominalizations",1
@@ -561,7 +534,6 @@
 "svc_relative_clauses","svc_relative_clauses_03","f_39_prepositions",1
 "svc_relative_clauses","svc_relative_clauses_03","f_41_adj_pred",1
 "svc_relative_clauses","svc_relative_clauses_03","f_44_mean_word_length",5.57142857142857
-"svc_relative_clauses","svc_relative_clauses_03","f_59_contractions",2
 "svc_relative_clauses","svc_relative_clauses_03","f_60_that_deletion",1
 "tough_de_impersonal","tough_de_impersonal_01","f_08_third_person_pronouns",1
 "tough_de_impersonal","tough_de_impersonal_01","f_09_pronoun_it",1
@@ -585,7 +557,6 @@
 "tough_de_impersonal_complementizer_que","tough_de_impersonal_complementizer_que_01","f_42_adverbs",2
 "tough_de_impersonal_complementizer_que","tough_de_impersonal_complementizer_que_01","f_44_mean_word_length",4.23076923076923
 "tough_de_impersonal_complementizer_que","tough_de_impersonal_complementizer_que_01","f_52_modal_possibility",1
-"tough_de_impersonal_complementizer_que","tough_de_impersonal_complementizer_que_01","f_59_contractions",3
 "tough_de_impersonal_complementizer_que","tough_de_impersonal_complementizer_que_02","f_02_perfect_aspect",1
 "tough_de_impersonal_complementizer_que","tough_de_impersonal_complementizer_que_02","f_05_time_adverbials",1
 "tough_de_impersonal_complementizer_que","tough_de_impersonal_complementizer_que_02","f_08_third_person_pronouns",1
@@ -609,7 +580,6 @@
 "tough_de_impersonal_complementizer_que","tough_de_impersonal_complementizer_que_03","f_41_adj_pred",1
 "tough_de_impersonal_complementizer_que","tough_de_impersonal_complementizer_que_03","f_42_adverbs",2
 "tough_de_impersonal_complementizer_que","tough_de_impersonal_complementizer_que_03","f_44_mean_word_length",4
-"tough_de_impersonal_complementizer_que","tough_de_impersonal_complementizer_que_03","f_59_contractions",3
 "tough_de_impersonal_complementizer_que","tough_de_impersonal_complementizer_que_03","f_60_that_deletion",2
 "tough_with_experiencer_shift","tough_with_experiencer_shift_01","f_16_other_nouns",2
 "tough_with_experiencer_shift","tough_with_experiencer_shift_01","f_19_be_main_verb",1
