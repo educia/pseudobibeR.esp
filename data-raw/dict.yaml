@@ -1,327 +1,320 @@
-# French linguistic feature dictionaries for Biber (1985) framework
+# Spanish linguistic feature dictionaries for Biber (1985) framework
 #
 # TOKENIZATION AND PATTERN FORMATTING:
-# French elisions (d', l', n', t', m', s') are handled specially:
-# 1. udpipe splits elisions: "d'ici" → ["d'", "ici"]
-# 2. Text reconstruction adds spaces: paste() → "d' ici"
-# 3. quanteda re-tokenizes and splits apostrophes: "d' ici" → ["d", "'", "ici"]
-# 4. Patterns use underscores for token boundaries:
-#    - Multiword: "loin d'ici" → "loin_d_'_ici" (matches ["loin", "d", "'", "ici"])
-#    - Single token: "t'" → "t_'" (matches ["t", "'"])
 #
-# KNOWN LIMITATIONS:
-# - Some items appear in multiple categories and may be counted twice:
-#   * donc: f_45_conjuncts AND f_50_discourse_particles
-#   * ensuite: f_05_time_adverbials AND f_45_conjuncts
-#   * vraiment: f_48_amplifiers AND f_49_emphatics
-#   * devoir: f_53_modal_necessity AND f_54_modal_predictive
-#   * risquer: f_52_modal_possibility AND f_54_modal_predictive
-# - Future enhancement: contextual disambiguation based on syntactic position
+# Patterns use underscores for token boundaries, following pseudobibeR conventions:
+#   - Multiword items: "por ejemplo" → "por_ejemplo"
+#   - Clitics or multi-token sequences: "tener que" → "tener_que"
+#   - The matching is done over lemmas or surface forms depending on the
+#     feature; keep entries in lower case and in infinitive form for verbs
+#     unless a downstream heuristic expects otherwise.
 #
+# This file defines only features whose detection genuinely relies on
+# lexical lists (adverbials, pronouns, discourse markers, modals and
+# specialized verb classes). Other Biber features for Spanish are
+# implemented via UD POS/morphology and dependency patterns in code.
+#
+
 f_04_place_adverbials:
-  - à_bord
-  - à_côté
-  - à_l_'_est
-  - à_l_'_étage
-  - à_l_'_étranger
-  - à_l_'_extérieur
-  - à_l_'_intérieur
-  - à_l_'_ouest
-  - à_la_mer
-  - à_proximité
-  - à_terre
-  - à_travers
-  - ailleurs
-  - au_loin
-  - au_nord
-  - au_sud
-  - au-dessous
-  - au-dessus
-  - autour
-  - dans_les_environs
-  - dans_les_terres
-  - dehors
-  - derrière
-  - descendant
-  - devant
-  - en_amont
-  - en_aval
-  - en_bas
-  - en_dessous
-  - en_montée
-  - ici
-  - là
-  - localement
-  - loin
-  - loin_d_'_ici  # Quanteda tokenizes as ["loin", "d", "'", "ici"] (4 tokens)
-  - nulle_part
-  - par_voie_de_terre
-  - partout
-  - sous_le_pied
-  - sous_terre
+  - aqui
+  - aquí
+  - ahi
+  - ahí
+  - alli
+  - allí
+  - aca
+  - acá
+  - afuera
+  - dentro
+  - adentro
+  - encima
+  - debajo
+  - arriba
+  - abajo
+  - cerca
+  - lejos
+  - alrededor
+  - alrededor_de
+  - enfrente
+  - en_frente
+  - en_frente_de
+  - al_lado
+  - al_lado_de
+  - en_casa
+  - en_el_campo
+  - en_la_ciudad
+  - en_el_extranjero
+  - por_aqui
+  - por_aquí
+  - por_ahi
+  - por_ahí
+  - por_alli
+  - por_allí
+  - en_ninguna_parte
+  - en_todas_partes
+
 f_05_time_adverbials:
-  - à_l_'_origine
-  - actuellement
-  - aujourd'hui
-  - autrefois
-  - bientôt
-  - ce_soir
-  - de_nos_jours
-  - demain
-  - désormais
-  - encore_une_fois
-  - enfin
-  - ensuite # Total count here; conjunct uses subtracted via count_ensuite_conjunct_fr()
-  - éventuellement
-  - hier
-  - immédiatement
-  - initialement
-  - instantanément
-  - jamais
-  - maintenant
-  - momentanément
-  - peu_de_temps_après
-  - plus_tard
-  - plus_tôt
-  - précédemment
-  - rarement
-  - récemment
-  - simultanément
-  - souvent
-  - tardivement
-  - tôt
-  - toujours
-  - ultérieurement
-  - une_fois
+  - ayer
+  - hoy
+  - mañana
+  - anoche
+  - anteayer
+  - pronto
+  - luego
+  - despues
+  - después
+  - mas_tarde
+  - más_tarde
+  - mas_temprano
+  - más_temprano
+  - enseguida
+  - inmediatamente
+  - ahora
+  - actualmente
+  - de_nos_dias
+  - de_vez_en_cuando
+  - a_veces
+  - a_menudo
+  - con_frecuencia
+  - raramente
+  - casi_nunca
+  - siempre
+  - nunca
+  - jamas
+  - jamás
+  - todavia
+  - todavía
+  - ya
+  - recien
+  - recién
+  - recientemente
+
 f_06_first_person_pronouns:
-  - je
-  - m_'
+  - yo
+  - nosotros
+  - nosotras
   - me
-  - moi
-  - moi-même
-  - notre
-  - nous
-  - nous-mêmes
+  - nos
+  - mi
+  - mis
+  - mio
+  - mío
+  - mia
+  - mía
+  - nuestros
+  - nuestras
+
 f_07_second_person_pronouns:
-  - t'
-  - ta
-  - tes
-  - toi
-  - ton
   - tu
+  - tú
   - vos
-  - votre
-  - vous
-  - vous-même
+  - usted
+  - ustedes
+  - vosotros
+  - vosotras
+  - te
+  - os
+  - su
+  - sus
+
 f_08_third_person_pronouns:
-  - elle
-  - elles
-  - eux
-  - eux-mêmes
-  - il
-  - ils
-  - les_siens
-  - leur
-  - leurs
-  - lui
+  - el
+  - él
+  - ella
+  - ellos
+  - ellas
+  - lo
+  - la
+  - los
+  - las
+  - le
+  - les
+  - ello
+
 f_11_indefinite_pronoun:
-  - autrui
-  - chacun
-  - chose
-  - n_'_importe_qui
-  - n_'_importe_quoi
-  - personne
-  - quelqu'un
-  - quelque
-  - quelquechose
-  - quiconque
-  - rien
-  - tout
-  - tout_le_monde
+  - alguien
+  - nadie
+  - algo
+  - nada
+  - alguno
+  - alguna
+  - algunos
+  - algunas
+  - cualquiera
+  - cualesquiera
+  - varios
+  - varias
+  - muchos
+  - muchas
+  - pocos
+  - pocas
+  - todo
+  - toda
+  - todos
+  - todas
+
 f_45_conjuncts:
-  - à_savoir
-  - ainsi
-  - alternativement
-  - cependant
-  - de_manière_similaire
-  - de_même
-  - de_plus
-  - donc # Total count here; discourse uses subtracted via count_donc_discourse_fr()
-  # ensuite - counted in f_05, conjunct uses added via count_ensuite_conjunct_fr()
-  - inversement
-  - néanmoins
-  - nonobstant
-  - par_ailleurs
-  - par_conséquent
-  - par_exemple
-  - puis
-  - toutefois
+  - sin_embargo
+  - no_obstante
+  - ademas
+  - además
+  - por_otro_lado
+  - por_otra_parte
+  - en_cambio
+  - por_el_contrario
+  - asimismo
+  - asi_mismo
+  - asi_que
+  - asi_pues
+  - por_consiguiente
+  - por_lo_tanto
+  - por_ello
+  - por_ejemplo
+  - en_resumen
+  - en_suma
+
 f_46_downtoners:
-  - à_demi
-  - à_peine
-  - guère
-  - légèrement
-  - modérément
-  - partiellement
-  - pratiquement
-  - presque
-  - seulement
-  - simplement
-  - un_peu
+  - apenas
+  - casi
+  - ligeramente
+  - algo
+  - un_poco
+  - mas_o_menos
+  - más_o_menos
+  - solamente
+  - solo
+  - sólo
+  - simplemente
+
 f_47_hedges:
-  - à_peu_de_choses_près
-  - à_peu_près
-  - du_genre
-  - en_quelque_sorte
-  - environ
-  - peut-être
-  - plus_ou_moins
-  - quelque_chose_comme
-  - quelque_peu
+  - aproximadamente
+  - alrededor_de
+  - en_cierto_modo
+  - en_cierta_medida
+  - en_parte
+  - de_alguna_manera
+  - de_algún_modo
+  - casi
+  - practicamente
+  - prácticamente
+  - tal_vez
+  - quizas
+  - quizás
+
 f_48_amplifiers:
-  - absolument
-  - complètement
-  - de_ouf
-  - énormément
-  - fort
-  - fortement
-  - grave
-  - hyper
-  - intensément
-  - parfaitement
-  - super
-  - totalement
-  - tout_à_fait
-  - très
-  - ultra
-  # vraiment - counted in f_49, amplifier uses added via count_vraiment_amplifier_fr()
+  - muy
+  - realmente
+  - sumamente
+  - extremadamente
+  - totalmente
+  - completamente
+  - absolutamente
+  - en_gran_medida
+  - en_extremo
+
 f_49_emphatics:
-  - beaucoup
-  - bien_sûr
-  - certes
-  - effectivement
-  - évidemment
-  - sûr
-  - tellement
-  - tout_à
-  - vraiment # Total count here; amplifier uses subtracted via count_vraiment_amplifier_fr()
+  - de_verdad
+  - desde_luego
+  - por_supuesto
+  - claro_que_si
+  - claro_que_sí
+  - en_absoluto
+  - sin_duda
+  - por_supuesto_que
+  - si_que
+  - sí_que
+
 f_50_discourse_particles:
-  - alors
-  - bien
-  - bref
-  - de_toute_façon
-  # donc - counted in f_45, discourse uses added via count_donc_discourse_fr()
-  - du_coup
-  - eh_bien
-  - en_fait
-  - euh
-  - ha
-  - hé
-  - hein
-  - ho
-  - ô
-  - voilà
+  - pues
+  - bueno
+  - hombre
+  - mira
+  - oye
+  - vaya
+  - en_fin
+  - entonces
+  - vale
+
 f_51_demonstratives:
-  - ça
-  - ce
-  - ceci
-  - cela
-  - celle
-  - celles
-  - celui
-  - ces
-  - cette
-  - ceux
-# Modals rely on lemma matching via dictionary_to_lemmas()/block_modals_fr(),
-# so keep entries in infinitive form even if downstream logic also inspects context.
+  - este
+  - esta
+  - estos
+  - estas
+  - ese
+  - esa
+  - esos
+  - esas
+  - aquel
+  - aquella
+  - aquellos
+  - aquellas
+
+# Modals rely on lemma matching via dictionary_to_lemmas()/block_modals_es(),
+# so keep entries in infinitive form even if downstream logic also inspects
+# context.
+
 f_52_modal_possibility:
-  - pouvoir
-  # sembler assigned to f_58_verb_seem
+  - poder
+
 f_53_modal_necessity:
-  - devoir  # Primary meaning; predictive uses ("il doit être 5h") assigned here
-  - falloir
-f_54_modal_predictive:
-  # Pattern-based detection in block_modals_fr() - no dictionary entries needed
-  # Captures: aller + inf, sera/serait, risquer de + inf, être susceptible de + inf
-  # Adding lemmas here would cause double-counting with pattern logic
+  - deber
+  - tener_que
+  - haber_de
+  - haber_que
+
+# Predictive modals (f_54) se detectarán mediante patrones (ir a + inf,
+# futuro simple, etc.) en el código, sin listas aquí para evitar doble conteo.
+
 f_55_verb_public:
-  # accepter → f_57_verb_suasive (core meaning: compliance)
-  - affirmer
-  - annoncer
-  - commenter
-  - déclarer
-  - écrire
-  - expliquer
-  - informer
-  - insister  # Core meaning: asserting publicly
-  - jurer
-  - mentionner
-  - nier
-  - parler
-  - proclamer
-  - promettre
-  - protester
-  - raconter
-  - réclamer
-  - reconnaître  # Core meaning: acknowledging publicly
-  - remarquer
-  - répondre
-  - se_plaindre
-  - signaler
-  # suggérer → f_57_verb_suasive (core meaning: recommending)
-f_56_verb_private: # = verbs of mental processes / internal states
-  - anticiper
-  - apprendre
-  - assumer
-  - comprendre
-  - conclure
-  - connaître
-  - constater
-  - craindre
-  - croire
-  - décider
-  - découvrir
-  - déterminer
-  - deviner
-  - douter
-  - espérer
-  - estimer
-  - imaginer
-  - oublier
-  - penser
-  - pressentir
-  - prévoir
-  - rappeler
-  - réaliser
-  # reconnaître → f_55_verb_public (core meaning: public acknowledgment)
-  - sentir # je sens que...
-  - supposer
-  - trouver # je trouve que...
+  - afirmar
+  - anunciar
+  - declarar
+  - explicar
+  - informar
+  - mencionar
+  - proclamar
+  - prometer
+  - protestar
+  - relatar
+  - contar
+  - señalar
+  - reconocer
+
+f_56_verb_private:
+  - asumir
+  - creer
+  - conocer
+  - comprender
+  - considerar
+  - comprender
+  - darse_cuenta
+  - dudar
+  - entender
+  - esperar
+  - imaginar
+  - notar
+  - olvidar
+  - pensar
+  - recordar
+  - saber
+  - suponer
+
 f_57_verb_suasive:
-  - accepter  # Core meaning: agreeing/complying
-  - accorder
-  - commander
-  - conseiller
-  - convaincre
-  # décider → f_56_verb_private (core meaning: mental decision-making)
-  - demander
-  - donner_des_instructions
-  - encourager
-  - exiger
-  # insister → f_55_verb_public (core meaning: public assertion)
-  - inviter
-  - mendier
-  - nantir
-  - ordonner
-  - organiser
-  - persuader
-  - prononcer
-  - proposer
-  - recommander
-  - stipuler
-  - suggérer  # Core meaning: advising/recommending
+  - aconsejar
+  - advertir
+  - animar
+  - convencer
+  - demandar
+  - exigir
+  - mandar
+  - ordenar
+  - pedir
+  - proponer
+  - recomendar
+  - rogar
+  - sugerir
+
 f_58_verb_seem:
-  - apparaître
-  - avoir_l_'_air
-  - paraître
-  - sembler
+  - parecer
+  - resultar
+  - aparentar
