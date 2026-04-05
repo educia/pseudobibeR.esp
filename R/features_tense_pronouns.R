@@ -1,18 +1,23 @@
-# Tense, aspect, and pronoun features
+# Tense, aspect, and pronoun features for Spanish
 
-#' Extract tense and auxiliary-related features
+#' Extract tense and auxiliary-related features (Spanish)
+#'
+#' This block currently mirrors the French logic but is intended to be
+#' used with Spanish UD parses and Spanish lexical resources defined in
+#' data-raw/dict.yaml and data-raw/word_lists.yaml.
 #'
 #' @param tokens Annotated token data frame
 #' @param doc_ids Document IDs
 #' @param head_lookup Head token lookup table
-#' @param proverb_pronouns Vector of proverb pronoun lemmas
+#' @param proverb_pronouns Vector of proverb pronoun lemmas (see
+#'   word_lists$proverb_object_pronouns)
 #' @return Data frame with f_02_perfect_aspect and f_12_proverb_do
 #' @keywords internal
-block_aux_tense_fr <- function(tokens, doc_ids, head_lookup, proverb_pronouns) {
+block_aux_tense_es <- function(tokens, doc_ids, head_lookup, proverb_pronouns) {
   perfect_candidates <- tokens %>%
     dplyr::filter(
       .data$pos %in% c("AUX", "VERB"),
-      .data$lemma %in% c("avoir", "\u00eatre"),
+      .data$lemma %in% c("haber", "estar"),
       stringr::str_detect(dplyr::coalesce(.data$dep_rel, ""), "^(aux|cop)"),
       !is.na(.data$head_token_id_int)
     ) %>%
@@ -33,13 +38,6 @@ block_aux_tense_fr <- function(tokens, doc_ids, head_lookup, proverb_pronouns) {
               "VerbForm=Part"
             ) &
             dplyr::coalesce(.data$head_morph_voice, "") != "Pass"
-        ) |
-        (
-          .data$head_pos == "NOUN" &
-            stringr::str_detect(
-              stringr::str_to_lower(dplyr::coalesce(.data$head_token, "")),
-              "(\u00e9|\u00e9e|\u00e9s|\u00e9es|i|ie|is|ies|u|ue|us|ues)$"
-            )
         )
     ) %>%
     dplyr::filter(.data$head_is_participle) %>%
@@ -67,7 +65,7 @@ block_aux_tense_fr <- function(tokens, doc_ids, head_lookup, proverb_pronouns) {
 
   proverb_candidates <- tokens %>%
     dplyr::filter(
-      .data$lemma == "faire",
+      .data$lemma == "hacer",
       .data$pos %in% c("VERB", "AUX"),
       !stringr::str_detect(dplyr::coalesce(.data$dep_rel, ""), "^aux"),
       !is.na(.data$token_id_int)
@@ -93,7 +91,10 @@ block_aux_tense_fr <- function(tokens, doc_ids, head_lookup, proverb_pronouns) {
     )
 }
 
-#' Extract personal pronoun and question features
+#' Extract personal pronoun and question features (Spanish)
+#'
+#' This block adapts the French pronoun_it / wh_question logic to
+#' Spanish, focusing on expletive/impersonal subjects and wh-questions.
 #'
 #' @param tokens Annotated token data frame
 #' @param doc_ids Document IDs
@@ -101,12 +102,13 @@ block_aux_tense_fr <- function(tokens, doc_ids, head_lookup, proverb_pronouns) {
 #' @param de_markers De marker lookup table
 #' @param que_markers Que marker lookup table
 #' @param clause_complements Clause complement lookup table
-#' @param weather_lemmas Weather verb lemmas
+#' @param weather_lemmas Weather verb lemmas (e.g., llover, nevar)
 #' @param raising_verbs Raising verb lemmas
-#' @param wh_question_lemmas WH question word lemmas
+#' @param wh_question_lemmas WH question word lemmas (quien, que, cual,
+#'   cuanto, como, cuando, donde, por_que)
 #' @return Data frame with f_09_pronoun_it and f_13_wh_question
 #' @keywords internal
-block_personal_pronouns_fr <- function(
+block_personal_pronouns_es <- function(
     tokens,
     doc_ids,
     head_lookup,
@@ -119,7 +121,7 @@ block_personal_pronouns_fr <- function(
   pronoun_it_candidates <- tokens %>%
     dplyr::filter(
       .data$pos == "PRON",
-      .data$lemma %in% c("il", "ce", "cela", "\u00e7a"),
+      .data$lemma %in% c("ello", "se"),
       !is.na(.data$head_token_id_int)
     ) %>%
     dplyr::left_join(
