@@ -25,10 +25,10 @@ Instala la versión de desarrollo desde GitHub (tu fork en `educia`):
 
 ```r
 # install.packages("devtools")
-devtools::install_github("educia/pseudobibeR.fr")  # paquete pseudobibeR.es
+devtools::install_github("educia/pseudobibeR.esp")  # paquete pseudobibeR.es
 ```
 
-> Nota: el repositorio conserva el nombre original `pseudobibeR.fr`, pero el paquete en `DESCRIPTION` se llama `pseudobibeR.es`.[cite:49]
+> Nota: el repositorio conserva el nombre original `pseudobibeR.esp`, pero el paquete en `DESCRIPTION` se llama `pseudobibeR.es`.[cite:49]
 
 Si en el futuro generas un tarball de versión (`pseudobibeR.es_<version>.tar.gz`), también podrás instalarlo con:
 
