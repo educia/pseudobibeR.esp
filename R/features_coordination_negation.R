@@ -1,186 +1,205 @@
-# Coordination, contractions, stranded prepositions, split structures,
-# negation, and lexical membership features for Spanish
+# features_coordination_negation.R
+# Coordination, split structures, negation, and lexical features (Spanish)
+# f_59, f_61–f_67 + f_10 (demonstratives), f_14–f_16 (nouns)
 #
-# NOTA LINGÜÍSTICA — negación española vs. francesa:
+# NOTA LINGÜÍSTICA — negación española:
 #
-#   Francés: negación discontinua  ne … pas/jamais/rien/plus
-#     → f_66 sintética = pronombres/adverbios negativos (personne, rien…)
-#     → f_67 analítica  = ne + pas/jamais combinados
+#   Español: morfema ÚNICO "no" preverbal + pronombres/adverbios negativos.
 #
-#   Español: negación con morfema ÚNICO
-#     → f_66 SINTÉTICA = pronombres/adverbios negativos que niegan SIN "no"
-#       preverbal: nadie llegó, nada importa, nunca viene, jamás lo hará
-#       (el pronombre/adverbio ocupa la posición preverbal y es el único marcador)
-#     → f_67 ANALÍTICA  = "no" preverbal + verbo  (el caso más frecuente)
-#       con refuerzo opcional: no … nunca, no … nadie, no … nada
+#   f_66  NEGACIÓN SINTÉTICA = pronombre/adverbio negativo ocupa posición
+#         preverbal SIN co-ocurrencia de "no" en la misma cláusula.
+#         Ejemplos: "Nadie llegó", "Nada importa", "Nunca viene".
 #
-#   Implementación UD:
-#     - "no" (y variantes) → dep_rel = "advmod", morph_polarity = "Neg"
-#       o lemma %in% negation_part_lemmas
-#     - pronombres negativos → lemma %in% neg_synthetic_terms, pos = PRON/ADV,
-#       dep_rel != advmod (para excluir el "no" mismo)
-#     - negación sintética = el pronombre/adverbio negativo aparece SIN "no"
-#       preverbal en la misma oración
-#     - negación analítica  = "no" preverbal ligado a un VERB/AUX por advmod
+#   f_67  NEGACIÓN ANALÍTICA = "no" (o variantes: ni, tampoco) en posición
+#         preverbal ligado al verbo por dep_rel=advmod.
+#         Ejemplos: "no llegó", "no lo veo nunca".
+#
+# BUG CORREGIDO respecto a la versión anterior:
+#   El left_join de analytic_neg_heads usaba .data$ dentro del vector
+#   by = c(...) lo que produce error en dplyr. Corregido con rename previo.
 
 # ─────────────────────────────────────────────────────────────────────────────
-# block_contractions_es
+# 1.  block_contractions_es   f_59
 # ─────────────────────────────────────────────────────────────────────────────
 
-#' Extract contraction features (Spanish)
+#' Contraction features (Spanish)
 #'
-#' Spanish does not productively use apostrophe contractions like French;
-#' this feature is kept for structural parity but will typically return 0.
+#' El español moderno carece de contracciones ortográficas productivas
+#' equivalentes a las del francés. Esta función devuelve siempre 0 para
+#' mantener paridad estructural con pseudobibeR.fr.
+#' Excepción: las contracciones gramaticales *del* (de + el) y *al*
+#' (a + el) se cuentan como indicadores de registro informal.
 #'
 #' @param tokens Annotated token data frame
-#' @param doc_ids Document IDs
+#' @param doc_ids One-column data frame with column `doc_id`
 #' @return Data frame with f_59_contractions
 #' @keywords internal
 block_contractions_es <- function(tokens, doc_ids) {
-  tibble::tibble(doc_id = doc_ids$doc_id, f_59_contractions = 0L)
+  # "del" y "al" son las únicas contracciones gramaticales del español.
+  # Los parsers UD las tratan como tokens multi-word (MWT) o como un
+  # token único; contamos el token superficial.
+  f59 <- tokens %>%
+    dplyr::filter(
+      stringr::str_to_lower(.data$token) %in% c("del", "al")
+    ) %>%
+    count_feature("f_59_contractions")
+
+  doc_ids %>%
+    dplyr::left_join(f59, by = "doc_id") %>%
+    dplyr::mutate(f_59_contractions = dplyr::coalesce(.data$f_59_contractions, 0L))
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
-# block_stranded_split_es
+# 2.  block_stranded_split_es   f_61–f_62
 # ─────────────────────────────────────────────────────────────────────────────
 
-#' Extract stranded preposition and split infinitive features (Spanish)
+#' Stranded preposition and split infinitive features (Spanish)
 #'
-#' The UD-based logic is largely language-agnostic and reused here.
+#' f_61  Preposición varada: ADP precede inmediatamente a pronombre
+#'       relativo/interrogativo ("a quien", "de lo que").
+#'       En español la preposición varada en relativas es marginal y
+#'       muy marcada; este rasgo discrimina registros informales orales.
+#'
+#' f_62  Infinitivo escindido: preposición + adverbio(s) + infinitivo
+#'       ("para realmente entender", "al nunca poder salir").
+#'       Patrón raro pero documentado en registros cultos y periodísticos.
 #'
 #' @param tokens Annotated token data frame
-#' @param doc_ids Document IDs
-#' @return Data frame with f_61_stranded_preposition and f_62_split_infinitive
+#' @param doc_ids One-column data frame with column `doc_id`
+#' @return Data frame with f_61_stranded_preposition, f_62_split_infinitive
 #' @keywords internal
 block_stranded_split_es <- function(tokens, doc_ids) {
+
   tokens_ctx <- tokens %>%
-    dplyr::group_by(.data$doc_id) %>%
-    dplyr::arrange(.data$sentence_id, .data$token_id_int, .by_group = TRUE) %>%
+    dplyr::group_by(.data$doc_id, .data$sentence_id) %>%
+    dplyr::arrange(.data$token_id_int, .by_group = TRUE) %>%
     dplyr::mutate(
-      lag1_pos   = dplyr::lag(.data$pos),
-      lag1_lemma = dplyr::lag(.data$lemma),
-      lag1_sent  = dplyr::lag(.data$sentence_id),
-      lag2_pos   = dplyr::lag(.data$pos, 2),
-      lag2_lemma = dplyr::lag(.data$lemma, 2),
-      lag2_sent  = dplyr::lag(.data$sentence_id, 2),
-      lag3_pos   = dplyr::lag(.data$pos, 3),
-      lag3_lemma = dplyr::lag(.data$lemma, 3),
-      lag3_sent  = dplyr::lag(.data$sentence_id, 3),
-      lag4_pos   = dplyr::lag(.data$pos, 4),
-      lag4_lemma = dplyr::lag(.data$lemma, 4),
-      lag4_sent  = dplyr::lag(.data$sentence_id, 4),
-      lead1_pos      = dplyr::lead(.data$pos),
-      lead1_lemma    = dplyr::lead(.data$lemma),
-      lead1_sent     = dplyr::lead(.data$sentence_id),
-      lead1_prontype = dplyr::lead(.data$morph_prontype)
+      lead1_pos      = dplyr::lead(.data$pos,   default = NA_character_),
+      lead1_lemma    = dplyr::lead(.data$lemma, default = NA_character_),
+      lead1_sent     = dplyr::lead(.data$sentence_id, default = NA_character_),
+      lead1_prontype = dplyr::lead(
+        extract_feat(.data$feats, "PronType"), default = NA_character_
+      ),
+      lag1_pos    = dplyr::lag(.data$pos,          default = NA_character_),
+      lag1_lemma  = dplyr::lag(.data$lemma,        default = NA_character_),
+      lag1_sent   = dplyr::lag(.data$sentence_id,  default = NA_character_),
+      lag2_pos    = dplyr::lag(.data$pos,    2,    default = NA_character_),
+      lag2_lemma  = dplyr::lag(.data$lemma,  2,    default = NA_character_),
+      lag2_sent   = dplyr::lag(.data$sentence_id, 2, default = NA_character_),
+      lag3_pos    = dplyr::lag(.data$pos,    3,    default = NA_character_),
+      lag3_sent   = dplyr::lag(.data$sentence_id, 3, default = NA_character_),
+      lag4_pos    = dplyr::lag(.data$pos,    4,    default = NA_character_),
+      lag4_lemma  = dplyr::lag(.data$lemma,  4,    default = NA_character_),
+      lag4_sent   = dplyr::lag(.data$sentence_id, 4, default = NA_character_)
     ) %>%
     dplyr::ungroup()
 
-  stranded_pronouns <- c("quien", "quienes", "que")
+  stranded_rel <- c("quien", "quienes", "que", "cual", "cuales", "donde")
 
+  # f_61
   f61 <- tokens_ctx %>%
     dplyr::filter(
       .data$pos == "ADP",
       !is.na(.data$lead1_sent),
       .data$lead1_sent == .data$sentence_id,
-      .data$lead1_pos  == "PRON",
-      .data$lead1_lemma %in% stranded_pronouns,
+      .data$lead1_pos  %in% c("PRON", "DET", "ADV"),
+      .data$lead1_lemma %in% stranded_rel,
       stringr::str_detect(
-        dplyr::coalesce(.data$lead1_prontype, ""),
-        "Rel|Int"
+        dplyr::coalesce(.data$lead1_prontype, ""), "Rel|Int"
       )
     ) %>%
     dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int) %>%
-    dplyr::group_by(.data$doc_id) %>%
-    dplyr::tally() %>%
-    dplyr::rename(f_61_stranded_preposition = "n")
+    count_feature("f_61_stranded_preposition")
 
-  inf_prepositions <- c("a", "al", "del", "de", "por", "para")
+  inf_prepositions <- c("a", "al", "de", "del", "por", "para")
   filler_pos       <- c("ADV", "PART", "PRON", "DET")
 
-  candidate_inf <- tokens_ctx %>%
+  # f_62: patrón ADP (+filler*) + ADV + INF
+  f62_candidates <- tokens_ctx %>%
     dplyr::filter(
       .data$pos %in% c("VERB", "AUX"),
-      !is.na(.data$morph_verbform),
-      .data$morph_verbform == "Inf"
+      dplyr::coalesce(extract_feat(.data$feats, "VerbForm"), "") == "Inf"
     ) %>%
     dplyr::mutate(
-      lag1_same  = !is.na(.data$lag1_sent) & .data$lag1_sent == .data$sentence_id,
-      lag2_same  = !is.na(.data$lag2_sent) & .data$lag2_sent == .data$sentence_id,
-      lag3_same  = !is.na(.data$lag3_sent) & .data$lag3_sent == .data$sentence_id,
-      lag4_same  = !is.na(.data$lag4_sent) & .data$lag4_sent == .data$sentence_id,
-      filler1_ok = .data$lag1_same & .data$lag1_pos %in% filler_pos,
-      filler2_ok = .data$lag2_same & .data$lag2_pos %in% filler_pos,
-      filler3_ok = .data$lag3_same & .data$lag3_pos %in% filler_pos,
-      adv12  = (.data$lag1_same & .data$lag1_pos == "ADV") |
-               (.data$lag2_same & .data$lag2_pos == "ADV"),
-      adv123 = (.data$lag1_same & .data$lag1_pos == "ADV") |
-               (.data$lag2_same & .data$lag2_pos == "ADV") |
-               (.data$lag3_same & .data$lag3_pos == "ADV"),
-      has_split2 = .data$lag2_same &
+      same1 = !is.na(.data$lag1_sent) & .data$lag1_sent == .data$sentence_id,
+      same2 = !is.na(.data$lag2_sent) & .data$lag2_sent == .data$sentence_id,
+      same3 = !is.na(.data$lag3_sent) & .data$lag3_sent == .data$sentence_id,
+      same4 = !is.na(.data$lag4_sent) & .data$lag4_sent == .data$sentence_id,
+      # patrón de 2: ADP ADV INF
+      split2 = .data$same2 &
         .data$lag2_pos   == "ADP" &
         .data$lag2_lemma %in% inf_prepositions &
-        .data$lag1_same  &
-        .data$lag1_pos   == "ADV",
-      has_split3 = .data$lag3_same &
+        .data$same1 & .data$lag1_pos == "ADV",
+      # patrón de 3: ADP filler ADV INF
+      split3 = .data$same3 &
         .data$lag3_pos   == "ADP" &
         .data$lag3_lemma %in% inf_prepositions &
-        .data$filler1_ok & .data$filler2_ok & .data$adv12,
-      has_split4 = .data$lag4_same &
+        .data$same2 & .data$lag2_pos %in% filler_pos &
+        .data$same1 & .data$lag1_pos == "ADV",
+      # patrón de 4: ADP filler filler ADV INF
+      split4 = .data$same4 &
         .data$lag4_pos   == "ADP" &
         .data$lag4_lemma %in% inf_prepositions &
-        .data$filler1_ok & .data$filler2_ok & .data$filler3_ok & .data$adv123
+        .data$same3 & .data$lag3_pos %in% filler_pos &
+        .data$same2 & .data$lag2_pos %in% filler_pos &
+        .data$same1 & .data$lag1_pos == "ADV"
     ) %>%
-    dplyr::filter(.data$has_split2 | .data$has_split3 | .data$has_split4)
+    dplyr::filter(.data$split2 | .data$split3 | .data$split4)
 
-  f62 <- candidate_inf %>%
+  f62 <- f62_candidates %>%
     dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int) %>%
-    dplyr::group_by(.data$doc_id) %>%
-    dplyr::tally() %>%
-    dplyr::rename(f_62_split_infinitive = "n")
+    count_feature("f_62_split_infinitive")
 
   doc_ids %>%
     dplyr::left_join(f61, by = "doc_id") %>%
     dplyr::left_join(f62, by = "doc_id") %>%
-    dplyr::mutate(dplyr::across(-dplyr::any_of("doc_id"), ~ dplyr::coalesce(., 0L)))
+    dplyr::mutate(
+      dplyr::across(-dplyr::any_of("doc_id"), ~ dplyr::coalesce(., 0L))
+    )
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
-# block_split_coordination_es
+# 3.  block_split_coordination_es   f_63–f_65
 # ─────────────────────────────────────────────────────────────────────────────
 
-#' Extract coordination features (Spanish)
+#' Split auxiliary and coordination features (Spanish)
+#'
+#' f_63  Auxiliar escindido: ADV interviene entre auxiliar y verbo principal
+#' f_64  Coordinación sintagmática: CCONJ entre sintagmas no clausales
+#' f_65  Coordinación clausal:      CCONJ entre cláusulas con sujeto
 #'
 #' @param tokens Annotated token data frame
-#' @param doc_ids Document IDs
-#' @param token_lookup Token lookup table
-#' @param subject_heads Subject head lookup
-#' @param head_lookup Head token lookup
-#' @param negation_part_lemmas Negation particle lemmas
-#' @return Data frame with f_63_split_auxiliary, f_64_phrasal_coordination,
-#'   f_65_clausal_coordination
+#' @param doc_ids One-column data frame with column `doc_id`
+#' @param token_lookup Token-level attribute lookup table
+#' @param subject_heads Table of clause heads that have an explicit subject
+#' @param head_lookup Head-token attribute table
+#' @param negation_part_lemmas Negation particle lemmas (no, ni, tampoco)
+#' @return Data frame with f_63, f_64, f_65
 #' @keywords internal
 block_split_coordination_es <- function(tokens, doc_ids, token_lookup,
                                          subject_heads, head_lookup,
                                          negation_part_lemmas) {
-  adverbial_interveners <- tokens %>%
+
+  adv_interveners <- tokens %>%
     dplyr::filter(
       .data$pos == "ADV" |
         (.data$pos == "PART" & .data$lemma %in% negation_part_lemmas)
     ) %>%
     dplyr::transmute(
       .data$doc_id, .data$sentence_id,
-      adv_token_id_int = .data$token_id_int
+      adv_tok = .data$token_id_int
     )
 
-  aux_dependencies <- tokens %>%
-    dplyr::filter(stringr::str_detect(dplyr::coalesce(.data$dep_rel, ""), "^aux")) %>%
+  aux_deps <- tokens %>%
+    dplyr::filter(
+      stringr::str_detect(dplyr::coalesce(.data$dep_rel, ""), "^aux")
+    ) %>%
     dplyr::left_join(
       head_lookup,
       by = c("doc_id", "sentence_id", "head_token_id_int" = "token_id_int")
     ) %>%
     dplyr::filter(
-      .data$head_pos %in% c("VERB", "AUX"),
+      dplyr::coalesce(.data$head_pos, "") %in% c("VERB", "AUX"),
       !is.na(.data$token_id_int),
       !is.na(.data$head_token_id_int),
       .data$token_id_int != .data$head_token_id_int
@@ -190,48 +209,60 @@ block_split_coordination_es <- function(tokens, doc_ids, token_lookup,
       span_max = pmax(.data$token_id_int, .data$head_token_id_int)
     )
 
-  split_auxiliary_tokens <- aux_dependencies %>%
-    dplyr::left_join(adverbial_interveners, by = c("doc_id", "sentence_id")) %>%
+  # f_63
+  f63 <- aux_deps %>%
+    dplyr::left_join(adv_interveners, by = c("doc_id", "sentence_id")) %>%
     dplyr::filter(
-      !is.na(.data$adv_token_id_int),
-      .data$adv_token_id_int > .data$span_min,
-      .data$adv_token_id_int < .data$span_max
+      !is.na(.data$adv_tok),
+      .data$adv_tok > .data$span_min,
+      .data$adv_tok < .data$span_max
     ) %>%
-    dplyr::distinct(.data$doc_id, .data$token_id_int)
-
-  split_aux_counts <- split_auxiliary_tokens %>%
+    dplyr::distinct(.data$doc_id, .data$token_id_int) %>%
     dplyr::group_by(.data$doc_id) %>%
     dplyr::summarise(f_63_split_auxiliary = dplyr::n(), .groups = "drop")
 
+  # cc_tokens: CCONJ con dep_rel=cc + atributos de su conjunción hermana
   cc_tokens <- tokens %>%
-    dplyr::filter(.data$pos == "CCONJ", .data$dep_rel == "cc") %>%
+    dplyr::filter(
+      .data$pos == "CCONJ",
+      dplyr::coalesce(.data$dep_rel, "") == "cc"
+    ) %>%
+    # atributos del head del CCONJ (= segundo conjunto)
     dplyr::left_join(
       token_lookup,
       by = c("doc_id", "sentence_id", "head_token_id_int" = "token_id_int")
     ) %>%
     dplyr::rename(
-      conj_pos              = "token_pos",
-      conj_dep_rel          = "token_dep_rel",
-      conj_head_token_id_int = "token_head_token_id_int",
-      conj_morph_verbform   = "token_morph_verbform"
+      conj_pos            = "token_pos",
+      conj_dep_rel        = "token_dep_rel",
+      conj_head_id        = "token_head_token_id_int",
+      conj_verbform       = "token_morph_verbform"
     ) %>%
+    # atributos del primer conjunto (head del head)
     dplyr::left_join(
       token_lookup %>%
-        dplyr::select("doc_id", "sentence_id", "token_id_int",
-                      first_conj_pos = "token_pos"),
-      by = c("doc_id", "sentence_id", "conj_head_token_id_int" = "token_id_int")
+        dplyr::select(
+          "doc_id", "sentence_id", "token_id_int",
+          first_conj_pos = "token_pos"
+        ),
+      by = c("doc_id", "sentence_id", "conj_head_id" = "token_id_int")
     ) %>%
+    # sujeto explícito en la cláusula
     dplyr::left_join(
       subject_heads,
-      by = c("doc_id", "sentence_id", "head_token_id_int" = "clause_head_token_id_int")
+      by = c("doc_id", "sentence_id",
+             "head_token_id_int" = "clause_head_token_id_int")
     ) %>%
-    dplyr::mutate(has_subject = dplyr::coalesce(.data$has_subject, FALSE)) %>%
-    dplyr::select(-dplyr::any_of("clause_head_token_id_int"))
+    dplyr::mutate(
+      has_subject = dplyr::coalesce(.data$has_subject, FALSE)
+    )
 
+  # f_64  Coordinación sintagmática
   f64 <- cc_tokens %>%
     dplyr::filter(
-      .data$conj_dep_rel == "conj",
-      .data$conj_pos %in% c("NOUN", "PROPN", "ADJ", "ADV"),
+      dplyr::coalesce(.data$conj_dep_rel, "") == "conj",
+      dplyr::coalesce(.data$conj_pos,     "") %in%
+        c("NOUN", "PROPN", "ADJ", "ADV"),
       !is.na(.data$first_conj_pos),
       .data$first_conj_pos == .data$conj_pos,
       !.data$has_subject
@@ -239,284 +270,254 @@ block_split_coordination_es <- function(tokens, doc_ids, token_lookup,
     dplyr::group_by(.data$doc_id) %>%
     dplyr::summarise(f_64_phrasal_coordination = dplyr::n(), .groups = "drop")
 
+  # f_65  Coordinación clausal
   f65 <- cc_tokens %>%
     dplyr::filter(
-      .data$conj_dep_rel == "conj",
-      .data$conj_pos %in% c("VERB", "AUX"),
+      dplyr::coalesce(.data$conj_dep_rel, "") == "conj",
+      dplyr::coalesce(.data$conj_pos,     "") %in% c("VERB", "AUX"),
       .data$has_subject,
-      is.na(.data$conj_morph_verbform) |
-        !.data$conj_morph_verbform %in% c("Inf", "Ger", "Part")
+      is.na(.data$conj_verbform) |
+        !.data$conj_verbform %in% c("Inf", "Ger", "Part")
     ) %>%
     dplyr::group_by(.data$doc_id) %>%
     dplyr::summarise(f_65_clausal_coordination = dplyr::n(), .groups = "drop")
 
   doc_ids %>%
-    dplyr::left_join(split_aux_counts, by = "doc_id") %>%
+    dplyr::left_join(f63, by = "doc_id") %>%
     dplyr::left_join(f64, by = "doc_id") %>%
     dplyr::left_join(f65, by = "doc_id") %>%
-    dplyr::mutate(dplyr::across(-dplyr::any_of("doc_id"), ~ dplyr::coalesce(., 0L)))
+    dplyr::mutate(
+      dplyr::across(-dplyr::any_of("doc_id"), ~ dplyr::coalesce(., 0L))
+    )
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
-# block_negation_es  (reescrito)
+# 4.  block_negation_es   f_66–f_67
 # ─────────────────────────────────────────────────────────────────────────────
 
-#' Extract negation features (Spanish)
+#' Negation features (Spanish)
 #'
-#' f_66  NEGACIÓN SINTÉTICA — pronombre/adverbio negativo preverbal SIN "no"
-#'   Ejemplos: "Nadie llegó", "Nada importa", "Nunca viene", "Jamás lo hará"
-#'   Condiciones UD:
-#'     - lemma %in% neg_synthetic_terms
-#'     - pos PRON o ADV
-#'     - dep_rel = nsubj | advmod | obj | nmod (el token niega por sí solo)
-#'     - en la misma oración NO existe un token con dep_rel = advmod y
-#'       morph_polarity = Neg cuyo head sea el mismo verbo (= no hay "no" previo)
-#'
-#' f_67  NEGACIÓN ANALÍTICA — "no" preverbal ligado al verbo
-#'   Ejemplos: "no llegó", "no lo veo nunca", "no hay nadie"
-#'   Condiciones UD:
-#'     - token con lemma %in% negation_part_lemmas (no, tampoco, ni)
-#'     - dep_rel = advmod
-#'     - head pos VERB o AUX
-#'   Contamos ocurrencias del marcador "no" (no del verbo) para mantener
-#'   compatibilidad con la convención de Biber et al. (1988).
+#' f_66  Negación sintética — pronombre/adverbio negativo preverbal SIN «no»
+#' f_67  Negación analítica  — «no» (o ni/tampoco) preverbal + verbo
 #'
 #' @param tokens Annotated token data frame
-#' @param doc_ids Document IDs
-#' @param neg_synthetic_terms Synthetic negation term lemmas
-#'   (nadie, nada, ninguno/a, nunca, jamás, tampoco en posición preverbal)
-#' @param negation_part_lemmas Negation particle lemmas (no, ni, tampoco)
-#' @param negation_adverbs Negation adverb lemmas (nunca, jamás, tampoco, etc.)
-#' @return Data frame with f_66_neg_synthetic and f_67_neg_analytic
+#' @param doc_ids One-column data frame with column `doc_id`
+#' @param neg_synthetic_terms Lemmas de pronombres/adverbios negativos
+#'   (nadie, nada, ninguno, ninguna, nunca, jamás)
+#' @param negation_part_lemmas Lemmas de partículas negativas (no, ni, tampoco)
+#' @return Data frame with f_66_neg_synthetic, f_67_neg_analytic
 #' @keywords internal
-block_negation_es <- function(tokens, doc_ids, neg_synthetic_terms,
-                               negation_part_lemmas, negation_adverbs) {
+block_negation_es <- function(tokens, doc_ids,
+                               neg_synthetic_terms,
+                               negation_part_lemmas) {
 
-  # ── Paso 1: identificar cláusulas con "no" analítico ─────────────────────
-  # Un token es "no analítico" cuando: lemma %in% negation_part_lemmas,
-  # dep_rel = advmod, y su head es VERB/AUX.
-  analytic_neg_heads <- tokens %>%
+  # ── Tabla auxiliar de heads verbales negados analíticamente ───────────────
+  # Columnas: doc_id, sentence_id, neg_head_id
+  verb_pos <- c("VERB", "AUX")
+
+  analytic_heads <- tokens %>%
     dplyr::filter(
       .data$lemma %in% negation_part_lemmas,
       dplyr::coalesce(.data$dep_rel, "") == "advmod",
       !is.na(.data$head_token_id_int)
     ) %>%
+    # join para verificar que el head es VERB/AUX
+    dplyr::rename(neg_head_id = "head_token_id_int") %>%
     dplyr::left_join(
       tokens %>%
-        dplyr::select(
-          doc_id_h      = .data$doc_id,
-          sentence_id_h = .data$sentence_id,
-          head_token_id_int = .data$token_id_int,
-          head_pos      = .data$pos
+        dplyr::transmute(
+          doc_id2      = .data$doc_id,
+          sentence_id2 = .data$sentence_id,
+          neg_head_id  = .data$token_id_int,
+          head_pos     = .data$pos
         ),
       by = c(
-        "doc_id"      = "doc_id_h",
-        "sentence_id" = "sentence_id_h",
-        "head_token_id_int"
+        "doc_id"      = "doc_id2",
+        "sentence_id" = "sentence_id2",
+        "neg_head_id"
       )
     ) %>%
-    dplyr::filter(.data$head_pos %in% c("VERB", "AUX")) %>%
-    dplyr::transmute(
-      .data$doc_id, .data$sentence_id,
-      neg_head_id = .data$head_token_id_int,
-      is_analytic = TRUE
-    ) %>%
-    dplyr::distinct()
+    dplyr::filter(dplyr::coalesce(.data$head_pos, "") %in% verb_pos) %>%
+    dplyr::distinct(.data$doc_id, .data$sentence_id, .data$neg_head_id)
 
   # ── f_67  Negación analítica ──────────────────────────────────────────────
-  # Contamos los tokens "no/ni/tampoco" que cumplen las condiciones de arriba.
   f67 <- tokens %>%
     dplyr::filter(
       .data$lemma %in% negation_part_lemmas,
       dplyr::coalesce(.data$dep_rel, "") == "advmod",
       !is.na(.data$head_token_id_int)
     ) %>%
+    dplyr::rename(neg_head_id = "head_token_id_int") %>%
     dplyr::inner_join(
-      analytic_neg_heads %>%
-        dplyr::rename(head_token_id_int = .data$neg_head_id),
-      by = c("doc_id", "sentence_id", "head_token_id_int")
+      analytic_heads,
+      by = c("doc_id", "sentence_id", "neg_head_id")
     ) %>%
     dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int) %>%
-    dplyr::group_by(.data$doc_id) %>%
-    dplyr::tally() %>%
-    dplyr::rename(f_67_neg_analytic = "n")
+    count_feature("f_67_neg_analytic")
 
   # ── f_66  Negación sintética ──────────────────────────────────────────────
-  # Pronombre/adverbio negativo que niega SIN "no" preverbal en la misma
-  # cláusula (mismo verbo-head).
-  #
-  # Estrategia:
-  #   (a) tomar todos los tokens neg_synthetic (nadie, nada, nunca, jamás…)
-  #       con dep_rel informativo (nsubj, advmod, obj, nmod, obl)
-  #   (b) obtener el head verbal de cada uno
-  #   (c) excluir aquellos cuyo head verbal ya tiene un "no" analítico
-  #       registrado en analytic_neg_heads
+  # Pronombre/adverbio negativo con función sintáctica real (nsubj, advmod,
+  # obj, obl…) cuyo head verbal NO aparece en analytic_heads.
+  synth_dep_rels <- c(
+    "nsubj", "nsubj:pass", "advmod", "obj", "iobj",
+    "nmod", "obl", "obl:agent"
+  )
 
-  synthetic_dep_rels <- c("nsubj", "advmod", "obj", "iobj", "nmod", "obl",
-                           "nsubj:pass", "obl:agent")
-
-  candidate_synthetic <- tokens %>%
+  f66 <- tokens %>%
     dplyr::filter(
       .data$lemma %in% neg_synthetic_terms,
-      .data$pos %in% c("PRON", "ADV", "DET"),
-      dplyr::coalesce(.data$dep_rel, "") %in% synthetic_dep_rels,
+      .data$pos   %in% c("PRON", "ADV", "DET"),
+      dplyr::coalesce(.data$dep_rel, "") %in% synth_dep_rels,
       !is.na(.data$head_token_id_int)
-    )
-
-  f66 <- candidate_synthetic %>%
+    ) %>%
+    dplyr::rename(neg_head_id = "head_token_id_int") %>%
     dplyr::anti_join(
-      analytic_neg_heads %>%
-        dplyr::rename(head_token_id_int = .data$neg_head_id),
-      by = c(
-        "doc_id", "sentence_id",
-        "head_token_id_int"
-      )
+      analytic_heads,
+      by = c("doc_id", "sentence_id", "neg_head_id")
     ) %>%
     dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int) %>%
-    dplyr::group_by(.data$doc_id) %>%
-    dplyr::tally() %>%
-    dplyr::rename(f_66_neg_synthetic = "n")
+    count_feature("f_66_neg_synthetic")
 
   doc_ids %>%
     dplyr::left_join(f66, by = "doc_id") %>%
     dplyr::left_join(f67, by = "doc_id") %>%
-    dplyr::mutate(dplyr::across(-dplyr::any_of("doc_id"), ~ dplyr::coalesce(., 0L)))
+    dplyr::mutate(
+      dplyr::across(-dplyr::any_of("doc_id"), ~ dplyr::coalesce(., 0L))
+    )
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
-# block_lexical_membership_es
+# 5.  block_lexical_membership_es   f_10 (dem.), f_14–f_16 (nouns)
 # ─────────────────────────────────────────────────────────────────────────────
 
-#' Extract lexical membership features (Spanish)
+#' Demonstrative pronoun, nominalization, gerund, and noun features (Spanish)
+#'
+#' f_10  Pronombres demostrativos (este, ese, aquel + formas)
+#' f_14  Nominalizaciones (sustantivos con sufijos productivos)
+#' f_15  Gerundios
+#' f_16  Otros sustantivos (= total NOUN/PROPN - nominalizaciones - gerundios-NOUN)
+#' f_51  Demostrativos determinantes (mismo este/ese/aquel en función DET)
 #'
 #' @param tokens Annotated token data frame
-#' @param doc_ids Document IDs
+#' @param doc_ids One-column data frame with column `doc_id`
 #' @param word_lists_lookup Word lists lookup
-#' @return Data frame with f_10_demonstrative_pronoun through f_51_demonstratives
+#' @return Data frame with f_10, f_14, f_15, f_16, f_51
 #' @keywords internal
 block_lexical_membership_es <- function(tokens, doc_ids, word_lists_lookup) {
-  pronoun_terms <- get_word_list(word_lists_lookup, "pronoun_matchlist")
 
-  f10 <- tokens %>%
-    dplyr::filter(
-      .data$token %in% pronoun_terms,
-      .data$pos == "PRON",
-      (.data$morph_prontype == "Dem" | is.na(.data$morph_prontype))
-    ) %>%
-    dplyr::group_by(.data$doc_id) %>%
-    dplyr::tally() %>%
-    dplyr::rename(f_10_demonstrative_pronoun = "n")
-
-  nominalization_suffixes <- get_word_list(word_lists_lookup, "nominalization_suffixes")
-
-  nominalization_pattern <- if (length(nominalization_suffixes) > 0) {
-    escaped <- stringr::str_replace_all(nominalization_suffixes, "([\\W])", "\\\\\\1")
-    paste0("(", paste(escaped, collapse = "|"), ")$")
-  } else {
-    "^$"
-  }
-
-  nominal_stoplist <- normalize_terms(
+  pronoun_terms         <- get_word_list(word_lists_lookup, "pronoun_matchlist")
+  nominalization_sfx    <- get_word_list(word_lists_lookup, "nominalization_suffixes")
+  nominalization_stop   <- normalize_terms(
     get_word_list(word_lists_lookup, "nominalization_stoplist")
   )
-
-  f14 <- tokens %>%
-    dplyr::filter(
-      .data$pos == "NOUN",
-      stringr::str_detect(.data$lemma, nominalization_pattern),
-      !.data$lemma %in% nominal_stoplist
-    ) %>%
-    dplyr::group_by(.data$doc_id) %>%
-    dplyr::tally() %>%
-    dplyr::rename(f_14_nominalizations = "n")
-
-  gerund_stoplist <- normalize_terms(
+  gerund_stop           <- normalize_terms(
     get_word_list(word_lists_lookup, "gerund_stoplist")
   )
 
-  # Gerundios por morfología UD (VerbForm=Ger o Part+Tense=Pres)
+  # ── f_10  Pronombres demostrativos ────────────────────────────────────────
+  f10 <- tokens %>%
+    dplyr::filter(
+      stringr::str_to_lower(.data$token) %in%
+        stringr::str_to_lower(pronoun_terms),
+      .data$pos == "PRON"
+    ) %>%
+    count_feature("f_10_demonstrative_pronoun")
+
+  # ── f_51  Demostrativos determinantes ─────────────────────────────────────
+  f51 <- tokens %>%
+    dplyr::filter(
+      stringr::str_to_lower(.data$token) %in%
+        stringr::str_to_lower(pronoun_terms),
+      .data$pos == "DET",
+      dplyr::coalesce(.data$dep_rel, "") == "det"
+    ) %>%
+    count_feature("f_51_demonstratives")
+
+  # ── f_14  Nominalizaciones ────────────────────────────────────────────────
+  if (length(nominalization_sfx) > 0) {
+    sfx_pat <- paste0(
+      "(", paste(nominalization_sfx, collapse = "|"), ")$"
+    )
+  } else {
+    sfx_pat <- "^$"
+  }
+
+  f14 <- tokens %>%
+    dplyr::filter(.data$pos == "NOUN") %>%
+    dplyr::mutate(lem_lower = stringr::str_to_lower(.data$lemma)) %>%
+    dplyr::filter(
+      stringr::str_detect(.data$lem_lower, sfx_pat),
+      !.data$lem_lower %in% nominalization_stop
+    ) %>%
+    count_feature("f_14_nominalizations")
+
+  # ── f_15  Gerundios ───────────────────────────────────────────────────────
+  # Por morfología UD (VerbForm=Ger)
   f15_morph <- tokens %>%
     dplyr::filter(
       .data$pos %in% c("VERB", "AUX"),
-      !is.na(.data$morph_verbform),
-      .data$morph_verbform == "Ger" |
-        (.data$morph_verbform == "Part" & .data$morph_tense == "Pres")
-    ) %>%
-    dplyr::filter(!.data$lemma %in% gerund_stoplist)
+      dplyr::coalesce(extract_feat(.data$feats, "VerbForm"), "") == "Ger",
+      !.data$lemma %in% gerund_stop
+    )
 
-  # Fallback: NOUN/PROPN con lema en -ando/-iendo precedidos de "en" (ADP)
-  # que el parser etiquetó mal (gerundio de "en + gerundio" = construcción
-  # temporal/condicional muy frecuente en español escrito).
+  # Fallback: NOUN con lema en -ando/-iendo precedido de preposición «en»
   f15_fallback <- tokens %>%
     dplyr::group_by(.data$doc_id, .data$sentence_id) %>%
     dplyr::arrange(.data$token_id_int, .by_group = TRUE) %>%
     dplyr::filter(
       .data$pos %in% c("NOUN", "PROPN"),
-      stringr::str_detect(.data$lemma, "ando$|iendo$"),
+      stringr::str_detect(
+        stringr::str_to_lower(.data$lemma), "(ando|iendo)$"
+      ),
       dplyr::lag(.data$token, default = "") == "en",
       dplyr::lag(.data$pos,   default = "") == "ADP",
-      stringr::str_detect(
-        dplyr::coalesce(.data$dep_rel, ""),
-        "^(nmod|obl|advcl)"
-      )
+      !.data$lemma %in% gerund_stop
     ) %>%
-    dplyr::ungroup() %>%
-    dplyr::filter(!.data$lemma %in% gerund_stoplist)
+    dplyr::ungroup()
 
-  # Unir y deduplicar; el fallback no debe solaparse con los morfológicos
   f15_tokens <- dplyr::bind_rows(f15_morph, f15_fallback) %>%
     dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int,
                     .keep_all = TRUE)
 
-  # Conteo de gerundios mal parseados como NOUN (para descontar de f_16)
-  gerunds_n <- f15_tokens %>%
+  gerunds_noun_n <- f15_tokens %>%
     dplyr::filter(.data$pos %in% c("NOUN", "PROPN")) %>%
     dplyr::group_by(.data$doc_id) %>%
     dplyr::tally() %>%
-    dplyr::rename(gerunds_n = "n")
+    dplyr::rename(gerunds_noun_n = "n")
 
   f15 <- f15_tokens %>%
-    dplyr::group_by(.data$doc_id) %>%
-    dplyr::tally() %>%
-    dplyr::rename(f_15_gerunds = "n")
+    count_feature("f_15_gerunds")
 
-  # f_16  Otros sustantivos (excluye nominalizaciones y gerundios-NOUN)
+  # ── f_16  Otros sustantivos ───────────────────────────────────────────────
   f16_raw <- tokens %>%
     dplyr::filter(
       .data$pos %in% c("NOUN", "PROPN"),
       !stringr::str_detect(.data$token, "-")
     ) %>%
-    dplyr::group_by(.data$doc_id) %>%
-    dplyr::tally() %>%
-    dplyr::rename(f_16_other_nouns = "n")
+    count_feature("f_16_other_nouns")
 
   f16 <- f16_raw %>%
-    dplyr::left_join(f14,       by = "doc_id") %>%
-    dplyr::left_join(gerunds_n, by = "doc_id") %>%
-    replace_nas() %>%
+    dplyr::left_join(
+      f14 %>% dplyr::rename(n_nom = "f_14_nominalizations"),
+      by = "doc_id"
+    ) %>%
+    dplyr::left_join(gerunds_noun_n, by = "doc_id") %>%
     dplyr::mutate(
-      f_16_other_nouns = .data$f_16_other_nouns -
-        .data$f_14_nominalizations -
-        .data$gerunds_n
+      n_nom        = dplyr::coalesce(.data$n_nom, 0L),
+      gerunds_noun_n = dplyr::coalesce(.data$gerunds_noun_n, 0L),
+      f_16_other_nouns = pmax(
+        0L,
+        .data$f_16_other_nouns - .data$n_nom - .data$gerunds_noun_n
+      )
     ) %>%
-    dplyr::transmute(.data$doc_id, f_16_other_nouns = .data$f_16_other_nouns)
-
-  f51 <- tokens %>%
-    dplyr::filter(
-      .data$token %in% pronoun_terms,
-      .data$dep_rel == "det",
-      .data$pos %in% c("DET", "PRON")
-    ) %>%
-    dplyr::group_by(.data$doc_id) %>%
-    dplyr::tally() %>%
-    dplyr::rename(f_51_demonstratives = "n")
+    dplyr::select("doc_id", "f_16_other_nouns")
 
   doc_ids %>%
-    dplyr::left_join(f10, by = "doc_id") %>%
-    dplyr::left_join(f14, by = "doc_id") %>%
-    dplyr::left_join(f15, by = "doc_id") %>%
-    dplyr::left_join(f16, by = "doc_id") %>%
-    dplyr::left_join(f51, by = "doc_id") %>%
+    dplyr::left_join(f10,  by = "doc_id") %>%
+    dplyr::left_join(f51,  by = "doc_id") %>%
+    dplyr::left_join(f14,  by = "doc_id") %>%
+    dplyr::left_join(f15,  by = "doc_id") %>%
+    dplyr::left_join(f16,  by = "doc_id") %>%
     dplyr::mutate(
       dplyr::across(-dplyr::any_of("doc_id"), ~ dplyr::coalesce(., 0L))
     )

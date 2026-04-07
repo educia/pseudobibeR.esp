@@ -1,56 +1,52 @@
-# Adjective, preposition, adverb, verb class, and modal features for Spanish
+# features_modals_verbs.R
+# Adjective, preposition, adverb, modal, and specialized-verb features (Spanish)
+# f_39–f_42, f_52–f_58
 #
 # NOTA LINGÜÍSTICA — modales españoles:
-#
-#   A diferencia del francés (pouvoir, devoir, vouloir como auxiliares
-#   monoléxicos), en español los modales son PERÍFRASIS VERBALES:
-#
+#   El español no tiene auxiliares modales monoléxicos como el inglés.
+#   Los modales son PERÍFRASIS VERBALES:
 #     f_52  Posibilidad:  poder + INF, caber + INF
-#     f_53  Necesidad:    deber (de) + INF, tener que + INF,
-#                         haber de + INF, haber que + INF
-#     f_54  Predictivo:   futuro sintético (dict), ir a + INF (parse_functions)
+#     f_53  Necesidad:    deber + INF, tener_que + INF,
+#                         haber_de + INF, haber_que + INF
+#     f_54  Predictivo:   futuro sintético (Tense=Fut,VerbForm=Fin)
+#                         + ir_a + INF (perífrase progresivo-futuro)
 #
-#   Para evitar falsos positivos ("el poder", "el deber"), exigimos:
-#     - POS AUX o VERB
-#     - dep_rel que NO sea nsubj/obj/root con morph_verbform != Fin
-#     - al menos un dependiente con morph_verbform = Inf
-#       enlazado por xcomp / ccomp / advcl / aux / obj (según parser)
+#   Para evitar falsos positivos ("el poder", "el deber" como sustantivos)
+#   exigimos que el verbo modal tenga al menos un dependiente con
+#   VerbForm=Inf enlazado por xcomp / ccomp / advcl / aux / obj.
 #
-#   tener_que y haber_de son multiword y ya se manejan por el diccionario
-#   via quanteda::tokens_compound en parse_functions. Aquí solo contamos
-#   por el verbo-cabeza para el caso en que el compound no se detecte.
+# NOTA — extract_feat() y count_feature() se definen en
+#   features_tense_pronouns.R y son visibles en el mismo namespace del paquete.
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Helper interno: verbo modal con infinitivo dependiente
+# 0.  Helper: perífrasis modal (verbo-cabeza + infinitivo-dependiente)
 # ─────────────────────────────────────────────────────────────────────────────
 
-# Tabla de infinitivos que cuelgan de algún token
-# Dep_rel válidas: xcomp, ccomp, advcl, aux, obj (spaCy a veces usa obj)
 count_modal_periphrasis <- function(tokens, lemmas) {
   if (length(lemmas) == 0)
     return(tibble::tibble(doc_id = character(), n = integer()))
 
-  # Dependientes infinitivos
   inf_deps <- tokens %>%
     dplyr::filter(
-      .data$morph_verbform == "Inf",
       .data$pos %in% c("VERB", "AUX"),
+      dplyr::coalesce(extract_feat(.data$feats, "VerbForm"), "") == "Inf",
       stringr::str_detect(
         dplyr::coalesce(.data$dep_rel, ""),
         "^(xcomp|ccomp|advcl|aux|obj)"
       ),
       !is.na(.data$head_token_id_int)
     ) %>%
-    dplyr::transmute(.data$doc_id, .data$sentence_id,
-                     head_token_id_int = .data$head_token_id_int,
-                     has_inf_dep = TRUE) %>%
+    dplyr::transmute(
+      .data$doc_id, .data$sentence_id,
+      head_token_id_int = .data$head_token_id_int,
+      has_inf_dep = TRUE
+    ) %>%
     dplyr::distinct()
 
   tokens %>%
     dplyr::filter(
       .data$lemma %in% lemmas,
       .data$pos %in% c("VERB", "AUX"),
-      # excluir cuando es nominalización (el poder, el deber)
       !stringr::str_detect(
         dplyr::coalesce(.data$dep_rel, ""),
         "^(nsubj|obj|iobj|nmod|det|appos)$"
@@ -67,90 +63,94 @@ count_modal_periphrasis <- function(tokens, lemmas) {
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
-# block_adj_prep_adv_es
+# 1.  block_adj_prep_adv_es   f_39–f_42
 # ─────────────────────────────────────────────────────────────────────────────
 
-#' Extract adjective, preposition, and adverb features (Spanish)
+#' Adjective, preposition, and adverb features (Spanish)
+#'
+#' f_39  Prepositions (dep_rel = case | fixed)
+#' f_40  Attributive adjectives (dep_rel = amod; fallback: ADJ before NOUN)
+#' f_41  Predicative adjectives (dep_rel = xcomp | acomp | cop target)
+#' f_42  General adverbs (excludes stance/hedge/negation adverbs)
 #'
 #' @param tokens Annotated token data frame
-#' @param doc_ids Document IDs
-#' @param dict_lookup Dictionary lookup
+#' @param doc_ids One-column data frame with column `doc_id`
+#' @param dict_lookup Dictionary lookup (yaml list loaded by parse_functions)
 #' @param word_lists_lookup Word lists lookup
-#' @param negation_adverbs Vector of negation adverbs
-#' @return Data frame with f_39_prepositions through f_42_adverbs
+#' @param negation_adverbs Character vector of negation adverb lemmas
+#' @return Data frame: one row per doc, columns f_39 – f_42
 #' @keywords internal
 block_adj_prep_adv_es <- function(tokens, doc_ids, dict_lookup,
                                    word_lists_lookup, negation_adverbs) {
 
-  # f_39  Preposiciones (dep_rel = case | fixed)
+  # f_39  Preposiciones
   f39 <- tokens %>%
     dplyr::filter(
       .data$pos == "ADP",
       dplyr::coalesce(.data$dep_rel, "") %in% c("case", "fixed")
     ) %>%
-    dplyr::group_by(.data$doc_id) %>%
-    dplyr::tally() %>%
-    dplyr::rename(f_39_prepositions = "n")
+    count_feature("f_39_prepositions")
 
-  # f_40  Adjetivo ATRIBUTIVO (prenominal o coordinado)
-  #   Usamos dep_rel = amod (modificador adjetival de sustantivo) para
-  #   evitar cruces entre oraciones con dplyr::lead.
-  #   Fallback: si el parser no asigna amod, usamos lead con group_by
-  #   restringido a sentence_id.
-  f40_by_dep <- tokens %>%
-    dplyr::filter(
-      .data$pos == "ADJ",
-      .data$dep_rel == "amod",
-      !stringr::str_detect(.data$token, "-")
-    ) %>%
-    dplyr::group_by(.data$doc_id) %>%
-    dplyr::tally() %>%
-    dplyr::rename(f_40_adj_attr = "n")
-
-  # Para parsers que no usen amod de manera consistente, guardamos
-  # conteo por lead dentro de oración como fallback.
-  f40_by_lead <- tokens %>%
-    dplyr::group_by(.data$doc_id, .data$sentence_id) %>%
-    dplyr::filter(
-      .data$pos == "ADJ",
-      !stringr::str_detect(.data$token, "-"),
-      (
-        dplyr::lead(.data$pos) == "NOUN" |
-          dplyr::lead(.data$pos) == "ADJ" |
-          (dplyr::lead(.data$token) == "," &
-             dplyr::lead(.data$pos, 2) == "ADJ")
-      )
-    ) %>%
-    dplyr::ungroup() %>%
-    dplyr::group_by(.data$doc_id) %>%
-    dplyr::tally() %>%
-    dplyr::rename(f_40_adj_attr = "n")
-
-  # Usar amod si disponible (más preciso), fallback a lead
+  # f_40  Adjetivo atributivo
   has_amod <- any(
-    tokens$dep_rel == "amod" & tokens$pos == "ADJ", na.rm = TRUE
+    !is.na(tokens$dep_rel) & tokens$dep_rel == "amod" & tokens$pos == "ADJ"
   )
-  f40 <- if (has_amod) f40_by_dep else f40_by_lead
 
-  # f_41  Adjetivo PREDICATIVO (verbo copulativo + ADJ)
-  linking_verbs <- get_word_list(word_lists_lookup, "linking_matchlist")
+  if (has_amod) {
+    f40 <- tokens %>%
+      dplyr::filter(
+        .data$pos == "ADJ",
+        dplyr::coalesce(.data$dep_rel, "") == "amod",
+        !stringr::str_detect(.data$token, "-")
+      ) %>%
+      count_feature("f_40_adj_attr")
+  } else {
+    # Fallback: ADJ inmediatamente antes de NOUN dentro de la misma oración
+    f40 <- tokens %>%
+      dplyr::group_by(.data$doc_id, .data$sentence_id) %>%
+      dplyr::arrange(.data$token_id_int, .by_group = TRUE) %>%
+      dplyr::filter(
+        .data$pos == "ADJ",
+        !stringr::str_detect(.data$token, "-"),
+        dplyr::lead(.data$pos, default = "") %in% c("NOUN", "PROPN", "ADJ")
+      ) %>%
+      dplyr::ungroup() %>%
+      count_feature("f_40_adj_attr")
+  }
 
-  f41 <- tokens %>%
-    dplyr::group_by(.data$doc_id, .data$sentence_id) %>%
+  # f_41  Adjetivo predicativo
+  #   dep_rel = xcomp o acomp, o ADJ cuyo head directo es SER/ESTAR
+  linking_verbs <- c("ser", "estar", "parecer", "resultar", "quedar",
+                     "volverse", "hacerse", "ponerse", "tornarse")
+
+  f41_dep <- tokens %>%
     dplyr::filter(
       .data$pos == "ADJ",
-      .data$dep_rel %in% c("xcomp", "acomp", "cop") |
-        (dplyr::lag(.data$pos %in% c("VERB", "AUX")) &
-           dplyr::lag(.data$lemma %in% linking_verbs) &
-           !dplyr::lead(.data$pos %in% c("NOUN", "ADJ", "ADV")))
-    ) %>%
-    dplyr::ungroup() %>%
-    dplyr::group_by(.data$doc_id) %>%
-    dplyr::tally() %>%
-    dplyr::rename(f_41_adj_pred = "n")
+      dplyr::coalesce(.data$dep_rel, "") %in% c("xcomp", "acomp")
+    )
 
-  # f_42  Adverbios (excluye los clasificados en f_46-f_50 y negación)
-  adverb_exclusions <- unique(c(
+  f41_cop <- tokens %>%
+    dplyr::filter(
+      .data$pos == "ADJ",
+      !is.na(.data$head_token_id_int)
+    ) %>%
+    dplyr::left_join(
+      tokens %>%
+        dplyr::transmute(
+          .data$doc_id, .data$sentence_id,
+          head_token_id_int = .data$token_id_int,
+          head_lemma = .data$lemma
+        ),
+      by = c("doc_id", "sentence_id", "head_token_id_int")
+    ) %>%
+    dplyr::filter(.data$head_lemma %in% linking_verbs)
+
+  f41 <- dplyr::bind_rows(f41_dep, f41_cop) %>%
+    dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int) %>%
+    count_feature("f_41_adj_pred")
+
+  # f_42  Adverbios generales (excluye stance, hedges, negación)
+  stance_lemmas <- unique(c(
     dictionary_to_lemmas(dict_lookup, "f_46_downtoners"),
     dictionary_to_lemmas(dict_lookup, "f_47_hedges"),
     dictionary_to_lemmas(dict_lookup, "f_48_amplifiers"),
@@ -162,11 +162,9 @@ block_adj_prep_adv_es <- function(tokens, doc_ids, dict_lookup,
   f42 <- tokens %>%
     dplyr::filter(
       .data$pos == "ADV",
-      !.data$lemma %in% adverb_exclusions
+      !.data$lemma %in% stance_lemmas
     ) %>%
-    dplyr::group_by(.data$doc_id) %>%
-    dplyr::tally() %>%
-    dplyr::rename(f_42_adverbs = "n")
+    count_feature("f_42_adverbs")
 
   doc_ids %>%
     dplyr::left_join(f39, by = "doc_id") %>%
@@ -179,102 +177,130 @@ block_adj_prep_adv_es <- function(tokens, doc_ids, dict_lookup,
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
-# block_specialized_verbs_es
+# 2.  block_modals_es   f_52–f_54
 # ─────────────────────────────────────────────────────────────────────────────
 
-#' Extract specialized verb class features (Spanish)
+#' Modal verb perifrastic features (Spanish)
 #'
-#' Counts f_55 (public verbs), f_56 (private verbs), f_57 (suasive verbs),
-#' f_58 (seem-type verbs) using lema lists from dict.yaml.
+#' f_52  Posibilidad:  poder + INF, caber + INF
+#' f_53  Necesidad:    deber + INF, tener_que + INF,
+#'                     haber_de + INF, haber_que + INF
+#' f_54  Predictivo:   futuro sintético (Tense=Fut,VerbForm=Fin)
+#'                     + ir_a + INF
 #'
 #' @param tokens Annotated token data frame
-#' @param doc_ids Document IDs
+#' @param doc_ids One-column data frame with column `doc_id`
 #' @param dict_lookup Dictionary lookup
-#' @return Data frame with f_55_verb_public through f_58_verb_seem
+#' @return Data frame: one row per doc, columns f_52 – f_54
 #' @keywords internal
-block_specialized_verbs_es <- function(tokens, doc_ids, dict_lookup) {
+block_modals_es <- function(tokens, doc_ids, dict_lookup) {
 
-  count_verb_class <- function(lemmas, col_name) {
-    tokens %>%
-      dplyr::filter(.data$lemma %in% lemmas,
-                    .data$pos %in% c("VERB", "AUX")) %>%
-      dplyr::group_by(.data$doc_id) %>%
-      dplyr::tally() %>%
-      dplyr::rename(!!col_name := "n")
-  }
+  # f_52  Posibilidad
+  poss_lemmas <- dictionary_to_lemmas(dict_lookup, "f_52_modal_possibility")
+  f52 <- count_modal_periphrasis(tokens, poss_lemmas) %>%
+    dplyr::rename(f_52_modal_possibility = "n")
 
-  f55 <- count_verb_class(dictionary_to_lemmas(dict_lookup, "f_55_verb_public"),
-                          "f_55_verb_public")
-  f56 <- count_verb_class(dictionary_to_lemmas(dict_lookup, "f_56_verb_private"),
-                          "f_56_verb_private")
-  f57 <- count_verb_class(dictionary_to_lemmas(dict_lookup, "f_57_verb_suasive"),
-                          "f_57_verb_suasive")
-  f58 <- count_verb_class(dictionary_to_lemmas(dict_lookup, "f_58_verb_seem"),
-                          "f_58_verb_seem")
+  # f_53  Necesidad
+  #   deber + INF (sin "de" = necesidad deóntica)
+  #   deber_de + INF (probabilidad epistémica; incluido por convención)
+  #   tener_que, haber_de, haber_que vienen compuestos del tokenizer
+  nec_lemmas <- dictionary_to_lemmas(dict_lookup, "f_53_modal_necessity")
+  f53 <- count_modal_periphrasis(tokens, nec_lemmas) %>%
+    dplyr::rename(f_53_modal_necessity = "n")
+
+  # f_54  Predictivo
+  #   (a) futuro sintético: Tense=Fut + VerbForm=Fin (via extract_feat)
+  f54_fut <- tokens %>%
+    dplyr::filter(
+      .data$pos %in% c("VERB", "AUX"),
+      dplyr::coalesce(extract_feat(.data$feats, "Tense"),    "") == "Fut",
+      dplyr::coalesce(extract_feat(.data$feats, "VerbForm"), "") == "Fin"
+    ) %>%
+    dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int)
+
+  #   (b) ir_a + INF  (ir con dep_rel aux cuyo head tiene VerbForm=Inf)
+  ir_a_inf <- tokens %>%
+    dplyr::filter(
+      .data$lemma == "ir",
+      .data$pos   %in% c("AUX", "VERB"),
+      !is.na(.data$head_token_id_int)
+    ) %>%
+    dplyr::left_join(
+      tokens %>%
+        dplyr::transmute(
+          .data$doc_id, .data$sentence_id,
+          head_token_id_int = .data$token_id_int,
+          head_verbform = extract_feat(.data$feats, "VerbForm")
+        ),
+      by = c("doc_id", "sentence_id", "head_token_id_int")
+    ) %>%
+    dplyr::filter(
+      dplyr::coalesce(.data$head_verbform, "") == "Inf",
+      stringr::str_detect(
+        dplyr::coalesce(.data$dep_rel, ""), "^aux"
+      )
+    ) %>%
+    dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int)
+
+  f54 <- dplyr::bind_rows(f54_fut, ir_a_inf) %>%
+    dplyr::distinct() %>%
+    count_feature("f_54_modal_predictive")
 
   doc_ids %>%
-    dplyr::left_join(f55, by = "doc_id") %>%
-    dplyr::left_join(f56, by = "doc_id") %>%
-    dplyr::left_join(f57, by = "doc_id") %>%
-    dplyr::left_join(f58, by = "doc_id") %>%
+    dplyr::left_join(f52, by = "doc_id") %>%
+    dplyr::left_join(f53, by = "doc_id") %>%
+    dplyr::left_join(f54, by = "doc_id") %>%
     dplyr::mutate(
       dplyr::across(-dplyr::any_of("doc_id"), ~ dplyr::coalesce(., 0L))
     )
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
-# block_modals_es
+# 3.  block_specialized_verbs_es   f_55–f_58
 # ─────────────────────────────────────────────────────────────────────────────
 
-#' Extract modal verb features (Spanish)
+#' Specialized verb class features (Spanish)
 #'
-#' Detecta perífrasis modales españolas exigiendo que el verbo modal
-#' tenga al menos un dependiente con VerbForm=Inf, para evitar contar
-#' nominalizaciones ("el poder", "el deber") y usos plenos no modales.
+#' f_55  Verbos públicos  (decir, afirmar, señalar, indicar, declarar…)
+#' f_56  Verbos privados  (creer, pensar, saber, sentir, suponer…)
+#' f_57  Verbos suasivos  (pedir, exigir, recomendar, sugerir, ordenar…)
+#' f_58  Verbos "seem"    (parecer, resultar, aparecer, semejarse…)
 #'
-#' f_52  Posibilidad: poder, caber (+ INF)
-#' f_53  Necesidad:   deber, tener_que, haber_de, haber_que (+ INF)
-#' f_54  Predictivo:  futuro sintético (via dict) + ir_a+INF (parse_functions)
-#'        — NOTE: f_54 via ir_a ya se computa en parse_functions.R y se
-#'          fusiona allí. Aquí sólo contamos el futuro sintético del dict.
+#' Las listas de lemas se leen de dict.yaml (secciones f_55_verb_public,
+#' f_56_verb_private, f_57_verb_suasive, f_58_verb_seem).
 #'
-#' @param tokens Annotated token data frame with context columns
-#' @param doc_ids Document IDs
+#' @param tokens Annotated token data frame
+#' @param doc_ids One-column data frame with column `doc_id`
 #' @param dict_lookup Dictionary lookup
-#' @return Data frame with f_52_modal_possibility through f_54_modal_predictive
+#' @return Data frame: one row per doc, columns f_55 – f_58
 #' @keywords internal
-block_modals_es <- function(tokens, doc_ids, dict_lookup) {
+block_specialized_verbs_es <- function(tokens, doc_ids, dict_lookup) {
 
-  # f_52  Posibilidad
-  possibility_lemmas <- dictionary_to_lemmas(dict_lookup, "f_52_modal_possibility")
-  f52 <- count_modal_periphrasis(tokens, possibility_lemmas) %>%
-    dplyr::rename(f_52_modal_possibility = "n")
+  count_verb_class <- function(lemmas, col_name) {
+    if (length(lemmas) == 0)
+      return(tibble::tibble(doc_id = character(), !!col_name := integer()))
+    tokens %>%
+      dplyr::filter(
+        .data$lemma %in% lemmas,
+        .data$pos   %in% c("VERB", "AUX")
+      ) %>%
+      count_feature(col_name)
+  }
 
-  # f_53  Necesidad
-  #   deber + INF     (sin "de" = necesidad; con "de" = probabilidad epistmica)
-  #   deber_de + INF  (probabilidad: algunos lo clasifican en f_52; aquí unido)
-  #   tener_que, haber_de, haber_que ya vienen compuestos del dict
-  necessity_lemmas <- dictionary_to_lemmas(dict_lookup, "f_53_modal_necessity")
-  f53 <- count_modal_periphrasis(tokens, necessity_lemmas) %>%
-    dplyr::rename(f_53_modal_necessity = "n")
-
-  # f_54  Predictivo (solo futuro sintético del dict; ir_a se maneja en parse_functions)
-  #   El futuro sintético (hablaré, hablarás…) viene del diccionario como
-  #   tokens con Tense=Fut, VerbForm=Fin.  Contamos directamente por morph.
-  f54 <- tokens %>%
-    dplyr::filter(
-      .data$pos %in% c("VERB", "AUX"),
-      .data$morph_tense == "Fut",
-      .data$morph_verbform == "Fin"
-    ) %>%
-    dplyr::group_by(.data$doc_id) %>%
-    dplyr::tally() %>%
-    dplyr::rename(f_54_modal_predictive = "n")
+  f55 <- count_verb_class(
+    dictionary_to_lemmas(dict_lookup, "f_55_verb_public"),  "f_55_verb_public")
+  f56 <- count_verb_class(
+    dictionary_to_lemmas(dict_lookup, "f_56_verb_private"), "f_56_verb_private")
+  f57 <- count_verb_class(
+    dictionary_to_lemmas(dict_lookup, "f_57_verb_suasive"), "f_57_verb_suasive")
+  f58 <- count_verb_class(
+    dictionary_to_lemmas(dict_lookup, "f_58_verb_seem"),    "f_58_verb_seem")
 
   doc_ids %>%
-    dplyr::left_join(f52, by = "doc_id") %>%
-    dplyr::left_join(f53, by = "doc_id") %>%
-    dplyr::left_join(f54, by = "doc_id") %>%
+    dplyr::left_join(f55, by = "doc_id") %>%
+    dplyr::left_join(f56, by = "doc_id") %>%
+    dplyr::left_join(f57, by = "doc_id") %>%
+    dplyr::left_join(f58, by = "doc_id") %>%
     dplyr::mutate(
       dplyr::across(-dplyr::any_of("doc_id"), ~ dplyr::coalesce(., 0L))
     )
