@@ -3,8 +3,8 @@
 # TOKENIZATION AND PATTERN FORMATTING:
 #
 # Patterns use underscores for token boundaries, following pseudobibeR conventions:
-#   - Multiword items: "por ejemplo" → "por_ejemplo"
-#   - Clitics or multi-token sequences: "tener que" → "tener_que"
+#   - Multiword items: "por ejemplo" -> "por_ejemplo"
+#   - Clitics or multi-token sequences: "tener que" -> "tener_que"
 #   - The matching is done over lemmas or surface forms depending on the
 #     feature; keep entries in lower case and in infinitive form for verbs
 #     unless a downstream heuristic expects otherwise.
@@ -14,6 +14,15 @@
 # specialized verb classes). Other Biber features for Spanish are
 # implemented via UD POS/morphology and dependency patterns in code.
 #
+# FUENTES:
+#   Biber, D. (1988). Variation across speech and writing. Cambridge UP.
+#   Biber, D. et al. (1999). Longman grammar of spoken and written English.
+#   Lavid, J. et al. (2010). Systemic-functional descriptions of Spanish.
+#   Adaptaciones propias para el español peninsular y latinoamericano.
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ADVERBIALES DE LUGAR Y TIEMPO (f_04, f_05)
+# ─────────────────────────────────────────────────────────────────────────────
 
 f_04_place_adverbials:
   - aqui
@@ -52,6 +61,17 @@ f_04_place_adverbials:
   - por_allí
   - en_ninguna_parte
   - en_todas_partes
+  - en_otro_lugar
+  - en_otro_sitio
+  - en_cualquier_parte
+  - a_la_derecha
+  - a_la_izquierda
+  - en_el_norte
+  - en_el_sur
+  - al_norte
+  - al_sur
+  - al_este
+  - al_oeste
 
 f_05_time_adverbials:
   - ayer
@@ -71,11 +91,11 @@ f_05_time_adverbials:
   - inmediatamente
   - ahora
   - actualmente
-  - de_nos_dias
   - de_vez_en_cuando
   - a_veces
   - a_menudo
   - con_frecuencia
+  - frecuentemente
   - raramente
   - casi_nunca
   - siempre
@@ -88,6 +108,32 @@ f_05_time_adverbials:
   - recien
   - recién
   - recientemente
+  - anteriormente
+  - previamente
+  - posteriormente
+  - finalmente
+  - ultimamente
+  - últimamente
+  - en_este_momento
+  - en_aquel_entonces
+  - al_mismo_tiempo
+  - al_principio
+  - al_final
+  - en_seguida
+  - tarde
+  - temprano
+  - de_repente
+  - de_pronto
+  - periodicamente
+  - periódicamente
+  - constantemente
+  - continuamente
+
+# ─────────────────────────────────────────────────────────────────────────────
+# PRONOMBRES PERSONALES (f_06, f_07, f_08)
+# Nota: usados como fallback léxico en block_personal_pronouns_es();
+# la lógica principal corre vía UD POS + dep_rel en el código.
+# ─────────────────────────────────────────────────────────────────────────────
 
 f_06_first_person_pronouns:
   - yo
@@ -96,13 +142,8 @@ f_06_first_person_pronouns:
   - me
   - nos
   - mi
-  - mis
-  - mio
-  - mío
-  - mia
-  - mía
-  - nuestros
-  - nuestras
+  - mí
+  - conmigo
 
 f_07_second_person_pronouns:
   - tu
@@ -113,9 +154,9 @@ f_07_second_person_pronouns:
   - vosotros
   - vosotras
   - te
+  - ti
   - os
-  - su
-  - sus
+  - contigo
 
 f_08_third_person_pronouns:
   - el
@@ -130,6 +171,7 @@ f_08_third_person_pronouns:
   - le
   - les
   - ello
+  - consigo
 
 f_11_indefinite_pronoun:
   - alguien
@@ -140,8 +182,14 @@ f_11_indefinite_pronoun:
   - alguna
   - algunos
   - algunas
+  - ninguno
+  - ninguna
+  - ningunos
+  - ningunas
   - cualquiera
   - cualesquiera
+  - quienquiera
+  - quienesquiera
   - varios
   - varias
   - muchos
@@ -152,88 +200,418 @@ f_11_indefinite_pronoun:
   - toda
   - todos
   - todas
+  - uno
+  - una
+  - unos
+  - unas
+  - otro
+  - otra
+  - otros
+  - otras
+  - demas
+  - demás
+  - bastante
+  - bastantes
+  - demasiado
+  - demasiada
+  - demasiados
+  - demasiadas
+  - tanto
+  - tanta
+  - tantos
+  - tantas
+
+# ─────────────────────────────────────────────────────────────────────────────
+# CONJUNCTOS ADVERBIALES (f_45)
+# Biber (1988): adverbials that link clauses or sentences logically.
+# Incluye: aditivos, adversativos, causales, temporales de secuencia,
+# ilativos y de reformulación.
+# ─────────────────────────────────────────────────────────────────────────────
 
 f_45_conjuncts:
-  - sin_embargo
-  - no_obstante
+  # Aditivos
   - ademas
   - además
-  - por_otro_lado
-  - por_otra_parte
-  - en_cambio
-  - por_el_contrario
   - asimismo
   - asi_mismo
-  - asi_que
-  - asi_pues
-  - por_consiguiente
+  - igualmente
+  - de_igual_forma
+  - de_igual_manera
+  - del_mismo_modo
+  - de_la_misma_manera
+  - incluso
+  - inclusive
+  - tambien
+  - también
+  - encima
+  - encima_de_todo
+  - aun_mas
+  - aún_más
+  - mas_aun
+  - más_aún
+  # Adversativos
+  - sin_embargo
+  - no_obstante
+  - ahora_bien
+  - en_cambio
+  - por_el_contrario
+  - por_otro_lado
+  - por_otra_parte
+  - de_todas_formas
+  - de_todas_maneras
+  - de_todos_modos
+  - a_pesar_de_todo
+  - con_todo
+  - aun_asi
+  - aun_así
+  - con_todo_y_eso
+  # Causales / ilativos
   - por_lo_tanto
+  - por_consiguiente
+  - en_consecuencia
   - por_ello
+  - por_eso
+  - por_esta_razon
+  - por_esta_razón
+  - por_tanto
+  - de_ahi_que
+  - de_ahí_que
+  - asi_pues
+  - así_pues
+  - asi_que
+  - así_que
+  - de_modo_que
+  - de_manera_que
+  - de_forma_que
+  - luego
+  - entonces
+  # Temporales de secuencia
+  - primero
+  - en_primer_lugar
+  - en_segundo_lugar
+  - en_tercer_lugar
+  - segundo
+  - a_continuacion
+  - a_continuación
+  - seguidamente
+  - posteriormente
+  - finalmente
+  - por_ultimo
+  - por_último
+  - en_ultimo_lugar
+  - en_último_lugar
+  - para_comenzar
+  - para_empezar
+  - para_terminar
+  - para_concluir
+  # Reformulación / ejemplificación
+  - es_decir
+  - o_sea
+  - esto_es
+  - a_saber
+  - en_otras_palabras
+  - dicho_de_otro_modo
+  - mejor_dicho
   - por_ejemplo
+  - pongamos_por_caso
+  - tal_como
+  - tales_como
+  - a_modo_de_ejemplo
+  # Resumen / conclusión
   - en_resumen
   - en_suma
+  - en_definitiva
+  - en_conclusion
+  - en_conclusión
+  - en_sintesis
+  - en_síntesis
+  - para_resumir
+  - en_pocas_palabras
+  - total
+  - en_general
+  - en_terminos_generales
+  - en_términos_generales
+
+# ─────────────────────────────────────────────────────────────────────────────
+# DOWNTONERS (f_46)
+# Adverbios que atenúan la fuerza de un predicado o adjetivo.
+# Biber (1988): almost, barely, hardly, merely, only, scarcely, slightly...
+# ─────────────────────────────────────────────────────────────────────────────
 
 f_46_downtoners:
   - apenas
   - casi
   - ligeramente
+  - levemente
   - algo
   - un_poco
+  - un_tanto
+  - en_cierta_medida
+  - en_cierto_modo
+  - en_cierta_manera
   - mas_o_menos
   - más_o_menos
+  - medianamente
+  - moderadamente
+  - relativamente
+  - bastante_poco
   - solamente
   - solo
   - sólo
+  - tan_solo
+  - tan_sólo
   - simplemente
+  - meramente
+  - puramente
+  - exclusivamente
+  - unicamente
+  - únicamente
+  - nada_mas
+  - nada_más
+  - en_absoluto  # <-- atenuador en oraciones afirmativas
+  - poco
+  - en_menor_medida
+  - en_menor_grado
+  - parcialmente
+  - a_medias
+
+# ─────────────────────────────────────────────────────────────────────────────
+# HEDGES (f_47)
+# Marcadores de imprecisión o aproximación epistémica.
+# Biber (1988): about, around, something like, more or less, kind of...
+# ─────────────────────────────────────────────────────────────────────────────
 
 f_47_hedges:
   - aproximadamente
   - alrededor_de
+  - cerca_de
+  - unos
+  - unas
+  - como_unos
+  - como_unas
+  - en_torno_a
+  - mas_o_menos
+  - más_o_menos
   - en_cierto_modo
+  - en_cierto_sentido
   - en_cierta_medida
+  - en_cierta_forma
   - en_parte
   - de_alguna_manera
   - de_algún_modo
+  - de_alguna_forma
+  - de_algún_tipo
+  - por_así_decirlo
+  - por_asi_decirlo
+  - de_alguna_clase
+  - algo_asi
+  - algo_así
+  - algo_parecido
+  - algo_similar
+  - una_especie_de
+  - una_suerte_de
+  - una_clase_de
+  - un_tipo_de
   - casi
   - practicamente
   - prácticamente
   - tal_vez
   - quizas
   - quizás
+  - quiza
+  - quizá
+  - a_lo_mejor
+  - puede_que
+  - puede_ser_que
+  - es_posible_que
+  - posiblemente
+  - probablemente
+  - acaso
+  - si_acaso
+  - en_principio
+  - en_teoria
+  - en_teoría
+  - en_la_practica
+  - en_la_práctica
+  - por_lo_general
+  - por_lo_comun
+  - por_lo_común
+  - normalmente
+  - generalmente
+  - habitualmente
+  - por_regla_general
+
+# ─────────────────────────────────────────────────────────────────────────────
+# AMPLIFIERS (f_48)
+# Adverbios que intensifican un predicado o adjetivo.
+# Biber (1988): absolutely, altogether, completely, enormously, entirely...
+# ─────────────────────────────────────────────────────────────────────────────
 
 f_48_amplifiers:
   - muy
+  - mucho
+  - muchisimo
+  - muchísimo
+  - demasiado
   - realmente
+  - verdaderamente
   - sumamente
   - extremadamente
+  - extraordinariamente
+  - increiblemente
+  - increíblemente
+  - notablemente
+  - considerablemente
+  - tremendamente
+  - enormemente
+  - profundamente
+  - ampliamente
   - totalmente
   - completamente
   - absolutamente
+  - plenamente
+  - enteramente
+  - del_todo
+  - por_completo
   - en_gran_medida
+  - en_gran_parte
   - en_extremo
+  - al_maximo
+  - al_máximo
+  - en_sumo_grado
+  - sobremanera
+  - en_gran_cantidad
+  - de_manera_notable
+  - de_forma_notable
+  - de_modo_notable
+  - bastante
+  - bien  # intensificador coloquial: "bien feo", "bien hecho"
+  - super  # coloquial: "super importante"
+  - súper
+  - hiper  # coloquial: "hiper activo"
+  - mega   # coloquial: "mega importante"
+  - re     # latinoamericano: "re bueno"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# EMPHATICS (f_49)
+# Marcadores de énfasis proposicional o actitudinal.
+# Biber (1988): for sure, I mean, in fact, of course, really, you know...
+# ─────────────────────────────────────────────────────────────────────────────
 
 f_49_emphatics:
+  # Énfasis proposicional
+  - de_hecho
+  - en_realidad
+  - realmente
+  - verdaderamente
   - de_verdad
+  - en_verdad
+  - es_verdad_que
+  - es_cierto_que
+  - es_obvio_que
+  - es_evidente_que
+  - evidentemente
+  - obviamente
+  - claramente
+  - sin_duda
+  - sin_duda_alguna
+  - sin_lugar_a_dudas
+  - indudablemente
+  - innegablemente
+  - definitivamente
+  - absolutamente
+  # Marcadores de certeza / acuerdo
   - desde_luego
   - por_supuesto
+  - naturalmente
+  - claro
   - claro_que_si
   - claro_que_sí
-  - en_absoluto
-  - sin_duda
-  - por_supuesto_que
+  - efectivamente
+  - exactamente
+  - justamente
+  - precisamente
+  - ciertamente
+  - por_cierto
+  # Énfasis contrastivo / corrección
   - si_que
   - sí_que
+  - lo_que_es
+  - lo_que_son
+  - nada_menos
+  - ni_mas_ni_menos
+  - ni_más_ni_menos
+  - mismamente  # coloquial peninsular
+  # Interaccionales (énfasis en interlocutor)
+  - ya_sabes
+  - ya_sabe
+  - ya_ves
+  - fijate
+  - fíjate
+  - imaginate
+  - imagínate
+  - escucha
+  - mire
+  - te_digo
+  - le_digo
+  - en_serio
+  - de_veras
+
+# ─────────────────────────────────────────────────────────────────────────────
+# DISCOURSE PARTICLES (f_50)
+# Marcadores discursivos coloquiales / fáticos.
+# Biber (1988): well, now, anyway, anyhow, maybe, like...
+# En español estos elementos son altamente dialectales.
+# ─────────────────────────────────────────────────────────────────────────────
 
 f_50_discourse_particles:
+  # Peninsular
   - pues
+  - pues_bien
   - bueno
   - hombre
+  - mujer
+  - tio   # coloquial
+  - tía
   - mira
+  - mire
   - oye
+  - oiga
   - vaya
+  - anda
+  - venga
+  - vamos
+  - anda_ya
   - en_fin
-  - entonces
+  - al_fin_y_al_cabo
+  - a_ver
+  - a_fin_de_cuentas
+  - de_todas_formas
+  - en_todo_caso
+  - o_sea
+  - o_sea_que
+  - vamos_a_ver
   - vale
+  - claro
+  - bueno_pues
+  # Latinoamericano
+  - entonces
+  - che  # Argentina/Uruguay
+  - pos  # México/Centroamérica (forma de "pues")
+  - pues_mira
+  - mira_pues
+  - vea    # Colombia/Ecuador
+  - oiga_pues
+  - oe     # Ecuador/Perú coloquial
+  - anda_pues
+  - hijole # México
+  - fijese
+  - fíjese
+  - diga_pues
+
+# ─────────────────────────────────────────────────────────────────────────────
+# DEMOSTRATIVOS (f_51)
+# ─────────────────────────────────────────────────────────────────────────────
 
 f_51_demonstratives:
   - este
@@ -248,73 +626,220 @@ f_51_demonstratives:
   - aquella
   - aquellos
   - aquellas
+  - esto
+  - eso
+  - aquello
 
-# Modals rely on lemma matching via dictionary_to_lemmas()/block_modals_es(),
-# so keep entries in infinitive form even if downstream logic also inspects
-# context.
+# ─────────────────────────────────────────────────────────────────────────────
+# MODALES (f_52, f_53)
+# Nota: detectados como perífrasis verbales en block_modals_es();
+# aquí solo los lemas-cabeza de la perífrasis.
+# f_54 (predictivo) se detecta por morfología Tense=Fut en código.
+# ─────────────────────────────────────────────────────────────────────────────
 
 f_52_modal_possibility:
+  # Posibilidad dinámica / epistémica
   - poder
+  - caber   # "cabe la posibilidad de"
 
 f_53_modal_necessity:
+  # Obligación / necesidad
   - deber
   - tener_que
   - haber_de
   - haber_que
+  - necesitar  # "necesita estudiar" (modal de necesidad en español)
 
-# Predictive modals (f_54) se detectarán mediante patrones (ir a + inf,
-# futuro simple, etc.) en el código, sin listas aquí para evitar doble conteo.
+# ─────────────────────────────────────────────────────────────────────────────
+# VERBOS ESPECIALIZADOS (f_55–f_58)
+# Basados en Biber (1988) pp. 242-244; lista revisada con cognados y
+# equivalentes funcionales en español según Lavid et al. (2010) y
+# verificación en el corpus CREA/CORPES XXI.
+# ─────────────────────────────────────────────────────────────────────────────
 
 f_55_verb_public:
+  # Verbos de comunicación pública (speech act verbs)
+  # Biber: acknowledge, admit, agree, announce, argue, claim, deny...
+  - admitir
+  - acordar
   - afirmar
+  - agregar
+  - alegar
   - anunciar
+  - añadir
+  - argumentar
+  - asegurar
+  - aseverar
+  - atestiguar
+  - clamar
+  - comentar
+  - comunicar
+  - concluir
+  - confirmar
+  - contestar
+  - convenir  # "convino en que"
+  - criticar
   - declarar
+  - defender
+  - denegar
+  - denunciar
+  - describir
+  - destacar
+  - discutir
+  - enfatizar
+  - establecer
+  - exigir   # tb en f_57; aquí cuando es acto de habla
   - explicar
+  - exponer
+  - expresar
+  - indicar
   - informar
+  - insistir
+  - mantener
+  - manifestar
   - mencionar
+  - narrar
+  - negar
+  - objetar
+  - observar
+  - opinar
+  - plantear
+  - preguntar
+  - presentar
   - proclamar
   - prometer
+  - proponer
   - protestar
-  - relatar
-  - contar
-  - señalar
+  - publicar
+  - recalcar
   - reconocer
+  - referir
+  - relatar
+  - repetir
+  - reportar
+  - responder
+  - revelar
+  - señalar
+  - sostener
+  - subrayar
+  - sugerir  # tb en f_57
+  - testificar
 
 f_56_verb_private:
+  # Verbos de estado mental / cognitivo-perceptivo (private verbs)
+  # Biber: assume, believe, consider, doubt, feel, find, guess, hope...
+  - aceptar   # "acepta que fue un error"
+  - advertir  # cognitivo: "advierte que"
+  - anticipar
   - asumir
-  - creer
+  - calcular  # "calcula que serán unos cien"
+  - concebir
+  - concluir  # cognitivo: llegar a una conclusión mental
   - conocer
-  - comprender
   - considerar
-  - comprender
+  - convencer  # "se convence de que"
+  - creer
   - darse_cuenta
+  - decidir
+  - deducir
+  - desear
+  - detectar
+  - determinar
+  - discernir
   - dudar
   - entender
   - esperar
+  - estimar
+  - evaluar
+  - experimentar
+  - hallar
+  - ignorar
   - imaginar
+  - inferir
+  - intuir
+  - juzgar
+  - lamentar
   - notar
+  - observar  # perceptivo: "observa que la luz cambió"
   - olvidar
+  - opinar
   - pensar
+  - percibir
+  - prever
+  - querer
+  - razonar
+  - reconocer  # cognitivo: "reconoce el problema"
   - recordar
+  - reflexionar
   - saber
+  - sentir
+  - sospechar
   - suponer
+  - temer
+  - valorar
+  - ver   # cognitivo: "veo que tienes razón"
 
 f_57_verb_suasive:
+  # Verbos suasorios: inducen o reportan un acto de influencia sobre otro
+  # Biber: agree, arrange, ask, beg, command, decide, demand, grant...
   - aconsejar
-  - advertir
+  - acordar  # "acordaron que se haría"
+  - advertir  # directivo: "le advirtió que parara"
+  - alentar
   - animar
+  - aprobar
+  - asumir  # directivo raro
+  - autorizar
+  - conceder
+  - conminar
   - convencer
+  - decidir  # directivo: "decidió que todos salieran"
   - demandar
+  - disponer
+  - encargar
+  - exhortar
   - exigir
+  - forzar
+  - impedir
+  - imponer
+  - incitar
+  - instar
+  - instruir
+  - invitar
+  - lograr  # causativo: "logró que viniera"
   - mandar
+  - motivar
+  - necesitar  # directivo: "necesita que alguien lo ayude"
+  - obligar
   - ordenar
   - pedir
+  - permitir
+  - persuadir
+  - posibilitar
+  - preferir  # volición: "prefiere que lo hagan así"
+  - presionar
+  - prohibir
   - proponer
+  - reclamar
   - recomendar
+  - requerir
   - rogar
+  - solicitar
   - sugerir
+  - suplicar
 
 f_58_verb_seem:
-  - parecer
-  - resultar
+  # Verbos de apariencia / semblanza (seem-type / linking verbs)
+  # Biber: appear, seem, tend, turn out...
+  - aparecer
   - aparentar
+  - lucir   # "luce cansado"
+  - parecer
+  - presentarse  # "se presenta como"
+  - resultar
+  - revelarse  # "se revela como"
+  - sonar   # "suena razonable"
+  - tender
+  - tornarse
+  - verse   # "se ve cansado"
+  - volverse  # "se volvió imposible"
