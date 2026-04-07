@@ -1,61 +1,94 @@
-# Tense, aspect, and pronoun features for Spanish
+# features_tense_pronouns.R
+# Tense, aspect, pronoun, and adverbial features for Spanish (f_01–f_13)
 #
 # NOTA LINGÜÍSTICA — pro-drop:
-#   El español es una lengua de sujeto nulo. Los pronombres personales
-#   explícitos (yo, tú, él…) son marcadamente informativos: señalan
-#   contraste, énfasis o desambiguación. Su frecuencia distingue registros
-#   de manera más fuerte que en francés. Por eso contamos:
-#     f_06  pronombres de 1ª persona explícitos (yo, me, mí, conmigo, nos,
-#           nosotros/as)
-#     f_07  pronombres de 2ª persona explícitos (tú, vos, te, ti, contigo,
-#           vosotros/as, usted, ustedes)
-#     f_08  pronombres de 3ª persona explícitos (él, ella, ello, ellos,
-#           ellas, le, lo, la, les, los, las, consigo)
-#   Excluimos los clíticos reflexivos puros (se, me, te como reflexivos)
-#   cuando su dep_rel es "expl:pv" o "expl:impers" o "expl".
+#   El español es lengua de sujeto nulo. Los pronombres personales explícitos
+#   son marcadamente informativos (contraste, énfasis, desambiguación).
+#   Contamos SOLO pronombres explícitos; los sujetos nulos no se cuentan.
 #
-# NOTA LINGÜÍSTICA — aspecto perfecto (f_02):
-#   En español el aspecto perfecto es HABER + participio (he llegado).
-#   ESTAR + participio es voz pasiva de estado (la puerta está cerrada),
-#   ya contada en f_17/f_18. La dificultad es que los modelos UD españoles
-#   a veces no asignan Voice=Pass a estar+Part copulativo, etiquetando
-#   el auxiliar solo como AUX sin rasgo de voz. Para evitar el falso
-#   positivo excluimos estar cuando su head recibe dep_rel = "cop" o
-#   cuando estar mismo tiene dep_rel = "cop".
+# NOTA — aspecto perfecto (f_02):
+#   HABER + participio = perfecto compuesto (he llegado).
+#   ESTAR + participio = pasiva de estado (está cerrada) → excluida vía
+#   anti_join sobre estar_cop_heads.
+#
+# CAMPOS UD REQUERIDOS EN tokens:
+#   doc_id, sentence_id, token_id_int, head_token_id_int,
+#   token, lemma, pos (UPOS), dep_rel, feats,
+#   morph_tense, morph_mood, morph_verbform, morph_voice, morph_person,
+#   morph_number
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 1.  block_aux_tense_es  (f_02 aspecto perfecto, f_12 verbo pro-verbal hacer)
+# 0.  Helpers internos
 # ─────────────────────────────────────────────────────────────────────────────
 
-#' Extract tense and auxiliary-related features (Spanish)
+# Extrae un rasgo morfológico concreto de la columna `feats` (formato UD).
+# Ej.: extract_feat("Tense=Past|VerbForm=Fin", "Tense") -> "Past"
+extract_feat <- function(feats_vec, feat_name) {
+  pattern <- paste0("(?:^|\\|)", feat_name, "=([^|]+)")
+  m <- regmatches(feats_vec, regexpr(pattern, feats_vec, perl = TRUE))
+  ifelse(nchar(m) == 0, NA_character_,
+         sub(paste0(".*", feat_name, "="), "", m))
+}
+
+# Cuenta ocurrencias distintas (doc, sent, tok) y agrega a nivel doc_id.
+count_feature <- function(tbl, col_name) {
+  tbl %>%
+    dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int) %>%
+    dplyr::group_by(.data$doc_id) %>%
+    dplyr::tally() %>%
+    dplyr::rename(!!col_name := "n")
+}
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 1.  block_tense_es
+#     f_01 tiempo pasado   f_02 aspecto perfecto   f_03 tiempo presente
+#     f_04 adv. de lugar   f_05 adv. de tiempo     f_10 formas de "be"
+#     f_11 pronombres indefinidos
+# ─────────────────────────────────────────────────────────────────────────────
+
+#' Tense, aspect, adverbial, and indefinite-pronoun features (Spanish)
 #'
-#' @param tokens Annotated token data frame
-#' @param doc_ids Document IDs
-#' @param head_lookup Head token lookup table
-#' @param proverb_pronouns Vector of proverb pronoun lemmas
-#' @return Data frame with f_02_perfect_aspect and f_12_proverb_do
+#' @param tokens Annotated token data frame (UD format)
+#' @param doc_ids One-column data frame with column `doc_id`
+#' @param head_lookup Pre-built head-token attribute table
+#' @param place_adverbials Character vector of place-adverbial lemmas (f_04)
+#' @param time_adverbials  Character vector of time-adverbial lemmas (f_05)
+#' @param indefinite_pronouns Character vector of indefinite pronoun lemmas (f_11)
+#' @return Data frame: one row per doc, columns f_01 … f_11 (selected)
 #' @keywords internal
-block_aux_tense_es <- function(tokens, doc_ids, head_lookup, proverb_pronouns) {
+block_tense_es <- function(
+    tokens,
+    doc_ids,
+    head_lookup,
+    place_adverbials,
+    time_adverbials,
+    indefinite_pronouns
+) {
 
-  # ── f_02  Aspecto perfecto: HABER + participio (excluye estar copulativo) ──
-  #
-  # Exclusiones:
-  #   1. estar con dep_rel = "cop"  (estar es cópula del participio-adjetivo)
-  #   2. estar cuyo head tiene dep_rel = "cop" en otro token de la misma or.
-  #      (doble seguridad para parsers que asignan cop al participio/adjetivo)
-  #   3. head con Voice=Pass explícito (cubre los casos bien anotados)
-  #
-  # Solo HABER como auxiliar perfectivo es inequívoco en UD español.
-  # Conservamos estar como fallback únicamente si su head es VerbForm=Part
-  # SIN Voice=Pass Y SIN dep_rel copulativa — caso raro pero posible en
-  # participios de verbos inacusativos ("está llegado" en dialectos).
+  # ── f_01  Tiempo pasado ────────────────────────────────────────────────────
+  # Cubre:
+  #   (a) Pretérito indefinido / perfecto simple (Tense=Past, Mood=Ind)
+  #   (b) Pretérito imperfecto de indicativo (Tense=Imp, Mood=Ind)
+  #   (c) Pretérito pluscuamperfecto → ya capturado en f_02 (haber+Part Past)
+  #   (d) Condicional simple (Mood=Cnd) — lo excluimos de f_01 por
+  #       convención Biber (el condicional no es tiempo del pasado en sentido
+  #       estricto, aunque morfológicamente derive del imperfecto).
+  f01 <- tokens %>%
+    dplyr::filter(
+      .data$pos %in% c("VERB", "AUX"),
+      dplyr::coalesce(extract_feat(.data$feats, "Tense"), "") %in%
+        c("Past", "Imp"),
+      dplyr::coalesce(extract_feat(.data$feats, "Mood"),  "") == "Ind",
+      dplyr::coalesce(extract_feat(.data$feats, "VerbForm"), "") == "Fin"
+    ) %>%
+    count_feature("f_01_past_tense")
 
-  # Participios-cabeza que son pasivas de estado con estar:
-  # son los que tienen un token "estar" con dep_rel = cop
+  # ── f_02  Aspecto perfecto: HABER + participio ────────────────────────────
+  # Excluye ESTAR copulativo (pasiva de estado).
   estar_cop_heads <- tokens %>%
     dplyr::filter(
       .data$lemma == "estar",
-      .data$pos %in% c("AUX", "VERB"),
+      .data$pos   %in% c("AUX", "VERB"),
       dplyr::coalesce(.data$dep_rel, "") == "cop",
       !is.na(.data$head_token_id_int)
     ) %>%
@@ -65,12 +98,11 @@ block_aux_tense_es <- function(tokens, doc_ids, head_lookup, proverb_pronouns) {
     ) %>%
     dplyr::distinct()
 
-  perfect_candidates <- tokens %>%
+  f02 <- tokens %>%
     dplyr::filter(
-      .data$pos %in% c("AUX", "VERB"),
       .data$lemma %in% c("haber", "estar"),
-      stringr::str_detect(dplyr::coalesce(.data$dep_rel, ""), "^(aux|cop)"),
-      # excluir estar cuando es cópula (ser/estar predicativo)
+      .data$pos   %in% c("AUX", "VERB"),
+      stringr::str_detect(dplyr::coalesce(.data$dep_rel, ""), "^aux"),
       !(.data$lemma == "estar" &
           dplyr::coalesce(.data$dep_rel, "") == "cop"),
       !is.na(.data$head_token_id_int)
@@ -79,99 +111,103 @@ block_aux_tense_es <- function(tokens, doc_ids, head_lookup, proverb_pronouns) {
       head_lookup,
       by = c("doc_id", "sentence_id", "head_token_id_int" = "token_id_int")
     ) %>%
-    # excluir cuando el head-participio ya tiene estar como cop (pasiva estado)
     dplyr::anti_join(
       estar_cop_heads,
-      by = c(
-        "doc_id", "sentence_id",
-        "head_token_id_int" = "cop_head_id"
+      by = c("doc_id", "sentence_id",
+             "head_token_id_int" = "cop_head_id")
+    ) %>%
+    dplyr::filter(
+      dplyr::coalesce(.data$head_morph_verbform, 
+                      extract_feat(.data$head_feats, "VerbForm"), "") == "Part",
+      dplyr::coalesce(.data$head_morph_voice,
+                      extract_feat(.data$head_feats, "Voice"),    "") != "Pass"
+    ) %>%
+    count_feature("f_02_perfect_aspect")
+
+  # ── f_03  Tiempo presente ─────────────────────────────────────────────────
+  # Presente de indicativo simple (Tense=Pres, Mood=Ind, VerbForm=Fin).
+  # No incluye el presente de subjuntivo (Mood=Sub) ni las formas no
+  # personales (infinitivo, gerundio, participio).
+  f03 <- tokens %>%
+    dplyr::filter(
+      .data$pos %in% c("VERB", "AUX"),
+      dplyr::coalesce(extract_feat(.data$feats, "Tense"),    "") == "Pres",
+      dplyr::coalesce(extract_feat(.data$feats, "Mood"),     "") == "Ind",
+      dplyr::coalesce(extract_feat(.data$feats, "VerbForm"), "") == "Fin"
+    ) %>%
+    count_feature("f_03_present_tense")
+
+  # ── f_04  Adverbiales de lugar ─────────────────────────────────────────────
+  # Matching por lemma sobre lista léxica; POS = ADV o ADP.
+  f04 <- tokens %>%
+    dplyr::filter(
+      .data$lemma %in% place_adverbials,
+      .data$pos   %in% c("ADV", "ADP", "NOUN")
+    ) %>%
+    count_feature("f_04_place_adverbials")
+
+  # ── f_05  Adverbiales de tiempo ───────────────────────────────────────────
+  f05 <- tokens %>%
+    dplyr::filter(
+      .data$lemma %in% time_adverbials,
+      .data$pos   %in% c("ADV", "NOUN", "ADP")
+    ) %>%
+    count_feature("f_05_time_adverbials")
+
+  # ── f_10  Formas del verbo copulativo (ser / estar) ───────────────────────
+  # Equivalente de Biber's "be" as main verb (no auxiliar).
+  # Contamos ser y estar cuando su dep_rel es "root", "cop", "ccomp",
+  # "xcomp" o "acl", pero NO cuando son auxiliares perfectivos o progresivos.
+  f10 <- tokens %>%
+    dplyr::filter(
+      .data$lemma %in% c("ser", "estar"),
+      .data$pos   %in% c("VERB", "AUX"),
+      !stringr::str_detect(
+        dplyr::coalesce(.data$dep_rel, ""), "^aux"
       )
     ) %>%
-    dplyr::mutate(
-      head_is_participle =
-        (.data$head_pos %in% c("VERB", "AUX") &
-           dplyr::coalesce(.data$head_morph_verbform, "") == "Part" &
-           dplyr::coalesce(.data$head_morph_voice, "")    != "Pass") |
-        (.data$head_pos %in% c("ADJ", "NOUN") &
-           stringr::str_detect(
-             dplyr::coalesce(.data$head_feats, ""), "VerbForm=Part"
-           ) &
-           dplyr::coalesce(.data$head_morph_voice, "") != "Pass")
-    ) %>%
-    dplyr::filter(.data$head_is_participle) %>%
-    dplyr::distinct(.data$doc_id, .data$head_token_id_int, .keep_all = TRUE)
+    count_feature("f_10_be_main_verb")
 
-  f02 <- perfect_candidates %>%
-    dplyr::group_by(.data$doc_id) %>%
-    dplyr::tally() %>%
-    dplyr::rename(f_02_perfect_aspect = "n")
-
-  # ── f_12  Verbo pro-verbal: hacer + clítico objeto referencial ────────────
-  # Ej.: "Lo hago", "¿Lo hace usted?"
-  proverb_objects <- tokens %>%
+  # ── f_11  Pronombres indefinidos ──────────────────────────────────────────
+  f11 <- tokens %>%
     dplyr::filter(
-      .data$pos == "PRON",
-      .data$lemma %in% proverb_pronouns,
-      stringr::str_detect(dplyr::coalesce(.data$dep_rel, ""), "^obj"),
-      !is.na(.data$head_token_id_int)
+      .data$lemma %in% indefinite_pronouns,
+      .data$pos   %in% c("PRON", "DET")
     ) %>%
-    dplyr::transmute(
-      .data$doc_id, .data$sentence_id,
-      head_token_id_int  = .data$head_token_id_int,
-      has_proverb_object = TRUE
-    ) %>%
-    dplyr::distinct()
+    count_feature("f_11_indefinite_pronoun")
 
-  f12 <- tokens %>%
-    dplyr::filter(
-      .data$lemma == "hacer",
-      .data$pos %in% c("VERB", "AUX"),
-      !stringr::str_detect(dplyr::coalesce(.data$dep_rel, ""), "^aux"),
-      !is.na(.data$token_id_int)
-    ) %>%
-    dplyr::left_join(
-      proverb_objects,
-      by = c("doc_id", "sentence_id", "token_id_int" = "head_token_id_int")
-    ) %>%
-    dplyr::filter(.data$has_proverb_object) %>%
-    dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int) %>%
-    dplyr::group_by(.data$doc_id) %>%
-    dplyr::tally() %>%
-    dplyr::rename(f_12_proverb_do = "n")
-
+  # ── Ensamblar ──────────────────────────────────────────────────────────────
   doc_ids %>%
+    dplyr::left_join(f01, by = "doc_id") %>%
     dplyr::left_join(f02, by = "doc_id") %>%
-    dplyr::left_join(f12, by = "doc_id") %>%
+    dplyr::left_join(f03, by = "doc_id") %>%
+    dplyr::left_join(f04, by = "doc_id") %>%
+    dplyr::left_join(f05, by = "doc_id") %>%
+    dplyr::left_join(f10, by = "doc_id") %>%
+    dplyr::left_join(f11, by = "doc_id") %>%
     dplyr::mutate(
-      f_02_perfect_aspect = dplyr::coalesce(.data$f_02_perfect_aspect, 0L),
-      f_12_proverb_do     = dplyr::coalesce(.data$f_12_proverb_do,     0L)
+      dplyr::across(-dplyr::any_of("doc_id"), ~ dplyr::coalesce(., 0L))
     )
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 2.  block_personal_pronouns_es
-#     f_06 1ª persona  |  f_07 2ª persona  |  f_08 3ª persona
-#     f_09 pronombre expletivo/impersonal   |  f_13 pregunta-qué
+#     f_06  1ª persona   f_07  2ª persona   f_08  3ª persona
+#     f_09  expletivo/impersonal            f_13  pregunta-qué
 # ─────────────────────────────────────────────────────────────────────────────
 
-#' Extract personal pronoun and question features (Spanish)
-#'
-#' f_06/f_07/f_08: conteo simplificado por lemma + exclusión de reflexivos.
-#' No se usa bind_rows redundante; un único filtro por lemma es suficiente
-#' porque en UD español los pronombres personales tónicos y átonos tienen
-#' lemmas inequívocos. morph_person se usa solo como desempate cuando
-#' un lemma es ambiguo (p.ej. "nos" puede ser 1ª o—raramente—vocativo).
+#' Personal pronoun, expletive, and WH-question features (Spanish)
 #'
 #' @param tokens Annotated token data frame
-#' @param doc_ids Document IDs
-#' @param head_lookup Head token lookup table
-#' @param de_markers De marker lookup table
-#' @param que_markers Que marker lookup table
-#' @param clause_complements Clause complement lookup table
-#' @param weather_lemmas Weather verb lemmas
-#' @param raising_verbs Raising verb lemmas
-#' @param wh_question_lemmas WH question word lemmas
-#' @return Data frame con f_06 a f_09 y f_13
+#' @param doc_ids One-column data frame with column `doc_id`
+#' @param head_lookup Pre-built head-token attribute table
+#' @param de_markers  Table: (doc_id, sentence_id, head_token_id_int, has_de_marker)
+#' @param que_markers Table: (doc_id, sentence_id, head_token_id_int, has_que_marker)
+#' @param clause_complements Table: (doc_id, sentence_id, head_token_id_int, has_clause_comp)
+#' @param weather_lemmas Impersonal weather verb lemmas (default provided)
+#' @param raising_verbs  Raising / impers-tendency verb lemmas (default provided)
+#' @param wh_question_lemmas WH-word lemmas (default provided)
+#' @return Data frame: one row per doc, columns f_06 … f_09, f_13
 #' @keywords internal
 block_personal_pronouns_es <- function(
     tokens,
@@ -200,10 +236,10 @@ block_personal_pronouns_es <- function(
       "por_que","por_qu\u00e9"
     )) {
 
-  # dep_rel que indican uso reflexivo/impersonal — excluidos en f_06-f_08
+  # dep_rel que señalan uso reflexivo/impersonal — excluidos en f_06–f_08
   reflexive_deps <- c("expl:pv", "expl:impers", "expl")
 
-  # Helper: contar pronombres de una persona dada por lista de lemmas
+  # Helper: filtrar pronombres de una persona por lista de lemmas
   count_person_pronouns <- function(lemma_list) {
     tokens %>%
       dplyr::filter(
@@ -214,52 +250,43 @@ block_personal_pronouns_es <- function(
       dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int)
   }
 
-  # ── f_06  1ª persona ──────────────────────────────────────────────────
-  first_person_lemmas <- c(
+  # ── f_06  1ª persona ─────────────────────────────────────────────────────
+  f06 <- count_person_pronouns(c(
     "yo", "nosotros", "nosotras",
     "me", "nos",
     "m\u00ed", "conmigo"
-  )
-  f06 <- count_person_pronouns(first_person_lemmas) %>%
+  )) %>%
     dplyr::group_by(.data$doc_id) %>%
     dplyr::tally() %>%
     dplyr::rename(f_06_first_person_pronouns = "n")
 
-  # ── f_07  2ª persona ──────────────────────────────────────────────────
-  # "te" es ambiguo: puede ser 2ª sing. átono o parte de "te" impersonal.
-  # Lo incluimos pero la exclusión de reflexive_deps filtra los casos
-  # expl:pv / expl más problemáticos.
-  second_person_lemmas <- c(
+  # ── f_07  2ª persona ─────────────────────────────────────────────────────
+  # "te" puede ser 2ª átono o parte de construcción impersonal;
+  # la exclusión de reflexive_deps filtra los casos expl más claros.
+  f07 <- count_person_pronouns(c(
     "t\u00fa", "vos", "vosotros", "vosotras",
     "usted", "ustedes",
     "te", "ti", "contigo", "os"
-  )
-  f07 <- count_person_pronouns(second_person_lemmas) %>%
+  )) %>%
     dplyr::group_by(.data$doc_id) %>%
     dplyr::tally() %>%
     dplyr::rename(f_07_second_person_pronouns = "n")
 
-  # ── f_08  3ª persona ──────────────────────────────────────────────────
-  # "se" con dep_rel reflexivo va a f_09 — aquí lo excluimos explícitamente
-  # por lemma además de por reflexive_deps para mayor seguridad.
-  third_person_lemmas <- c(
+  # ── f_08  3ª persona ─────────────────────────────────────────────────────
+  f08 <- count_person_pronouns(c(
     "\u00e9l", "ella", "ello", "ellos", "ellas",
     "le", "lo", "la", "les", "los", "las",
     "consigo"
-  )
-  f08 <- count_person_pronouns(third_person_lemmas) %>%
-    # excluir "ello" cuando va a f_09 (sujeto impersonal)
-    # se maneja en f_09 por separado; no restamos aquí para no perder
-    # usos referenciales de "ello" ("ello nos preocupó" referencial)
+  )) %>%
     dplyr::group_by(.data$doc_id) %>%
     dplyr::tally() %>%
     dplyr::rename(f_08_third_person_pronouns = "n")
 
-  # ── f_09  Pronombre expletivo / impersonal ─────────────────────────────
-  # Análogo al "il" expletivo francés. En español:
+  # ── f_09  Pronombre expletivo / impersonal ───────────────────────────────
+  # Cubre:
   #   (a) "ello" como sujeto impersonal ("Ello implica que…")
-  #   (b) "se" con dep_rel expl:impers o expl
-  #   (c) haber impersonal (hay, hubo, habrá…) sin nsubj explícito
+  #   (b) "se" con dep_rel expl:impers o expl (se impersonal)
+  #   (c) haber impersonal (hay, había…) sin sujeto explícito
   pronoun_it_candidates <- tokens %>%
     dplyr::filter(
       .data$pos == "PRON",
@@ -268,79 +295,94 @@ block_personal_pronouns_es <- function(
     ) %>%
     dplyr::left_join(
       head_lookup,
-      by = c("doc_id", "sentence_id", "head_token_id_int" = "token_id_int")
+      by = c("doc_id", "sentence_id",
+             "head_token_id_int" = "token_id_int")
     ) %>%
-    dplyr::left_join(de_markers,         by = c("doc_id", "sentence_id", "head_token_id_int")) %>%
-    dplyr::left_join(que_markers,        by = c("doc_id", "sentence_id", "head_token_id_int")) %>%
-    dplyr::left_join(clause_complements, by = c("doc_id", "sentence_id", "head_token_id_int")) %>%
+    dplyr::left_join(de_markers,
+                     by = c("doc_id", "sentence_id",
+                            "head_token_id_int")) %>%
+    dplyr::left_join(que_markers,
+                     by = c("doc_id", "sentence_id",
+                            "head_token_id_int")) %>%
+    dplyr::left_join(clause_complements,
+                     by = c("doc_id", "sentence_id",
+                            "head_token_id_int")) %>%
     dplyr::mutate(
       has_de_marker   = dplyr::coalesce(.data$has_de_marker,   FALSE),
       has_que_marker  = dplyr::coalesce(.data$has_que_marker,  FALSE),
       has_clause_comp = dplyr::coalesce(.data$has_clause_comp, FALSE),
-      is_weather         = .data$head_lemma %in% weather_lemmas,
-      is_raising_verb    = .data$head_lemma %in% raising_verbs,
-      has_control_marker = .data$has_de_marker | .data$has_que_marker | .data$has_clause_comp
+      is_weather          = .data$head_lemma %in% weather_lemmas,
+      is_raising_verb     = .data$head_lemma %in% raising_verbs,
+      has_control_marker  =
+        .data$has_de_marker | .data$has_que_marker | .data$has_clause_comp
     ) %>%
     dplyr::filter(
-      stringr::str_detect(dplyr::coalesce(.data$dep_rel, ""), "^expl") |
-        (stringr::str_detect(dplyr::coalesce(.data$dep_rel, ""), "^nsubj") &
+      stringr::str_detect(
+        dplyr::coalesce(.data$dep_rel, ""), "^expl"
+      ) |
+        (stringr::str_detect(
+          dplyr::coalesce(.data$dep_rel, ""), "^nsubj"
+        ) &
            .data$lemma == "ello" &
            (.data$is_weather |
               (.data$head_pos == "ADJ" & .data$has_control_marker) |
               (.data$head_pos %in% c("VERB", "AUX") &
-                 (.data$is_raising_verb | .data$has_control_marker))))
+                 (.data$is_raising_verb |
+                    .data$has_control_marker))))
     )
 
-  # haber impersonal: sin nsubj colgando de este token
+  # haber impersonal sin nsubj dependiente
   haber_impersonal <- tokens %>%
     dplyr::filter(
       .data$lemma == "haber",
-      .data$pos %in% c("VERB", "AUX"),
-      .data$dep_rel %in% c("root", "ccomp", "xcomp", "advcl") |
-        is.na(.data$dep_rel)
+      .data$pos   %in% c("VERB", "AUX"),
+      dplyr::coalesce(.data$dep_rel, "") %in%
+        c("root", "ccomp", "xcomp", "advcl", "parataxis", "")
     ) %>%
     dplyr::anti_join(
       tokens %>%
         dplyr::filter(
-          stringr::str_detect(dplyr::coalesce(.data$dep_rel, ""), "^nsubj")
+          stringr::str_detect(
+            dplyr::coalesce(.data$dep_rel, ""), "^nsubj"
+          )
         ) %>%
         dplyr::transmute(
           .data$doc_id, .data$sentence_id,
           head_token_id_int = .data$head_token_id_int
         ),
-      by = c("doc_id", "sentence_id", "token_id_int" = "head_token_id_int")
+      by = c("doc_id", "sentence_id",
+             "token_id_int" = "head_token_id_int")
     )
 
   f09 <- dplyr::bind_rows(
     pronoun_it_candidates %>%
-      dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int),
+      dplyr::distinct(.data$doc_id, .data$sentence_id,
+                      .data$token_id_int),
     haber_impersonal %>%
-      dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int)
+      dplyr::distinct(.data$doc_id, .data$sentence_id,
+                      .data$token_id_int)
   ) %>%
     dplyr::distinct() %>%
-    dplyr::group_by(.data$doc_id) %>%
-    dplyr::tally() %>%
-    dplyr::rename(f_09_pronoun_it = "n")
+    count_feature("f_09_pronoun_it")
 
-  # ── f_13  Preguntas-qué ───────────────────────────────────────────────────
+  # ── f_13  Preguntas con palabra interrogativa ───────────────────────────
   question_sentences <- tokens %>%
     dplyr::filter(.data$token == "?") %>%
-    dplyr::transmute(.data$doc_id, .data$sentence_id, has_question = TRUE) %>%
+    dplyr::transmute(.data$doc_id, .data$sentence_id,
+                     has_question = TRUE) %>%
     dplyr::distinct()
 
   f13 <- tokens %>%
     dplyr::filter(
       .data$lemma %in% wh_question_lemmas,
-      .data$pos %in% c("ADV", "PRON", "DET", "ADJ")
+      .data$pos   %in% c("ADV", "PRON", "DET", "ADJ")
     ) %>%
-    dplyr::left_join(question_sentences, by = c("doc_id", "sentence_id")) %>%
+    dplyr::left_join(question_sentences,
+                     by = c("doc_id", "sentence_id")) %>%
     dplyr::filter(!is.na(.data$has_question)) %>%
-    dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int) %>%
-    dplyr::group_by(.data$doc_id) %>%
-    dplyr::tally() %>%
-    dplyr::rename(f_13_wh_question = "n")
+    count_feature("f_13_wh_question")
 
-  # ── Ensamblar ──────────────────────────────────────────────────────────────────────
+  # ── Ensamblar ─────────────────────────────────────────────────────────────
   doc_ids %>%
     dplyr::left_join(f06, by = "doc_id") %>%
     dplyr::left_join(f07, by = "doc_id") %>%
@@ -348,6 +390,7 @@ block_personal_pronouns_es <- function(
     dplyr::left_join(f09, by = "doc_id") %>%
     dplyr::left_join(f13, by = "doc_id") %>%
     dplyr::mutate(
-      dplyr::across(-dplyr::any_of("doc_id"), ~ dplyr::coalesce(., 0L))
+      dplyr::across(-dplyr::any_of("doc_id"),
+                    ~ dplyr::coalesce(., 0L))
     )
 }
