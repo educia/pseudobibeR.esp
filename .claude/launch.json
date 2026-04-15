@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "shiny",
+      "runtimeExecutable": "Rscript",
+      "runtimeArgs": ["-e", "shiny::runApp('/Volumes/Disco 2/pseudobibeR.esp', port=7654, launch.browser=FALSE)"],
+      "port": 7654
+    }
+  ]
+}
