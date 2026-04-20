@@ -4,7 +4,13 @@
 \alias{parse_biber_features}
 \title{Main feature extraction orchestrator}
 \usage{
-parse_biber_features(tokens, measure, normalize, engine = c("spacy", "udpipe"))
+parse_biber_features(
+  tokens,
+  measure,
+  normalize,
+  engine = c("spacy", "udpipe"),
+  language = c("fr", "es")
+)
 }
 \arguments{
 \item{tokens}{Annotated token data}
@@ -14,6 +20,9 @@ parse_biber_features(tokens, measure, normalize, engine = c("spacy", "udpipe"))
 \item{normalize}{Whether to normalize counts}
 
 \item{engine}{Parser engine ("spacy" or "udpipe")}
+
+\item{language}{Language code for feature heuristics ("fr" for French,
+"es" for Spanish). Defaults to "fr" to preserve original behaviour.}
 }
 \value{
 Data frame of extracted features

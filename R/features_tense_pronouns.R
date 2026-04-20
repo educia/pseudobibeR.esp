@@ -68,9 +68,15 @@ block_tense_es <- function(
 ) {
 
   # ── f_01  Tiempo pasado (imperfecto) ─────────────────────────────────────
-  # Biber (1988) mapea el pasado narrativo al imperfecto en español.
-  # Solo Tense=Imp (pretérito imperfecto de indicativo).
-  # El pretérito indefinido se recoge aparte en f_01b.
+  # f_01 DECISIÓN DE DISEÑO (2026-04-20):
+  # En pseudobibeR.es, f_01 captura SOLO el pretérito imperfecto (Tense=Imp).
+  # El pretérito indefinido vive en f_71; el perfecto compuesto en f_02.
+  # Esto difiere de pseudobibeR.fr donde f_01 agrega TODOS los pasados.
+  # Justificación: en español imperfecto e indefinido tienen valores
+  # aspectuales distintos (imperfectivo vs perfectivo); mantenerlos separados
+  # aumenta el poder discriminativo del análisis. Para comparaciones
+  # translingües FR↔ES, usar f_01 + f_02 + f_71 como proxy de "total pasado".
+  # Ver: docs/DECISIONES_ES.md §f_01.
   f01 <- tokens %>%
     dplyr::filter(
       .data$pos %in% c("VERB", "AUX"),

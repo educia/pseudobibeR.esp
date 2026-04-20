@@ -16,8 +16,11 @@
 
 # ---------------------------------------------------------------------------
 # PRONOMBRES
-# Usados como fallback lexico en block_personal_pronouns_es();
-# la logica principal corre via UD POS + dep_rel en el codigo.
+# NOTA (2026-04-20): pronoun_matchlist NO se usa en block_personal_pronouns_es().
+# f_06/f_07/f_08 usan listas de lemmas hardcoded en el propio código.
+# Esta lista se usa ÚNICAMENTE como fallback genérico en otros contextos
+# que necesiten identificar formas pronominales sin distinción de persona.
+# Para demostrativos, ver demonstrative_matchlist.
 # ---------------------------------------------------------------------------
 
 pronoun_matchlist:
@@ -92,6 +95,46 @@ pronoun_matchlist:
   - nadie
   - todo_el_mundo
   - todo_el_que
+
+# ---------------------------------------------------------------------------
+# DEMOSTRATIVOS
+# Añadida 2026-04-20: lista separada para f_10 (pronombres demostrativos)
+# y f_51 (determinantes demostrativos). La pronoun_matchlist no incluía
+# estas formas, causando que f_10/f_51 midieran el constructo incorrecto.
+# Se incluyen formas con tilde (pre-RAE 2010) que aparecen en corpus históricos.
+# ---------------------------------------------------------------------------
+
+demonstrative_matchlist:
+  # Demostrativos pronominales (f_10): pos=PRON
+  - este
+  - esta
+  - esto
+  - estos
+  - estas
+  - ese
+  - esa
+  - eso
+  - esos
+  - esas
+  - aquel
+  - aquella
+  - aquello
+  - aquellos
+  - aquellas
+  # Formas con tilde (pronominales; la RAE 2010 las acepta sin tilde,
+  # pero aparecen en corpus anteriores a 2010)
+  - éste
+  - ésta
+  - éstos
+  - éstas
+  - ése
+  - ésa
+  - ésos
+  - ésas
+  - aquél
+  - aquélla
+  - aquéllos
+  - aquéllas
 
 # Pronombres reflexivos: usados para excluir de f_06–f_08
 reflexive_clitic_matchlist:

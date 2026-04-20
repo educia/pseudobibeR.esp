@@ -407,7 +407,12 @@ block_negation_es <- function(tokens, doc_ids,
 #' @keywords internal
 block_lexical_membership_es <- function(tokens, doc_ids, word_lists_lookup) {
 
+  # 2026-04-20: pronoun_matchlist no contiene demostrativos (este/ese/aquel).
+  # Se carga demonstrative_matchlist (añadida en word_lists.yaml) para f_10 y f_51.
+  # pronoun_matchlist se conserva para otros usos genéricos dentro del bloque.
+  # Ver: docs/DECISIONES_ES.md §f_10-f_51.
   pronoun_terms         <- get_word_list(word_lists_lookup, "pronoun_matchlist")
+  demonstr_terms        <- get_word_list(word_lists_lookup, "demonstrative_matchlist")
   nominalization_sfx    <- get_word_list(word_lists_lookup, "nominalization_suffixes")
   nominalization_stop   <- normalize_terms(
     get_word_list(word_lists_lookup, "nominalization_stoplist")
@@ -417,19 +422,25 @@ block_lexical_membership_es <- function(tokens, doc_ids, word_lists_lookup) {
   )
 
   # ── f_10  Pronombres demostrativos ────────────────────────────────────────
+  # 2026-04-20: cambiado de pronoun_terms a demonstr_terms.
+  # pronoun_matchlist carece de formas demostrativas (este/ese/aquel);
+  # usarla aquí hacía que f_10 contara pronombres personales/posesivos.
   f10 <- tokens %>%
     dplyr::filter(
       stringr::str_to_lower(.data$token) %in%
-        stringr::str_to_lower(pronoun_terms),
+        stringr::str_to_lower(demonstr_terms),
       .data$pos == "PRON"
     ) %>%
     count_feature("f_10_demonstrative_pronoun")
 
   # ── f_51  Demostrativos determinantes ─────────────────────────────────────
+  # 2026-04-20: cambiado de pronoun_terms a demonstr_terms.
+  # pronoun_matchlist solo tenía posesivos átonos (mi/tu/su); esos no son
+  # demostrativos. demonstrative_matchlist contiene este/ese/aquel + formas.
   f51 <- tokens %>%
     dplyr::filter(
       stringr::str_to_lower(.data$token) %in%
-        stringr::str_to_lower(pronoun_terms),
+        stringr::str_to_lower(demonstr_terms),
       .data$pos == "DET",
       dplyr::coalesce(.data$dep_rel, "") == "det"
     ) %>%

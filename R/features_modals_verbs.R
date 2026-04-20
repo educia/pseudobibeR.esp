@@ -246,6 +246,12 @@ block_modals_es <- function(tokens, doc_ids, dict_lookup) {
     dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int)
 
   #   (b) ir_a + INF  (ir con dep_rel aux cuyo head tiene VerbForm=Inf)
+  # 2026-04-20: Filtro de Tense añadido para excluir desplazamiento físico.
+  # Sin filtro, "fue a buscarlo" (Tense=Past) se contaba como futuro perifrástico.
+  # Decisión: se aceptan Tense=Pres (va a hacer) y Tense=Imp (iba a hacer,
+  # futuro del pasado / condicional). Se excluyen Tense=Past (fue a + INF =
+  # movimiento físico dirigido) y Tense=Fut (irá a + INF = futuro doble, raro).
+  # Ver: docs/DECISIONES_ES.md §f_54.
   ir_a_inf <- tokens %>%
     dplyr::filter(
       .data$lemma == "ir",
@@ -265,7 +271,10 @@ block_modals_es <- function(tokens, doc_ids, dict_lookup) {
       dplyr::coalesce(.data$head_verbform, "") == "Inf",
       stringr::str_detect(
         dplyr::coalesce(.data$dep_rel, ""), "^aux"
-      )
+      ),
+      # Filtro de tiempo: solo futuro próximo (Pres) y futuro del pasado (Imp).
+      # Se excluye Tense=Past (fue a + INF = desplazamiento físico, no modalidad).
+      dplyr::coalesce(extract_feat(.data$feats, "Tense"), "") %in% c("Pres", "Imp")
     ) %>%
     dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int)
 

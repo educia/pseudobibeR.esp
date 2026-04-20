@@ -2,7 +2,8 @@
 % Please edit documentation in R/pseudobibeR.fr-package.R
 \docType{package}
 \name{pseudobibeR.fr}
-\alias{pseudobibeR.fr-package}
+\alias{pseudobibeR.es}
+\alias{pseudobibeR.es-package}
 \alias{pseudobibeR.fr}
 \title{pseudobibeR.fr: French Biber Feature Extraction}
 \description{
@@ -12,13 +13,7 @@ development iteration focuses on building language resources (dictionaries,
 word lists) and parsing helpers grounded in Universal Dependencies.
 }
 \author{
-\strong{Maintainer}: David Brown \email{dwb2@andrew.cmu.edu} (\href{https://orcid.org/0000-0001-7745-6354}{ORCID})
-
-Authors:
-\itemize{
-  \item Marina Seghier \email{ms@up8.edu}
-  \item Alice Millour \email{am@up8.edu}
-}
+\strong{Maintainer}: Maximiliano Cordovez \email{maximiliano.cf@outlook.es}
 
 }
 \keyword{internal}

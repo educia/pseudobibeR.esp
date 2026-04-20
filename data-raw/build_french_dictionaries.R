@@ -91,6 +91,9 @@ multiword_patterns <- sort(unique(c(dict_multiword_patterns, manual_multiword_pa
 
 word_lists <- list(
   pronoun_matchlist = normalize_terms(word_lists_spec$pronoun_matchlist, replace_spaces = TRUE),
+  # 2026-04-20: demonstrative_matchlist añadida para f_10/f_51 (este/ese/aquel).
+  # pronoun_matchlist carecía de demostrativos; ver docs/DECISIONES_ES.md §f_10-f_51.
+  demonstrative_matchlist = normalize_terms(word_lists_spec$demonstrative_matchlist, replace_spaces = TRUE),
   proverb_object_pronouns = normalize_terms(word_lists_spec$proverb_object_pronouns, replace_spaces = TRUE),
   impersonal_verbs = normalize_terms(word_lists_spec$impersonal_verbs, replace_spaces = TRUE),
   linking_matchlist = normalize_terms(word_lists_spec$linking_matchlist, replace_spaces = TRUE),
