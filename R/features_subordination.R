@@ -1,45 +1,45 @@
 # features_subordination.R
-# Subordination and clause-embedding features for Spanish (f_21–f_38)
+# Subordination and clause-embedding features for Spanish (f_21-f_38)
 #
 # ESTRATEGIA GENERAL:
 #   Reescritura completa sin depender de flags pre-computados
 #   (is_infinitive, is_relative_subject, etc.) que no siempre existen.
-#   Toda la lógica trabaja directamente sobre columnas UD estándar:
+#   Toda la logica trabaja directamente sobre columnas UD estandar:
 #     pos (UPOS), dep_rel, feats, lemma, token, head_token_id_int.
 #   Se usa extract_feat() de features_tense_pronouns.R para leer
-#   rasgos morfológicos del campo `feats`.
+#   rasgos morfologicos del campo `feats`.
 #
 # MAPA DE FEATURES:
 #   f_21  that-complementizador tras verbo       ("dijo que...")
 #   f_22  that-complementizador tras adjetivo    ("seguro de que...")
-#   f_23  Cláusula-wh (relativa/interrogativa indirecta)
-#   f_24  Infinitivos (VerbForm=Inf como núcleo clausal)
+#   f_23  Clausula-wh (relativa/interrogativa indirecta)
+#   f_24  Infinitivos (VerbForm=Inf como nucleo clausal)
 #   f_25  Gerundio adverbial / complemento       (VerbForm=Ger, dep_rel=advcl|ccomp)
 #   f_26  Participio adverbial / absoluto        (VerbForm=Part, dep_rel=advcl|ccomp|acl)
 #   f_27  Participio postnominal (whiz-deletion) (VerbForm=Part, dep_rel=acl, head=NOUN)
 #   f_28  Gerundio postnominal  (whiz-deletion)  (VerbForm=Ger,  dep_rel=acl, head=NOUN)
-#   f_29  Relativa de sujeto con «que»
-#   f_30  Relativa de objeto con «que»
+#   f_29  Relativa de sujeto con <<que>>
+#   f_30  Relativa de objeto con <<que>>
 #   f_31  Relativa de sujeto con pronombre-wh    (quien, cual)
 #   f_32  Relativa de objeto con pronombre-wh
 #   f_33  Pied-piping (prep + pronombre relativo)
 #   f_34  Relativa oracional (eso que, lo que)
-#   f_35  Subordinada causal (porque, ya que, puesto que…)
-#   f_36  Subordinada concesiva (aunque, si bien, a pesar de que…)
-#   f_37  Subordinada condicional (si, en caso de que…)
+#   f_35  Subordinada causal (porque, ya que, puesto que?)
+#   f_36  Subordinada concesiva (aunque, si bien, a pesar de que?)
+#   f_37  Subordinada condicional (si, en caso de que?)
 #   f_38  Otros subordinadores adverbiales
-#   f_60  That-deletion (elipsis de «que» complementizador)
+#   f_60  That-deletion (elipsis de <<que>> complementizador)
 
-# ─────────────────────────────────────────────────────────────────────────────
-# 1.  block_participial_clauses_es   f_24–f_28
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
+# 1.  block_participial_clauses_es   f_24-f_28
+# -----------------------------------------------------------------------------
 
 #' Participial and infinitive clause features (Spanish)
 #'
 #' @param tokens Annotated token data frame (UD format)
 #' @param doc_ids One-column data frame with column `doc_id`
 #' @param head_lookup Pre-built head-token attribute table
-#' @return Data frame: one row per doc, columns f_24 – f_28
+#' @return Data frame: one row per doc, columns f_24 - f_28
 #' @keywords internal
 block_participial_clauses_es <- function(tokens, doc_ids, head_lookup) {
 
@@ -51,11 +51,11 @@ block_participial_clauses_es <- function(tokens, doc_ids, head_lookup) {
       )
     )
 
-  # ── f_24  Infinitivos como núcleo clausal ─────────────────────────────────
+  # -- f_24  Infinitivos como nucleo clausal ---------------------------------
   # Un infinitivo cuenta cuando:
   #   - VerbForm = Inf
   #   - dep_rel es xcomp, ccomp, advcl, acl, obj (complement clausal)
-  #   - NO es el infinitivo de una perífrasis modal (aux de un VERB finito)
+  #   - NO es el infinitivo de una perifrasis modal (aux de un VERB finito)
   f24 <- tokens %>%
     dplyr::filter(
       .data$pos  %in% c("VERB", "AUX"),
@@ -67,7 +67,7 @@ block_participial_clauses_es <- function(tokens, doc_ids, head_lookup) {
     ) %>%
     count_feature("f_24_infinitives")
 
-  # ── f_25  Gerundio adverbial / complemento ────────────────────────────────
+  # -- f_25  Gerundio adverbial / complemento --------------------------------
   # VerbForm=Ger con dep_rel=advcl|ccomp, NO postnominal
   f25 <- tokens %>%
     dplyr::filter(
@@ -80,9 +80,9 @@ block_participial_clauses_es <- function(tokens, doc_ids, head_lookup) {
     ) %>%
     count_feature("f_25_present_participle")
 
-  # ── f_26  Participio adverbial / absoluto ─────────────────────────────────
-  # VerbForm=Part + Voice≠Pass con dep_rel=advcl|ccomp|acl
-  # (participio absoluto: «llegado el momento…», «terminada la reunión…»)
+  # -- f_26  Participio adverbial / absoluto ---------------------------------
+  # VerbForm=Part + Voice?Pass con dep_rel=advcl|ccomp|acl
+  # (participio absoluto: <<llegado el momento?>>, <<terminada la reunion?>>)
   f26 <- tokens %>%
     dplyr::filter(
       .data$pos %in% c("VERB", "ADJ"),
@@ -95,7 +95,7 @@ block_participial_clauses_es <- function(tokens, doc_ids, head_lookup) {
     ) %>%
     count_feature("f_26_past_participle")
 
-  # ── f_27  Participio postnominal (whiz-deletion) ──────────────────────────
+  # -- f_27  Participio postnominal (whiz-deletion) --------------------------
   # VerbForm=Part, dep_rel=acl, head es NOUN/PROPN
   f27 <- tokens %>%
     dplyr::filter(
@@ -115,7 +115,7 @@ block_participial_clauses_es <- function(tokens, doc_ids, head_lookup) {
     ) %>%
     count_feature("f_27_past_participle_whiz")
 
-  # ── f_28  Gerundio postnominal (whiz-deletion) ────────────────────────────
+  # -- f_28  Gerundio postnominal (whiz-deletion) ----------------------------
   # VerbForm=Ger, dep_rel=acl, head es NOUN/PROPN
   f28 <- tokens %>%
     dplyr::filter(
@@ -146,28 +146,28 @@ block_participial_clauses_es <- function(tokens, doc_ids, head_lookup) {
     )
 }
 
-# ─────────────────────────────────────────────────────────────────────────────
-# 2.  block_relatives_es   f_29–f_34
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
+# 2.  block_relatives_es   f_29-f_34
+# -----------------------------------------------------------------------------
 
 #' Relative clause features (Spanish)
 #'
 #' Estrategia UD pura:
-#'   - Cláusulas relativas = tokens con dep_rel que comienza por "acl"
+#'   - Clausulas relativas = tokens con dep_rel que comienza por "acl"
 #'     (acl, acl:relcl) cuyo marcador (dep_rel=mark o ref) es un pronombre
 #'     relativo o wh.
-#'   - Tipo de relativa (sujeto/objeto) se determina por la función UD
-#'     del pronombre relativo dentro de la cláusula subordinada.
+#'   - Tipo de relativa (sujeto/objeto) se determina por la funcion UD
+#'     del pronombre relativo dentro de la clausula subordinada.
 #'
 #' @param tokens Annotated token data frame
 #' @param doc_ids One-column data frame with column `doc_id`
 #' @param head_lookup Pre-built head-token attribute table
-#' @return Data frame: one row per doc, columns f_29 – f_34
+#' @return Data frame: one row per doc, columns f_29 - f_34
 #' @keywords internal
 block_relatives_es <- function(tokens, doc_ids, head_lookup) {
 
-  # Tabla de pronombres/adverbios relativos con su función en la relativa
-  # ── pronombres relativos en UD español
+  # Tabla de pronombres/adverbios relativos con su funcion en la relativa
+  # -- pronombres relativos en UD espanol
   rel_pronouns_all <- c(
     "que", "quien", "quienes",
     "cual", "cuales",
@@ -193,7 +193,7 @@ block_relatives_es <- function(tokens, doc_ids, head_lookup) {
         )
     )
 
-  # Head de la cláusula relativa: el token cuya dep_rel = acl*
+  # Head de la clausula relativa: el token cuya dep_rel = acl*
   # y cuya sentence_id coincide
   acl_heads <- tokens %>%
     dplyr::filter(
@@ -215,7 +215,7 @@ block_relatives_es <- function(tokens, doc_ids, head_lookup) {
       ant_pos = .data$pos
     )
 
-  # ── f_29  Relativa de sujeto con «que» ────────────────────────────────────
+  # -- f_29  Relativa de sujeto con <<que>> ------------------------------------
   f29 <- rel_tokens %>%
     dplyr::filter(
       .data$lemma == "que",
@@ -230,7 +230,7 @@ block_relatives_es <- function(tokens, doc_ids, head_lookup) {
                       by = c("doc_id", "sentence_id", "antecedent_id")) %>%
     count_feature("f_29_that_subj")
 
-  # ── f_30  Relativa de objeto con «que» ────────────────────────────────────
+  # -- f_30  Relativa de objeto con <<que>> ------------------------------------
   f30 <- rel_tokens %>%
     dplyr::filter(
       .data$lemma == "que",
@@ -247,7 +247,7 @@ block_relatives_es <- function(tokens, doc_ids, head_lookup) {
 
   wh_pronouns <- c("quien", "quienes", "cual", "cuales")
 
-  # ── f_31  Relativa de sujeto con pronombre-wh ─────────────────────────────
+  # -- f_31  Relativa de sujeto con pronombre-wh -----------------------------
   f31 <- rel_tokens %>%
     dplyr::filter(
       .data$lemma %in% wh_pronouns,
@@ -255,7 +255,7 @@ block_relatives_es <- function(tokens, doc_ids, head_lookup) {
     ) %>%
     count_feature("f_31_wh_subj")
 
-  # ── f_32  Relativa de objeto con pronombre-wh ─────────────────────────────
+  # -- f_32  Relativa de objeto con pronombre-wh -----------------------------
   f32 <- rel_tokens %>%
     dplyr::filter(
       .data$lemma %in% wh_pronouns,
@@ -263,10 +263,10 @@ block_relatives_es <- function(tokens, doc_ids, head_lookup) {
     ) %>%
     count_feature("f_32_wh_obj")
 
-  # ── f_33  Pied-piping (preposición + pronombre relativo) ──────────────────
+  # -- f_33  Pied-piping (preposicion + pronombre relativo) ------------------
   # El pronombre relativo tiene dep_rel = obl* o nmod y su head inmediato
-  # en UD es el verbo de la relativa; la preposición lo gobierna.
-  # Proxy: token ADP inmediatamente antes del pronombre relativo en la oración
+  # en UD es el verbo de la relativa; la preposicion lo gobierna.
+  # Proxy: token ADP inmediatamente antes del pronombre relativo en la oracion
   f33 <- tokens %>%
     dplyr::group_by(.data$doc_id, .data$sentence_id) %>%
     dplyr::arrange(.data$token_id_int, .by_group = TRUE) %>%
@@ -278,7 +278,7 @@ block_relatives_es <- function(tokens, doc_ids, head_lookup) {
     dplyr::ungroup() %>%
     count_feature("f_33_pied_piping")
 
-  # ── f_34  Relativa oracional (lo que, eso que, lo cual) ───────────────────
+  # -- f_34  Relativa oracional (lo que, eso que, lo cual) -------------------
   # El antecedente es un pronombre neutro (eso, esto, ello, lo)
   sentence_rel_antecedents <- c("eso", "esto", "ello", "lo")
 
@@ -318,31 +318,31 @@ block_relatives_es <- function(tokens, doc_ids, head_lookup) {
     )
 }
 
-# ─────────────────────────────────────────────────────────────────────────────
-# 3.  block_clause_embedding_es   f_21–f_23, f_35–f_38, f_60
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
+# 3.  block_clause_embedding_es   f_21-f_23, f_35-f_38, f_60
+# -----------------------------------------------------------------------------
 
 #' Complementizer, subordinator, and clause-embedding features (Spanish)
 #'
 #' f_21  That-complementizador tras VERB ("dijo que", "sabe que")
 #' f_22  That-complementizador tras ADJ  ("seguro de que", "feliz de que")
-#' f_23  Cláusula-wh (relativa/interrogativa indirecta)
-#' f_35  Subordinada causal    (porque, ya_que, puesto_que, dado_que…)
-#' f_36  Subordinada concesiva (aunque, si_bien, a_pesar_de_que…)
-#' f_37  Subordinada condicional (si, en_caso_de_que, siempre_que…)
-#' f_38  Otros subordinadores adverbiales (cuando, mientras, antes_de_que…)
-#' f_60  That-deletion (ccomp/xcomp sin «que» complementizador)
+#' f_23  Clausula-wh (relativa/interrogativa indirecta)
+#' f_35  Subordinada causal    (porque, ya_que, puesto_que, dado_que?)
+#' f_36  Subordinada concesiva (aunque, si_bien, a_pesar_de_que?)
+#' f_37  Subordinada condicional (si, en_caso_de_que, siempre_que?)
+#' f_38  Otros subordinadores adverbiales (cuando, mientras, antes_de_que?)
+#' f_60  That-deletion (ccomp/xcomp sin <<que>> complementizador)
 #'
 #' @param tokens Annotated token data frame
 #' @param doc_ids One-column data frame with column `doc_id`
 #' @param head_lookup Pre-built head-token attribute table
 #' @param dict_lookup Dictionary lookup (para listas de subordinadores)
-#' @return Data frame: one row per doc, columns f_21–f_23, f_35–f_38, f_60
+#' @return Data frame: one row per doc, columns f_21-f_23, f_35-f_38, f_60
 #' @keywords internal
 block_clause_embedding_es <- function(tokens, doc_ids, head_lookup,
                                        dict_lookup = NULL) {
 
-  # ── f_21  «que» complementizador tras VERB ────────────────────────────────
+  # -- f_21  <<que>> complementizador tras VERB --------------------------------
   # Condiciones UD:
   #   - token lemma = "que", pos = SCONJ
   #   - dep_rel = mark
@@ -363,8 +363,8 @@ block_clause_embedding_es <- function(tokens, doc_ids, head_lookup,
     ) %>%
     count_feature("f_21_that_verb_comp")
 
-  # ── f_22  «que» complementizador tras ADJ ────────────────────────────────
-  # El head inmediato de la cláusula marcada con «que» es un ADJ
+  # -- f_22  <<que>> complementizador tras ADJ --------------------------------
+  # El head inmediato de la clausula marcada con <<que>> es un ADJ
   f22 <- tokens %>%
     dplyr::filter(
       .data$lemma == "que",
@@ -381,7 +381,7 @@ block_clause_embedding_es <- function(tokens, doc_ids, head_lookup,
     ) %>%
     count_feature("f_22_that_adj_comp")
 
-  # ── f_23  Cláusula-wh (interrogativa/relativa indirecta) ──────────────────
+  # -- f_23  Clausula-wh (interrogativa/relativa indirecta) ------------------
   wh_lemmas <- c(
     "quien", "quienes", "que", "cual", "cuales",
     "donde", "cuando", "como",
@@ -409,10 +409,10 @@ block_clause_embedding_es <- function(tokens, doc_ids, head_lookup,
     dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int) %>%
     count_feature("f_23_wh_clause")
 
-  # ── f_35  Causal ──────────────────────────────────────────────────────────
+  # -- f_35  Causal ----------------------------------------------------------
   causal_lemmas <- c(
     "porque", "ya_que", "puesto_que", "dado_que",
-    "pues", "como",   # «como» causal: "Como llueve, me quedo"
+    "pues", "como",   # "como" causal: "Como llueve, me quedo"
     "en_vista_de_que", "habida_cuenta_de_que"
   )
 
@@ -427,7 +427,7 @@ block_clause_embedding_es <- function(tokens, doc_ids, head_lookup,
     dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int) %>%
     count_feature("f_35_because")
 
-  # ── f_36  Concesiva ───────────────────────────────────────────────────────
+  # -- f_36  Concesiva -------------------------------------------------------
   concessive_lemmas <- c(
     "aunque", "si_bien", "a_pesar_de_que", "aun_cuando",
     "por_m\u00e1s_que", "por_mucho_que", "pese_a_que",
@@ -445,7 +445,7 @@ block_clause_embedding_es <- function(tokens, doc_ids, head_lookup,
     dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int) %>%
     count_feature("f_36_though")
 
-  # ── f_37  Condicional ─────────────────────────────────────────────────────
+  # -- f_37  Condicional -----------------------------------------------------
   conditional_lemmas <- c(
     "si", "en_caso_de_que", "siempre_que", "siempre_y_cuando",
     "con_tal_de_que", "a_condici\u00f3n_de_que", "a_menos_que",
@@ -463,7 +463,7 @@ block_clause_embedding_es <- function(tokens, doc_ids, head_lookup,
     dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int) %>%
     count_feature("f_37_if")
 
-  # ── f_38  Otros subordinadores adverbiales ────────────────────────────────
+  # -- f_38  Otros subordinadores adverbiales --------------------------------
   # Todo SCONJ con dep_rel=mark que NO sea ya contado en f_21/f_22/f_35/f_36/f_37
   counted_sub <- unique(c(
     "que",
@@ -480,9 +480,9 @@ block_clause_embedding_es <- function(tokens, doc_ids, head_lookup,
     ) %>%
     count_feature("f_38_other_adv_sub")
 
-  # ── f_60  That-deletion ───────────────────────────────────────────────────
-  # Cláusulas ccomp/xcomp sin marcador «que»
-  # Paso 1: cláusulas que SÍ tienen «que» como mark
+  # -- f_60  That-deletion ---------------------------------------------------
+  # Clausulas ccomp/xcomp sin marcador <<que>>
+  # Paso 1: clausulas que SI tienen <<que>> como mark
   has_que_mark <- tokens %>%
     dplyr::filter(
       .data$lemma == "que",
@@ -497,7 +497,7 @@ block_clause_embedding_es <- function(tokens, doc_ids, head_lookup,
     ) %>%
     dplyr::distinct()
 
-  # Paso 2: cláusulas complemento cuyo head es VERB/AUX/ADJ Y no tienen «que»
+  # Paso 2: clausulas complemento cuyo head es VERB/AUX/ADJ Y no tienen <<que>>
   f60 <- tokens %>%
     dplyr::filter(
       stringr::str_detect(

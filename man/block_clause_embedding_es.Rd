@@ -16,16 +16,16 @@ block_clause_embedding_es(tokens, doc_ids, head_lookup, dict_lookup = NULL)
 \item{dict_lookup}{Dictionary lookup (para listas de subordinadores)}
 }
 \value{
-Data frame: one row per doc, columns f_21–f_23, f_35–f_38, f_60
+Data frame: one row per doc, columns f_21-f_23, f_35-f_38, f_60
 }
 \description{
 f_21  That-complementizador tras VERB ("dijo que", "sabe que")
 f_22  That-complementizador tras ADJ  ("seguro de que", "feliz de que")
-f_23  Cláusula-wh (relativa/interrogativa indirecta)
-f_35  Subordinada causal    (porque, ya_que, puesto_que, dado_que…)
-f_36  Subordinada concesiva (aunque, si_bien, a_pesar_de_que…)
-f_37  Subordinada condicional (si, en_caso_de_que, siempre_que…)
-f_38  Otros subordinadores adverbiales (cuando, mientras, antes_de_que…)
-f_60  That-deletion (ccomp/xcomp sin «que» complementizador)
+f_23  Clausula-wh (relativa/interrogativa indirecta)
+f_35  Subordinada causal    (porque, ya_que, puesto_que, dado_que?)
+f_36  Subordinada concesiva (aunque, si_bien, a_pesar_de_que?)
+f_37  Subordinada condicional (si, en_caso_de_que, siempre_que?)
+f_38  Otros subordinadores adverbiales (cuando, mientras, antes_de_que?)
+f_60  That-deletion (ccomp/xcomp sin <\if{html}{\out{<que>}}> complementizador)
 }
 \keyword{internal}

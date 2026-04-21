@@ -20,7 +20,7 @@ block_passive_voice_es(tokens, doc_ids, head_lookup, passive_rel_values)
 Data frame con f_17 a f_20
 }
 \description{
-Detecta la pasiva perifística (ser/estar + participo, aux:pass) y la
+Detecta la pasiva perifistica (ser/estar + participo, aux:pass) y la
 pasiva refleja (se + VerbForm=Part/Fin, expl:pass). Excluye haber
 perfect de f_17/f_18. Distingue ser/estar copulativo (f_19) del
 auxiliar de pasiva. Detecta haber impersonal-existencial (f_20).

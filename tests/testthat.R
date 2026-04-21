@@ -1,4 +1,4 @@
 library(testthat)
-library(pseudobibeR.fr)
+library(pseudobibeR.es)
 
-test_check("pseudobibeR.fr")
+test_check("pseudobibeR.es")

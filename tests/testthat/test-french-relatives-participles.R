@@ -1,4 +1,6 @@
 # nolint start: line_length_linter, object_name_linter
+if (!requireNamespace("pseudobibeR.fr", quietly = TRUE)) skip("French-only test: pseudobibeR.fr not installed")
+
 
 test_that("French infinitives and participles counted", {
   clause_tokens <- tibble::tribble(

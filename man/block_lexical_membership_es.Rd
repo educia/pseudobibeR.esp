@@ -21,6 +21,6 @@ f_10  Pronombres demostrativos (este, ese, aquel + formas)
 f_14  Nominalizaciones (sustantivos con sufijos productivos)
 f_15  Gerundios
 f_16  Otros sustantivos (= total NOUN/PROPN - nominalizaciones - gerundios-NOUN)
-f_51  Demostrativos determinantes (mismo este/ese/aquel en función DET)
+f_51  Demostrativos determinantes (mismo este/ese/aquel en funcion DET)
 }
 \keyword{internal}

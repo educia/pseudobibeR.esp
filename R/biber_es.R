@@ -1,48 +1,135 @@
-#' Biber features para textos en español (udpipe)
+#' Rasgos de Biber para textos en espanol (udpipe)
 #'
-#' Extrae los 67 rasgos de Biber adaptados al español a partir de la
-#' salida de `udpipe::udpipe_annotate()` usando el modelo UD `spanish-gsd`.
+#' @title Extractor de rasgos lexico-gramaticales de Biber (1988) para espanol
 #'
-#' @param tokens Objeto devuelto por `udpipe::udpipe_annotate()`
-#' @param measure Medida de TTR: "MATTR", "TTR", "CTTR", "MSTTR" o "none"
-#' @param normalize Si TRUE (por defecto), normaliza los recuentos a
-#'   frecuencia por 1.000 tokens
+#' @description
+#' Extrae los 67 rasgos de Biber adaptados al espanol a partir de la
+#' salida de \code{udpipe::udpipe_annotate()} usando el modelo UD
+#' \code{spanish-gsd}. Devuelve una fila por documento con conteos brutos o
+#' normalizados.
 #'
-#' @return Un data.frame con una fila por documento y columnas f_01–f_67
-#'   más las métricas léxicas (f_43, f_44)
+#' La funcion acepta dos formatos de entrada:
+#' \itemize{
+#'   \item \strong{udpipe_connlu}: objeto devuelto directamente por
+#'         \code{udpipe::udpipe_annotate()} (la salida se convierte
+#'         internamente antes de llamar al orquestador).
+#'   \item \strong{data.frame / spacyr_parsed}: tabla ya convertida con
+#'         columnas \code{doc_id}, \code{token}, \code{lemma}, \code{pos},
+#'         \code{tag}, \code{feats}, \code{head_token_id}, \code{dep_rel}.
+#' }
+#'
+#' @param tokens Objeto devuelto por \code{udpipe::udpipe_annotate()} o
+#'   data.frame con formato \code{spacyr_parsed}. Debe contener al menos las
+#'   columnas \code{doc_id}, \code{token}, \code{lemma}, \code{upos} (o
+#'   \code{pos}), \code{dep_rel}.
+#' @param measure Medida de diversidad lexica (TTR). Opciones:
+#'   \code{"MATTR"} (Moving-Average TTR, recomendada para textos de longitud
+#'   variable), \code{"TTR"} (tipo/token simple), \code{"CTTR"} (TTR
+#'   corregida), \code{"MSTTR"} (TTR de segmentos), o \code{"none"} (omitir
+#'   calculo de TTR). Por defecto \code{"MATTR"}.
+#' @param normalize Logico. Si \code{TRUE} (por defecto), todos los conteos se
+#'   normalizan a frecuencia por 1\,000 tokens lexicos (se excluyen signos de
+#'   puntuacion y espacios del denominador). Si \code{FALSE} se devuelven
+#'   recuentos absolutos.
+#'
+#' @return Un \code{data.frame} con una fila por documento y las siguientes
+#'   columnas:
+#'   \itemize{
+#'     \item \code{doc_id}: identificador del documento (hereda el
+#'           \code{doc_id} de la anotacion udpipe).
+#'     \item \code{f_01_past_tense} \ldots \code{f_67_neg_analytic}: 67
+#'           columnas de rasgos con el convenio de nombres
+#'           \code{f_NN_nombre}, donde \code{NN} es el numero de rasgo
+#'           segun Biber (1988) y \code{nombre} es un descriptor breve en
+#'           ingles.
+#'     \item \code{f_43_type_token}: diversidad lexica (MATTR u otra medida
+#'           seleccionada).
+#'     \item \code{f_44_mean_word_length}: longitud media de tokens lexicos
+#'           (en caracteres).
+#'   }
+#'
+#' @note
+#' \strong{Alcance de f_01 (preterito imperfecto):} A diferencia del paquete
+#' frances \code{pseudobibeR.fr} (donde \code{f_01} agrega todos los pasados),
+#' en la version espanola \code{f_01} captura unicamente el preterito
+#' imperfecto (\code{Tense=Imp|Mood=Ind|VerbForm=Fin}). El indefinido
+#' (\emph{canto}) se recoge en \code{f_71_preterit} y el perfecto compuesto
+#' (\emph{ha cantado}) en \code{f_02_perfect_aspect}. Para un proxy de
+#' \dQuote{total de formas de pasado} equivalente al ingles, sumar
+#' \code{f_01 + f_02 + f_71}.
+#'
+#' @references
+#' Biber, D. (1988). \emph{Variation across speech and writing}.
+#' Cambridge University Press.
+#' \doi{10.1017/CBO9780511621024}
+#'
+#' Brown, D. W. (2024). \emph{pseudobibeR: Pseudo Biber Tagger for Text
+#' Feature Extraction}. R package.
+#' \url{https://github.com/browndw/pseudobibeR}
+#'
+#' @examples
+#' \dontrun{
+#' library(udpipe)
+#' library(pseudobibeR.es)
+#'
+#' # Descargar y cargar modelo UD espanol
+#' m  <- udpipe_download_model("spanish-gsd")
+#' ud <- udpipe_load_model(m$file_model)
+#'
+#' # Anotar texto
+#' parsed <- udpipe_annotate(
+#'   ud,
+#'   x      = "El gobierno aprob\u00f3 la ley ayer.",
+#'   doc_id = "doc1"
+#' )
+#'
+#' # Extraer rasgos (normalizados por 1000 tokens)
+#' result <- biber_es(parsed, measure = "MATTR", normalize = TRUE)
+#' print(result[, 1:10])
+#' }
+#'
 #' @export
 biber_es <- function(tokens,
                      measure   = c("MATTR", "TTR", "CTTR", "MSTTR", "none"),
                      normalize = TRUE) {
 
-  # Requiere udpipe, igual que biber.udpipe_connlu()[cite:47]
+  # Requires udpipe (same pattern as biber.udpipe_connlu())
   if (!requireNamespace("udpipe", quietly = TRUE)) {
-    stop("El paquete 'udpipe' debe estar instalado para usar biber_es().\n",
-         "Instálalo con: install.packages('udpipe')",
-         call. = FALSE)
+    stop(
+      "El paquete 'udpipe' debe estar instalado para usar biber_es().\n",
+      "Inst\u00e1lalo con: install.packages('udpipe')",
+      call. = FALSE
+    )
   }
 
   if (is.null(tokens)) {
-    stop("'tokens' no puede ser NULL. Pasa el resultado de udpipe_annotate().",
-         call. = FALSE)
+    stop(
+      "'tokens' no puede ser NULL. Pasa el resultado de udpipe_annotate().",
+      call. = FALSE
+    )
   }
 
-  # Conversión al formato interno tipo spacyr_parsed,
-  # copiando la lógica de biber.udpipe_connlu()[cite:47]
+  # Convert to internal spacyr_parsed-compatible data.frame
   udpipe_tks <- as.data.frame(tokens, stringsAsFactors = FALSE)
 
   if (nrow(udpipe_tks) == 0) {
-    stop("'tokens' está vacío (0 filas). Asegúrate de que udpipe_annotate() devolvió algo.",
-         call. = FALSE)
+    stop(
+      "'tokens' est\u00e1 vac\u00edo (0 filas). ",
+      "Aseg\u00farate de que udpipe_annotate() devolvi\u00f3 algo.",
+      call. = FALSE
+    )
   }
 
   required_cols <- c("doc_id", "token", "lemma", "upos", "xpos", "dep_rel")
   missing_cols  <- setdiff(required_cols, colnames(udpipe_tks))
   if (length(missing_cols) > 0) {
-    stop("Faltan columnas requeridas en 'tokens': ",
-         paste(missing_cols, collapse = ", " ),
-         ". Asegúrate de llamar a udpipe_annotate() con tagger='default' y parser='default'.",
-         call. = FALSE)
+    stop(
+      "Faltan columnas requeridas en 'tokens': ",
+      paste(missing_cols, collapse = ", "),
+      ". Aseg\u00farate de llamar a udpipe_annotate() con ",
+      "tagger='default' y parser='default'.",
+      call. = FALSE
+    )
   }
 
   udpipe_tks <- udpipe_tks |>
@@ -59,7 +146,7 @@ biber_es <- function(tokens,
       )
     )
 
-  # La clase "spacyr_parsed" es la que espera parse_biber_features()[cite:47]
+  # The "spacyr_parsed" class is what parse_biber_features() expects
   udpipe_tks <- structure(
     udpipe_tks,
     class = c("spacyr_parsed", "data.frame")
@@ -67,7 +154,7 @@ biber_es <- function(tokens,
 
   measure <- match.arg(measure)
 
-  # Aquí fijamos language = "es" para usar todos los bloques *_es[cite:48]
+  # language = "es" activates all *_es blocks in parse_biber_features()
   parse_biber_features(
     tokens    = udpipe_tks,
     measure   = measure,

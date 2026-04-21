@@ -1,3 +1,5 @@
+if (!requireNamespace("pseudobibeR.fr", quietly = TRUE)) skip("French-only test: pseudobibeR.fr not installed")
+
 test_that("udpipe connector handles missing xpos", {
   skip_if_not_installed("udpipe")
 

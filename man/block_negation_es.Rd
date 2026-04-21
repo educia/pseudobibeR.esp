@@ -18,15 +18,15 @@ block_negation_es(
 \item{doc_ids}{One-column data frame with column \code{doc_id}}
 
 \item{neg_synthetic_terms}{Lemmas de pronombres/adverbios negativos
-(nadie, nada, ninguno, ninguna, nunca, jamás)}
+(nadie, nada, ninguno, ninguna, nunca, jamas)}
 
-\item{negation_part_lemmas}{Lemmas de partículas negativas (no, ni, tampoco)}
+\item{negation_part_lemmas}{Lemmas de particulas negativas (no, ni, tampoco)}
 }
 \value{
 Data frame with f_66_neg_synthetic, f_67_neg_analytic
 }
 \description{
-f_66  Negación sintética — pronombre/adverbio negativo preverbal SIN «no»
-f_67  Negación analítica  — «no» (o ni/tampoco) preverbal + verbo
+f_66  Negacion sintetica -- pronombre/adverbio negativo preverbal SIN <\if{html}{\out{<no>}}>
+f_67  Negacion analitica  -- <\if{html}{\out{<no>}}> (o ni/tampoco) preverbal + verbo
 }
 \keyword{internal}

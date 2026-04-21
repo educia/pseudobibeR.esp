@@ -24,7 +24,7 @@ block_adj_prep_adv_es(
 \item{negation_adverbs}{Character vector of negation adverb lemmas}
 }
 \value{
-Data frame: one row per doc, columns f_39 – f_42
+Data frame: one row per doc, columns f_39 - f_42
 }
 \description{
 f_39  Prepositions (dep_rel = case | fixed)

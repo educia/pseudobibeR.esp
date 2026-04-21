@@ -1,3 +1,5 @@
+if (!requireNamespace("pseudobibeR.fr", quietly = TRUE)) skip("French-only test: pseudobibeR.fr not installed")
+
 test_that("biber rejects NULL input", {
   expect_error(
     biber(NULL),

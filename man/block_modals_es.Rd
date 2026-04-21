@@ -14,13 +14,13 @@ block_modals_es(tokens, doc_ids, dict_lookup)
 \item{dict_lookup}{Dictionary lookup}
 }
 \value{
-Data frame: one row per doc, columns f_52 – f_54
+Data frame: one row per doc, columns f_52 - f_54
 }
 \description{
 f_52  Posibilidad:  poder + INF, caber + INF
 f_53  Necesidad:    deber + INF, tener_que + INF,
 haber_de + INF, haber_que + INF
-f_54  Predictivo:   futuro sintético (Tense=Fut,VerbForm=Fin)
+f_54  Predictivo:   futuro sintetico (Tense=Fut,VerbForm=Fin)
 + ir_a + INF
 }
 \keyword{internal}

@@ -1,14 +1,14 @@
 # features_tense_pronouns.R
-# Tense, aspect, pronoun, and adverbial features for Spanish (f_01–f_13)
+# Tense, aspect, pronoun, and adverbial features for Spanish (f_01-f_13)
 #
-# NOTA LINGÜÍSTICA — pro-drop:
-#   El español es lengua de sujeto nulo. Los pronombres personales explícitos
-#   son marcadamente informativos (contraste, énfasis, desambiguación).
-#   Contamos SOLO pronombres explícitos; los sujetos nulos no se cuentan.
+# NOTA LINGUISTICA -- pro-drop:
+#   El espanol es lengua de sujeto nulo. Los pronombres personales explicitos
+#   son marcadamente informativos (contraste, enfasis, desambiguacion).
+#   Contamos SOLO pronombres explicitos; los sujetos nulos no se cuentan.
 #
-# NOTA — aspecto perfecto (f_02):
+# NOTA -- aspecto perfecto (f_02):
 #   HABER + participio = perfecto compuesto (he llegado).
-#   ESTAR + participio = pasiva de estado (está cerrada) → excluida vía
+#   ESTAR + participio = pasiva de estado (esta cerrada) -> excluida via
 #   anti_join sobre estar_cop_heads.
 #
 # CAMPOS UD REQUERIDOS EN tokens:
@@ -17,11 +17,11 @@
 #   morph_tense, morph_mood, morph_verbform, morph_voice, morph_person,
 #   morph_number
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # 0.  Helpers internos
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 
-# Extrae un rasgo morfológico concreto de la columna `feats` (formato UD).
+# Extrae un rasgo morfologico concreto de la columna `feats` (formato UD).
 # Ej.: extract_feat("Tense=Past|VerbForm=Fin", "Tense") -> "Past"
 # Segura con NAs: usa stringr::str_match() que devuelve NA para no-coincidencias,
 # siempre con la misma longitud que feats_vec.
@@ -32,21 +32,33 @@ extract_feat <- function(feats_vec, feat_name) {
 }
 
 # Cuenta ocurrencias distintas (doc, sent, tok) y agrega a nivel doc_id.
+# 2026-04-21: UDPipe MWT rows (e.g. "al"/"del" with token_id "4-5") have
+# token_id_int=NA; two MWTs in the same sentence would both get NA and collapse
+# to one row under distinct(), undercounting by 1 per extra MWT.
+# Fix: assign unique negative integers to NA positions before deduplication
+# so each MWT row is treated as a distinct token.
 count_feature <- function(tbl, col_name) {
   tbl %>%
-    dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int) %>%
+    dplyr::mutate(
+      .tid_dedup = dplyr::if_else(
+        is.na(.data$token_id_int),
+        -.Machine$integer.max + dplyr::row_number(),
+        .data$token_id_int
+      )
+    ) %>%
+    dplyr::distinct(.data$doc_id, .data$sentence_id, .data$.tid_dedup) %>%
     dplyr::group_by(.data$doc_id) %>%
     dplyr::tally() %>%
     dplyr::rename(!!col_name := "n")
 }
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # 1.  block_tense_es
 #     f_01  tiempo pasado (imperfecto)   f_02  aspecto perfecto
 #     f_03  tiempo presente              f_04  adv. de lugar
 #     f_05  adv. de tiempo              f_11  pronombres indefinidos
-#     f_12  pro-verbo hacer             f_71  pretérito indefinido (ext. española)
-# ─────────────────────────────────────────────────────────────────────────────
+#     f_12  pro-verbo hacer             f_71  preterito indefinido (ext. espanola)
+# -----------------------------------------------------------------------------
 
 #' Tense, aspect, adverbial, and indefinite-pronoun features (Spanish)
 #'
@@ -56,7 +68,7 @@ count_feature <- function(tbl, col_name) {
 #' @param place_adverbials Character vector of place-adverbial lemmas (f_04)
 #' @param time_adverbials  Character vector of time-adverbial lemmas (f_05)
 #' @param indefinite_pronouns Character vector of indefinite pronoun lemmas (f_11)
-#' @return Data frame: one row per doc, columns f_01–f_05, f_11, f_12, f_71
+#' @return Data frame: one row per doc, columns f_01-f_05, f_11, f_12, f_71
 #' @keywords internal
 block_tense_es <- function(
     tokens,
@@ -67,16 +79,16 @@ block_tense_es <- function(
     indefinite_pronouns
 ) {
 
-  # ── f_01  Tiempo pasado (imperfecto) ─────────────────────────────────────
-  # f_01 DECISIÓN DE DISEÑO (2026-04-20):
-  # En pseudobibeR.es, f_01 captura SOLO el pretérito imperfecto (Tense=Imp).
-  # El pretérito indefinido vive en f_71; el perfecto compuesto en f_02.
+  # -- f_01  Tiempo pasado (imperfecto) -------------------------------------
+  # f_01 DECISION DE DISE?O (2026-04-20):
+  # En pseudobibeR.es, f_01 captura SOLO el preterito imperfecto (Tense=Imp).
+  # El preterito indefinido vive en f_71; el perfecto compuesto en f_02.
   # Esto difiere de pseudobibeR.fr donde f_01 agrega TODOS los pasados.
-  # Justificación: en español imperfecto e indefinido tienen valores
+  # Justificacion: en espanol imperfecto e indefinido tienen valores
   # aspectuales distintos (imperfectivo vs perfectivo); mantenerlos separados
-  # aumenta el poder discriminativo del análisis. Para comparaciones
-  # translingües FR↔ES, usar f_01 + f_02 + f_71 como proxy de "total pasado".
-  # Ver: docs/DECISIONES_ES.md §f_01.
+  # aumenta el poder discriminativo del analisis. Para comparaciones
+  # translingues FR?ES, usar f_01 + f_02 + f_71 como proxy de "total pasado".
+  # Ver: docs/DECISIONES_ES.md ?f_01.
   f01 <- tokens %>%
     dplyr::filter(
       .data$pos %in% c("VERB", "AUX"),
@@ -86,10 +98,10 @@ block_tense_es <- function(
     ) %>%
     count_feature("f_01_past_tense")
 
-  # ── f_71  Pretérito indefinido (extensión española) ──────────────────────
+  # -- f_71  Preterito indefinido (extension espanola) ----------------------
   # Tense=Past, Mood=Ind, VerbForm=Fin.
-  # No existe en pseudobibeR.fr ni en el catálogo original de Biber (1985).
-  # Se añade como rasgo extendido del español (f_71) siguiendo
+  # No existe en pseudobibeR.fr ni en el catalogo original de Biber (1985).
+  # Se anade como rasgo extendido del espanol (f_71) siguiendo
   # Davies et al. (2006) Dimension 5.
   f71 <- tokens %>%
     dplyr::filter(
@@ -100,7 +112,7 @@ block_tense_es <- function(
     ) %>%
     count_feature("f_71_preterit")
 
-  # ── f_02  Aspecto perfecto: HABER + participio ────────────────────────────
+  # -- f_02  Aspecto perfecto: HABER + participio ----------------------------
   # Excluye ESTAR copulativo (pasiva de estado).
   estar_cop_heads <- tokens %>%
     dplyr::filter(
@@ -141,7 +153,7 @@ block_tense_es <- function(
     ) %>%
     count_feature("f_02_perfect_aspect")
 
-  # ── f_03  Tiempo presente ─────────────────────────────────────────────────
+  # -- f_03  Tiempo presente -------------------------------------------------
   # Presente de indicativo simple (Tense=Pres, Mood=Ind, VerbForm=Fin).
   # No incluye el presente de subjuntivo (Mood=Sub) ni las formas no
   # personales (infinitivo, gerundio, participio).
@@ -154,8 +166,8 @@ block_tense_es <- function(
     ) %>%
     count_feature("f_03_present_tense")
 
-  # ── f_04  Adverbiales de lugar ─────────────────────────────────────────────
-  # Matching por lemma sobre lista léxica; POS = ADV o ADP.
+  # -- f_04  Adverbiales de lugar ---------------------------------------------
+  # Matching por lemma sobre lista lexica; POS = ADV o ADP.
   f04 <- tokens %>%
     dplyr::filter(
       .data$lemma %in% place_adverbials,
@@ -163,7 +175,7 @@ block_tense_es <- function(
     ) %>%
     count_feature("f_04_place_adverbials")
 
-  # ── f_05  Adverbiales de tiempo ───────────────────────────────────────────
+  # -- f_05  Adverbiales de tiempo -------------------------------------------
   f05 <- tokens %>%
     dplyr::filter(
       .data$lemma %in% time_adverbials,
@@ -171,7 +183,7 @@ block_tense_es <- function(
     ) %>%
     count_feature("f_05_time_adverbials")
 
-  # ── f_11  Pronombres indefinidos ──────────────────────────────────────────
+  # -- f_11  Pronombres indefinidos ------------------------------------------
   f11 <- tokens %>%
     dplyr::filter(
       .data$lemma %in% indefinite_pronouns,
@@ -179,13 +191,13 @@ block_tense_es <- function(
     ) %>%
     count_feature("f_11_indefinite_pronoun")
 
-  # ── f_12  Pro-verbo "hacer" ───────────────────────────────────────────────
-  # Equivalente español de Biber's "pro-verb do".
+  # -- f_12  Pro-verbo "hacer" -----------------------------------------------
+  # Equivalente espanol de Biber's "pro-verb do".
   # Detectamos "hacer" como VERB (no AUX) cuando tiene como dependiente
-  # directo un clítico de objeto (lo/la/los/las) con dep_rel obj/iobj/expl.
-  # Este patrón captura usos proverbales como "lo hace", "hazlo", etc.
-  # Se excluye "hacer" en locuciones fijas (hacer_falta, hacer_caso…) que
-  # el tokenizador puede dejar como token único (handled by semi_join scope).
+  # directo un clitico de objeto (lo/la/los/las) con dep_rel obj/iobj/expl.
+  # Este patron captura usos proverbales como "lo hace", "hazlo", etc.
+  # Se excluye "hacer" en locuciones fijas (hacer_falta, hacer_caso?) que
+  # el tokenizador puede dejar como token unico (handled by semi_join scope).
   hacer_clitic_deps <- tokens %>%
     dplyr::filter(
       .data$lemma %in% c("lo", "la", "los", "las"),
@@ -207,7 +219,7 @@ block_tense_es <- function(
     ) %>%
     count_feature("f_12_proverb_do")
 
-  # ── Ensamblar ──────────────────────────────────────────────────────────────
+  # -- Ensamblar --------------------------------------------------------------
   doc_ids %>%
     dplyr::left_join(f01,  by = "doc_id") %>%
     dplyr::left_join(f71,  by = "doc_id") %>%
@@ -222,11 +234,11 @@ block_tense_es <- function(
     )
 }
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # 2.  block_personal_pronouns_es
-#     f_06  1ª persona   f_07  2ª persona   f_08  3ª persona
-#     f_09  expletivo/impersonal            f_13  pregunta-qué
-# ─────────────────────────────────────────────────────────────────────────────
+#     f_06  1a persona   f_07  2a persona   f_08  3a persona
+#     f_09  expletivo/impersonal            f_13  pregunta-que
+# -----------------------------------------------------------------------------
 
 #' Personal pronoun, expletive, and WH-question features (Spanish)
 #'
@@ -239,7 +251,7 @@ block_tense_es <- function(
 #' @param weather_lemmas Impersonal weather verb lemmas (default provided)
 #' @param raising_verbs  Raising / impers-tendency verb lemmas (default provided)
 #' @param wh_question_lemmas WH-word lemmas (default provided)
-#' @return Data frame: one row per doc, columns f_06 … f_09, f_13
+#' @return Data frame: one row per doc, columns f_06 ? f_09, f_13
 #' @keywords internal
 block_personal_pronouns_es <- function(
     tokens,
@@ -268,7 +280,7 @@ block_personal_pronouns_es <- function(
       "por_que","por_qu\u00e9"
     )) {
 
-  # dep_rel que señalan uso reflexivo/impersonal — excluidos en f_06–f_08
+  # dep_rel que senalan uso reflexivo/impersonal -- excluidos en f_06-f_08
   reflexive_deps <- c("expl:pv", "expl:impers", "expl")
 
   # Helper: filtrar pronombres de una persona por lista de lemmas
@@ -282,7 +294,7 @@ block_personal_pronouns_es <- function(
       dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int)
   }
 
-  # ── f_06  1ª persona ─────────────────────────────────────────────────────
+  # -- f_06  1a persona -----------------------------------------------------
   f06 <- count_person_pronouns(c(
     "yo", "nosotros", "nosotras",
     "me", "nos",
@@ -292,9 +304,9 @@ block_personal_pronouns_es <- function(
     dplyr::tally() %>%
     dplyr::rename(f_06_first_person_pronouns = "n")
 
-  # ── f_07  2ª persona ─────────────────────────────────────────────────────
-  # "te" puede ser 2ª átono o parte de construcción impersonal;
-  # la exclusión de reflexive_deps filtra los casos expl más claros.
+  # -- f_07  2a persona -----------------------------------------------------
+  # "te" puede ser 2a atono o parte de construccion impersonal;
+  # la exclusion de reflexive_deps filtra los casos expl mas claros.
   f07 <- count_person_pronouns(c(
     "t\u00fa", "vos", "vosotros", "vosotras",
     "usted", "ustedes",
@@ -304,7 +316,7 @@ block_personal_pronouns_es <- function(
     dplyr::tally() %>%
     dplyr::rename(f_07_second_person_pronouns = "n")
 
-  # ── f_08  3ª persona ─────────────────────────────────────────────────────
+  # -- f_08  3a persona -----------------------------------------------------
   f08 <- count_person_pronouns(c(
     "\u00e9l", "ella", "ello", "ellos", "ellas",
     "le", "lo", "la", "les", "los", "las",
@@ -314,11 +326,11 @@ block_personal_pronouns_es <- function(
     dplyr::tally() %>%
     dplyr::rename(f_08_third_person_pronouns = "n")
 
-  # ── f_09  Pronombre expletivo / impersonal ───────────────────────────────
+  # -- f_09  Pronombre expletivo / impersonal -------------------------------
   # Cubre:
-  #   (a) "ello" como sujeto impersonal ("Ello implica que…")
+  #   (a) "ello" como sujeto impersonal ("Ello implica que?")
   #   (b) "se" con dep_rel expl:impers o expl (se impersonal)
-  #   (c) haber impersonal (hay, había…) sin sujeto explícito
+  #   (c) haber impersonal (hay, habia?) sin sujeto explicito
   pronoun_it_candidates <- tokens %>%
     dplyr::filter(
       .data$pos == "PRON",
@@ -397,7 +409,7 @@ block_personal_pronouns_es <- function(
     dplyr::distinct() %>%
     count_feature("f_09_pronoun_it")
 
-  # ── f_13  Preguntas con palabra interrogativa ───────────────────────────
+  # -- f_13  Preguntas con palabra interrogativa ---------------------------
   question_sentences <- tokens %>%
     dplyr::filter(.data$token == "?") %>%
     dplyr::transmute(.data$doc_id, .data$sentence_id,
@@ -414,7 +426,7 @@ block_personal_pronouns_es <- function(
     dplyr::filter(!is.na(.data$has_question)) %>%
     count_feature("f_13_wh_question")
 
-  # ── Ensamblar ─────────────────────────────────────────────────────────────
+  # -- Ensamblar -------------------------------------------------------------
   doc_ids %>%
     dplyr::left_join(f06, by = "doc_id") %>%
     dplyr::left_join(f07, by = "doc_id") %>%

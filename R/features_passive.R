@@ -1,32 +1,32 @@
 # Passive voice, copular and existential features for Spanish
 #
-# NOTA LINGÜÍSTICA — tres tipos de pasiva en español:
+# NOTA LINGUISTICA -- tres tipos de pasiva en espanol:
 #
-#   (A) Pasiva PERIFRÁSTICA (ser/estar + participio)
-#       «El libro fue escrito por Galdós.»
+#   (A) Pasiva PERIFRASTICA (ser/estar + participio)
+#       <<El libro fue escrito por Galdos.>>
 #       El parser UD marca el auxiliar con dep_rel = aux:pass.
-#       Detectada por passive_rel_values (igual que el francés).
+#       Detectada por passive_rel_values (igual que el frances).
 #
 #   (B) Pasiva REFLEJA / SE-PASIVA
-#       «Se publicó el informe.»
+#       <<Se publico el informe.>>
 #       El parser UD marca el se con dep_rel = expl:pass o expl.
 #       El verbo lleva Voice=Pass en feats o VerbForm=Fin sin aux:pass.
-#       NO la detecta la heurística francesa — requiere lógica propia.
+#       NO la detecta la heuristica francesa -- requiere logica propia.
 #
 #   (C) Pasiva ESTATIVA (estar + participio)
-#       «El puente está cerrado.»
+#       <<El puente esta cerrado.>>
 #       El participo lleva Voice=Pass o Aspect=Perf. En UD suele
 #       etiquetarse el participio como ADJ con dep_rel = amod/nmod.
 #       Se incluye en (A) cuando estar lleva aux:pass.
 #
-# f_17  Pasiva agentiva sin agente explicito  (A+B sin «por»-frase)
-# f_18  Pasiva con agente «por»               (A+B con «por»-frase)
+# f_17  Pasiva agentiva sin agente explicito  (A+B sin <<por>>-frase)
+# f_18  Pasiva con agente <<por>>               (A+B con <<por>>-frase)
 # f_19  Ser/estar como verbo principal (copula nominal/adjetival, no aux)
-# f_20  Haber existencial impersonal           (hay, había, hubo…)
+# f_20  Haber existencial impersonal           (hay, habia, hubo?)
 
 #' Extract passive voice, copular and existential features (Spanish)
 #'
-#' Detecta la pasiva perifística (ser/estar + participo, aux:pass) y la
+#' Detecta la pasiva perifistica (ser/estar + participo, aux:pass) y la
 #' pasiva refleja (se + VerbForm=Part/Fin, expl:pass). Excluye haber
 #' perfect de f_17/f_18. Distingue ser/estar copulativo (f_19) del
 #' auxiliar de pasiva. Detecta haber impersonal-existencial (f_20).
@@ -42,7 +42,7 @@ block_passive_voice_es <- function(tokens, doc_ids, head_lookup,
                                    passive_rel_values) {
 
   # -----------------------------------------------------------------------
-  # (A) Pasiva perifística — aux marcado como aux:pass
+  # (A) Pasiva perifistica -- aux marcado como aux:pass
   # -----------------------------------------------------------------------
   perifrastic_passive <- tokens %>%
     dplyr::filter(.data$dep_rel %in% passive_rel_values,
@@ -56,7 +56,7 @@ block_passive_voice_es <- function(tokens, doc_ids, head_lookup,
                     .data$head_token_id_int, .keep_all = TRUE)
 
   # -----------------------------------------------------------------------
-  # (B) Pasiva refleja — se con dep_rel expl:pass | expl
+  # (B) Pasiva refleja -- se con dep_rel expl:pass | expl
   #     y verbo con Voice=Pass o, como fallback, participio pasado
   # -----------------------------------------------------------------------
   se_passive <- tokens %>%
@@ -79,7 +79,7 @@ block_passive_voice_es <- function(tokens, doc_ids, head_lookup,
         (.data$head_morph_verbform == "Part" &
            .data$head_morph_tense %in% c("Past", "Pqp"))
     ) %>%
-    # Excluir cuando ya hay un aux:pass (ya contado en perifística)
+    # Excluir cuando ya hay un aux:pass (ya contado en perifistica)
     dplyr::anti_join(
       perifrastic_passive %>%
         dplyr::select("doc_id", "sentence_id", "head_token_id_int"),
@@ -89,7 +89,7 @@ block_passive_voice_es <- function(tokens, doc_ids, head_lookup,
                     .data$head_token_id_int, .keep_all = TRUE)
 
   # -----------------------------------------------------------------------
-  # Unión A + B
+  # Union A + B
   # -----------------------------------------------------------------------
   all_passive <- dplyr::bind_rows(
     perifrastic_passive %>%
@@ -102,7 +102,7 @@ block_passive_voice_es <- function(tokens, doc_ids, head_lookup,
     dplyr::distinct(.data$doc_id, .data$sentence_id, .data$head_token_id_int,
                     .keep_all = TRUE)
 
-  # f_17  Agentless passives (sin frase «por» en las dos posiciones siguientes)
+  # f_17  Agentless passives (sin frase <<por>> en las dos posiciones siguientes)
   f17 <- all_passive %>%
     dplyr::filter(!.data$passive_agent_next2,
                   !.data$passive_agent_next3) %>%
@@ -110,7 +110,7 @@ block_passive_voice_es <- function(tokens, doc_ids, head_lookup,
     dplyr::tally() %>%
     dplyr::rename(f_17_agentless_passives = "n")
 
-  # f_18  By-passives (con frase «por»)
+  # f_18  By-passives (con frase <<por>>)
   f18 <- all_passive %>%
     dplyr::filter(.data$passive_agent_next2 | .data$passive_agent_next3) %>%
     dplyr::group_by(.data$doc_id) %>%
@@ -118,8 +118,8 @@ block_passive_voice_es <- function(tokens, doc_ids, head_lookup,
     dplyr::rename(f_18_by_passives = "n")
 
   # -----------------------------------------------------------------------
-  # f_19  Ser/estar como verbo principal (cópula nominal/adjetival)
-  #       Excluye: (1) uso como aux de pasiva perifística,
+  # f_19  Ser/estar como verbo principal (copula nominal/adjetival)
+  #       Excluye: (1) uso como aux de pasiva perifistica,
   #                (2) uso como aux de aspecto progresivo (estar + gerundio)
   # -----------------------------------------------------------------------
   # Token IDs que ya sabemos son aux:pass
@@ -149,7 +149,7 @@ block_passive_voice_es <- function(tokens, doc_ids, head_lookup,
   f19 <- tokens %>%
     dplyr::filter(
       .data$lemma %in% c("ser", "estar"),
-      # dep_rel NO debe ser aux de ningún tipo
+      # dep_rel NO debe ser aux de ningun tipo
       !stringr::str_detect(dplyr::coalesce(.data$dep_rel, ""), "^aux")
     ) %>%
     dplyr::anti_join(aux_pass_ids,
@@ -161,8 +161,8 @@ block_passive_voice_es <- function(tokens, doc_ids, head_lookup,
     dplyr::rename(f_19_be_main_verb = "n")
 
   # -----------------------------------------------------------------------
-  # f_20  Haber existencial impersonal (hay, había, hubo, habrá…)
-  #       Condición: lemma = haber, VERB/AUX, dep_rel root/ccomp/xcomp/advcl
+  # f_20  Haber existencial impersonal (hay, habia, hubo, habra?)
+  #       Condicion: lemma = haber, VERB/AUX, dep_rel root/ccomp/xcomp/advcl
   #       y SIN nsubj dependiente (eso lo distingue del haber perfecto).
   #       Se normaliza el token para capturar formas con y sin tilde.
   # -----------------------------------------------------------------------

@@ -1,4 +1,6 @@
 # nolint start: line_length_linter, object_name_linter
+if (!requireNamespace("pseudobibeR.fr", quietly = TRUE)) skip("French-only test: pseudobibeR.fr not installed")
+
 
 test_that("synthetic French tokens cover f01-f08", {
   synthetic_tokens <- tibble::tribble(

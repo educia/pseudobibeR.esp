@@ -1,51 +1,51 @@
 # features_lexical_complexity.R
 # Lexical complexity and nominalization features for Spanish
 #
-# MAPEO A CÓDIGOS DE SALIDA:
+# MAPEO A CODIGOS DE SALIDA:
 #   f_43_type_token          <- TTR (type/token ratio); se fusiona con f_43
 #                               de parse_functions cuando measure != "none"
-#   f_44_mean_word_length    <- longitud media de tokens léxicos; se fusiona
+#   f_44_mean_word_length    <- longitud media de tokens lexicos; se fusiona
 #                               con f_44 de parse_functions (pmax)
-#   f_68_nominalization      <- sustantivos en sufijos de nominalización
-#   f_68_nominalization_rate <- tasa por 1000 tokens léxicos
+#   f_68_nominalization      <- sustantivos en sufijos de nominalizacion
+#   f_68_nominalization_rate <- tasa por 1000 tokens lexicos
 #   f_69_mente_adverbs       <- adverbios en -mente (equivalente a -ly)
-#   f_69_mente_adverbs_rate  <- tasa por 1000 tokens léxicos
+#   f_69_mente_adverbs_rate  <- tasa por 1000 tokens lexicos
 #   f_70_long_words          <- palabras >= 6 letras
-#   f_70_long_words_rate     <- tasa por 1000 tokens léxicos
+#   f_70_long_words_rate     <- tasa por 1000 tokens lexicos
 #
-# NOTA: f_68–f_71 son extensiones específicas del español que no tienen
-#   equivalente directo en el catálogo original de Biber (1985) para inglés.
+# NOTA: f_68-f_71 son extensiones especificas del espanol que no tienen
+#   equivalente directo en el catalogo original de Biber (1985) para ingles.
 #
-# NOTA METODOLÓGICA — normalización:
+# NOTA METODOLOGICA -- normalizacion:
 #   Biber normaliza los rasgos por 1.000 palabras para hacerlos
-#   comparables entre textos de distinta longitud. Esta función devuelve
+#   comparables entre textos de distinta longitud. Esta funcion devuelve
 #   TANTO los conteos brutos COMO las tasas normalizadas (sufijo _rate)
 #   para que el usuario pueda elegir. Las tasas se calculan dividiendo
-#   entre el número de tokens léxicos del documento.
+#   entre el numero de tokens lexicos del documento.
 #
-#   Tokens léxicos = NOUN + VERB + ADJ + ADV (UPOS).
-#   Tokens totales = todos los tokens excepto puntuación (PUNCT) y espacios.
+#   Tokens lexicos = NOUN + VERB + ADJ + ADV (UPOS).
+#   Tokens totales = todos los tokens excepto puntuacion (PUNCT) y espacios.
 #
-# NOTA — TTR y longitud media:
-#   El TTR clásico es sensible a la longitud del texto. Para corpus de
-#   tamaños desiguales conviene complementar con MATTR o MTLD (paquete
-#   `koRpus`), pero esa lógica pertenece al flujo de análisis, no aquí.
+# NOTA -- TTR y longitud media:
+#   El TTR clasico es sensible a la longitud del texto. Para corpus de
+#   tamanos desiguales conviene complementar con MATTR o MTLD (paquete
+#   `koRpus`), pero esa logica pertenece al flujo de analisis, no aqui.
 #   Devolvemos el TTR simple para mantener la fidelidad a Biber (1988).
 
-# ─────────────────────────────────────────────────────────────────────────────
-# 0.  Helper — vectores léxicos
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
+# 0.  Helper -- vectores lexicos
+# -----------------------------------------------------------------------------
 
-# UPOS que se consideran "tokens léxicos" para normalización y TTR
+# UPOS que se consideran "tokens lexicos" para normalizacion y TTR
 LEXICAL_UPOS <- c("NOUN", "VERB", "ADJ", "ADV", "PROPN")
 
 # UPOS que se excluyen del conteo de tokens totales
 PUNCT_UPOS <- c("PUNCT", "SYM", "SPACE", "X")
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # 1.  block_lexical_complexity_es
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 
 #' Lexical complexity and nominalization features (Spanish)
 #'
@@ -57,7 +57,7 @@ PUNCT_UPOS <- c("PUNCT", "SYM", "SPACE", "X")
 #'   columns: doc_id, token, lemma, pos (UPOS), feats.
 #' @param doc_ids One-column data frame with column `doc_id`.
 #' @param nominalization_suffixes Character vector of suffix strings
-#'   (lower-case, without leading dot/caret). Example: c("cion","ción",...)
+#'   (lower-case, without leading dot/caret). Example: c("cion","cion",...)
 #' @param nominalization_stoplist Character vector of lexicalized nouns to
 #'   exclude even if they match a suffix.
 #' @param mente_stoplist Character vector of -mente adverbs to exclude from
@@ -78,15 +78,15 @@ block_lexical_complexity_es <- function(
     mente_stoplist = character(0)
 ) {
 
-  # ── Base: filtrar puntuación ─────────────────────────────────────────────
+  # -- Base: filtrar puntuacion ---------------------------------------------
   toks <- tokens %>%
     dplyr::filter(!.data$pos %in% PUNCT_UPOS)
 
-  # ── Tokens léxicos (para normalización y TTR) ───────────────────────────
+  # -- Tokens lexicos (para normalizacion y TTR) ---------------------------
   lex_toks <- toks %>%
     dplyr::filter(.data$pos %in% LEXICAL_UPOS)
 
-  # ── Conteos base por documento ───────────────────────────────────────────
+  # -- Conteos base por documento -------------------------------------------
   doc_n <- toks %>%
     dplyr::group_by(.data$doc_id) %>%
     dplyr::summarise(
@@ -101,16 +101,16 @@ block_lexical_complexity_es <- function(
       .groups = "drop"
     )
 
-  # ── f_60  Nominalizaciones ────────────────────────────────────────────────
+  # -- f_60  Nominalizaciones ------------------------------------------------
   # Algoritmo:
   #   1. Seleccionar tokens NOUN (o PROPN en casos excepcionales).
-  #   2. Convertir form a minúsculas.
-  #   3. Aplicar regex: endsWith con sufijos de nominalización.
+  #   2. Convertir form a minusculas.
+  #   3. Aplicar regex: endsWith con sufijos de nominalizacion.
   #   4. Excluir items en nominalization_stoplist.
   #
-  # El regex construye un patrón del tipo:
-  #   "(cion|ción|ciones|...|ismo|ismos)$"
-  # aplicado sobre la forma en minúsculas del token.
+  # El regex construye un patron del tipo:
+  #   "(cion|cion|ciones|...|ismo|ismos)$"
+  # aplicado sobre la forma en minusculas del token.
 
   suffix_pattern <- paste0(
     "(",
@@ -134,9 +134,9 @@ block_lexical_complexity_es <- function(
     dplyr::tally() %>%
     dplyr::rename(f_68_nominalization = "n")
 
-  # ── f_61  Type-Token Ratio (TTR) ──────────────────────────────────────────
-  # TTR = n tipos léxicos únicos / n tokens léxicos totales.
-  # Se calcula sobre lemmas en minúsculas de tokens léxicos.
+  # -- f_61  Type-Token Ratio (TTR) ------------------------------------------
+  # TTR = n tipos lexicos unicos / n tokens lexicos totales.
+  # Se calcula sobre lemmas en minusculas de tokens lexicos.
   ttr_tbl <- lex_toks %>%
     dplyr::mutate(
       lemma_lower = stringr::str_to_lower(.data$lemma)
@@ -156,10 +156,10 @@ block_lexical_complexity_es <- function(
     ) %>%
     dplyr::select("doc_id", "f_43_type_token")
 
-  # ── f_62  Longitud media de palabra ──────────────────────────────────────
-  # Sobre tokens léxicos; se mide en nchar() de la forma superficial.
-  # Se excluyen tokens de un solo carácter (artículos, preposiciones
-  # monosilábicas que quedaron en UPOS léxico por error de parseo).
+  # -- f_62  Longitud media de palabra --------------------------------------
+  # Sobre tokens lexicos; se mide en nchar() de la forma superficial.
+  # Se excluyen tokens de un solo caracter (articulos, preposiciones
+  # monosilabicas que quedaron en UPOS lexico por error de parseo).
   word_len_tbl <- lex_toks %>%
     dplyr::mutate(
       tok_len = nchar(as.character(.data$token))
@@ -171,16 +171,16 @@ block_lexical_complexity_es <- function(
       .groups = "drop"
     )
 
-  # ── f_63  Adverbios en -mente ─────────────────────────────────────────────
+  # -- f_63  Adverbios en -mente ---------------------------------------------
   # Equivalente de Biber's -ly adverbs.
   # Condiciones:
   #   1. UPOS = ADV
-  #   2. token (en minúsculas) termina en "-mente"
-  #   3. No está en mente_stoplist
-  # Justificación de la stoplist: adverbios muy frecuentes como
-  # "actualmente", "anteriormente", "finalmente" están tan lexicalizados
-  # que no aportan información de derivación productiva; su inclusión
-  # inflaría f_63 en textos expositivos de manera no diferencial.
+  #   2. token (en minusculas) termina en "-mente"
+  #   3. No esta en mente_stoplist
+  # Justificacion de la stoplist: adverbios muy frecuentes como
+  # "actualmente", "anteriormente", "finalmente" estan tan lexicalizados
+  # que no aportan informacion de derivacion productiva; su inclusion
+  # inflaria f_63 en textos expositivos de manera no diferencial.
 
   f63 <- toks %>%
     dplyr::filter(.data$pos == "ADV") %>%
@@ -197,9 +197,9 @@ block_lexical_complexity_es <- function(
     dplyr::tally() %>%
     dplyr::rename(f_69_mente_adverbs = "n")
 
-  # ── f_64  Palabras largas (>= 6 caracteres) ───────────────────────────────
-  # Biber (1988) usa >= 6 letras sobre tokens ortográficos.
-  # Aplicamos sobre tokens léxicos en minúsculas.
+  # -- f_64  Palabras largas (>= 6 caracteres) -------------------------------
+  # Biber (1988) usa >= 6 letras sobre tokens ortograficos.
+  # Aplicamos sobre tokens lexicos en minusculas.
   f64 <- lex_toks %>%
     dplyr::mutate(
       tok_len = nchar(as.character(.data$token))
@@ -211,7 +211,7 @@ block_lexical_complexity_es <- function(
     dplyr::tally() %>%
     dplyr::rename(f_70_long_words = "n")
 
-  # ── Ensamblar + tasas normalizadas ────────────────────────────────────────
+  # -- Ensamblar + tasas normalizadas ----------------------------------------
   doc_ids %>%
     dplyr::left_join(doc_n,        by = "doc_id") %>%
     dplyr::left_join(doc_n_lex,    by = "doc_id") %>%
@@ -226,7 +226,7 @@ block_lexical_complexity_es <- function(
       f_68_nominalization   = dplyr::coalesce(.data$f_68_nominalization, 0L),
       f_69_mente_adverbs    = dplyr::coalesce(.data$f_69_mente_adverbs,  0L),
       f_70_long_words       = dplyr::coalesce(.data$f_70_long_words,     0L),
-      # Tasas por 1000 tokens léxicos
+      # Tasas por 1000 tokens lexicos
       f_68_nominalization_rate = dplyr::if_else(
         .data$n_lex_tokens > 0,
         round(.data$f_68_nominalization / .data$n_lex_tokens * 1000, 3),

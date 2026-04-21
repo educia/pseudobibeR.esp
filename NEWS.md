@@ -1,3 +1,26 @@
+# pseudobibeR.es 0.1.0
+
+## Primera version funcional
+
+* Implementacion de los 67 rasgos Biber (1988) para espanol via UDPipe (Spanish-GSD).
+* Funcion principal `biber_es()` con soporte para `udpipe_connlu`.
+* Diccionarios en YAML con cobertura de espanol peninsular y latinoamericano.
+* Validacion empirica sobre corpus de 4 generos: 17/20 predicciones Biber verificadas.
+
+## Correcciones aplicadas durante desarrollo
+
+* f_10 / f_51: lista de demostrativos separada de pronombres personales.
+* f_54: filtro temporal excluye desplazamiento fisico con *ir* en indefinido.
+* f_59: deteccion de MWT (*al*, *del*) corregida en preprocesado UDPipe.
+* f_43: eliminada colision de columnas `.x`/`.y` en `parse_functions.R`.
+
+## Decisiones de diseno
+
+* f_01 captura solo preterito imperfecto (ver `docs/DECISIONES_ES.md`).
+* Para proxy de "total pasado" equivalente al ingles: `f_01 + f_02 + f_71`.
+
+---
+
 # pseudobibeR.fr 0.0.0.93
 
 ## Major Changes

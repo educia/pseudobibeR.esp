@@ -14,13 +14,13 @@ block_specialized_verbs_es(tokens, doc_ids, dict_lookup)
 \item{dict_lookup}{Dictionary lookup}
 }
 \value{
-Data frame: one row per doc, columns f_55 – f_58
+Data frame: one row per doc, columns f_55 - f_58
 }
 \description{
-f_55  Verbos públicos  (decir, afirmar, señalar, indicar, declarar…)
-f_56  Verbos privados  (creer, pensar, saber, sentir, suponer…)
-f_57  Verbos suasivos  (pedir, exigir, recomendar, sugerir, ordenar…)
-f_58  Verbos "seem"    (parecer, resultar, aparecer, semejarse…)
+f_55  Verbos publicos  (decir, afirmar, senalar, indicar, declarar?)
+f_56  Verbos privados  (creer, pensar, saber, sentir, suponer?)
+f_57  Verbos suasivos  (pedir, exigir, recomendar, sugerir, ordenar?)
+f_58  Verbos "seem"    (parecer, resultar, aparecer, semejarse?)
 }
 \details{
 Las listas de lemas se leen de dict.yaml (secciones f_55_verb_public,

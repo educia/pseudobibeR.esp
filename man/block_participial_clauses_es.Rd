@@ -14,7 +14,7 @@ block_participial_clauses_es(tokens, doc_ids, head_lookup)
 \item{head_lookup}{Pre-built head-token attribute table}
 }
 \value{
-Data frame: one row per doc, columns f_24 – f_28
+Data frame: one row per doc, columns f_24 - f_28
 }
 \description{
 Participial and infinitive clause features (Spanish)

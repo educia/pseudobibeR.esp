@@ -1,26 +1,26 @@
 # features_modals_verbs.R
 # Adjective, preposition, adverb, modal, and specialized-verb features (Spanish)
-# f_39–f_42, f_52–f_58
+# f_39-f_42, f_52-f_58
 #
-# NOTA LINGÜÍSTICA — modales españoles:
-#   El español no tiene auxiliares modales monoléxicos como el inglés.
-#   Los modales son PERÍFRASIS VERBALES:
+# NOTA LINGUISTICA -- modales espanoles:
+#   El espanol no tiene auxiliares modales monolexicos como el ingles.
+#   Los modales son PERIFRASIS VERBALES:
 #     f_52  Posibilidad:  poder + INF, caber + INF
 #     f_53  Necesidad:    deber + INF, tener_que + INF,
 #                         haber_de + INF, haber_que + INF
-#     f_54  Predictivo:   futuro sintético (Tense=Fut,VerbForm=Fin)
-#                         + ir_a + INF (perífrase progresivo-futuro)
+#     f_54  Predictivo:   futuro sintetico (Tense=Fut,VerbForm=Fin)
+#                         + ir_a + INF (perifrase progresivo-futuro)
 #
 #   Para evitar falsos positivos ("el poder", "el deber" como sustantivos)
 #   exigimos que el verbo modal tenga al menos un dependiente con
 #   VerbForm=Inf enlazado por xcomp / ccomp / advcl / aux / obj.
 #
-# NOTA — extract_feat() y count_feature() se definen en
+# NOTA -- extract_feat() y count_feature() se definen en
 #   features_tense_pronouns.R y son visibles en el mismo namespace del paquete.
 
-# ─────────────────────────────────────────────────────────────────────────────
-# 0.  Helper: perífrasis modal (verbo-cabeza + infinitivo-dependiente)
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
+# 0.  Helper: perifrasis modal (verbo-cabeza + infinitivo-dependiente)
+# -----------------------------------------------------------------------------
 
 count_modal_periphrasis <- function(tokens, lemmas) {
   if (length(lemmas) == 0)
@@ -89,9 +89,9 @@ count_modal_periphrasis <- function(tokens, lemmas) {
     dplyr::tally()
 }
 
-# ─────────────────────────────────────────────────────────────────────────────
-# 1.  block_adj_prep_adv_es   f_39–f_42
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
+# 1.  block_adj_prep_adv_es   f_39-f_42
+# -----------------------------------------------------------------------------
 
 #' Adjective, preposition, and adverb features (Spanish)
 #'
@@ -105,7 +105,7 @@ count_modal_periphrasis <- function(tokens, lemmas) {
 #' @param dict_lookup Dictionary lookup (yaml list loaded by parse_functions)
 #' @param word_lists_lookup Word lists lookup
 #' @param negation_adverbs Character vector of negation adverb lemmas
-#' @return Data frame: one row per doc, columns f_39 – f_42
+#' @return Data frame: one row per doc, columns f_39 - f_42
 #' @keywords internal
 block_adj_prep_adv_es <- function(tokens, doc_ids, dict_lookup,
                                    word_lists_lookup, negation_adverbs) {
@@ -132,7 +132,7 @@ block_adj_prep_adv_es <- function(tokens, doc_ids, dict_lookup,
       ) %>%
       count_feature("f_40_adj_attr")
   } else {
-    # Fallback: ADJ inmediatamente antes de NOUN dentro de la misma oración
+    # Fallback: ADJ inmediatamente antes de NOUN dentro de la misma oracion
     f40 <- tokens %>%
       dplyr::group_by(.data$doc_id, .data$sentence_id) %>%
       dplyr::arrange(.data$token_id_int, .by_group = TRUE) %>%
@@ -176,7 +176,7 @@ block_adj_prep_adv_es <- function(tokens, doc_ids, dict_lookup,
     dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int) %>%
     count_feature("f_41_adj_pred")
 
-  # f_42  Adverbios generales (excluye stance, hedges, negación)
+  # f_42  Adverbios generales (excluye stance, hedges, negacion)
   stance_lemmas <- unique(c(
     dictionary_to_lemmas(dict_lookup, "f_46_downtoners"),
     dictionary_to_lemmas(dict_lookup, "f_47_hedges"),
@@ -203,22 +203,22 @@ block_adj_prep_adv_es <- function(tokens, doc_ids, dict_lookup,
     )
 }
 
-# ─────────────────────────────────────────────────────────────────────────────
-# 2.  block_modals_es   f_52–f_54
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
+# 2.  block_modals_es   f_52-f_54
+# -----------------------------------------------------------------------------
 
 #' Modal verb perifrastic features (Spanish)
 #'
 #' f_52  Posibilidad:  poder + INF, caber + INF
 #' f_53  Necesidad:    deber + INF, tener_que + INF,
 #'                     haber_de + INF, haber_que + INF
-#' f_54  Predictivo:   futuro sintético (Tense=Fut,VerbForm=Fin)
+#' f_54  Predictivo:   futuro sintetico (Tense=Fut,VerbForm=Fin)
 #'                     + ir_a + INF
 #'
 #' @param tokens Annotated token data frame
 #' @param doc_ids One-column data frame with column `doc_id`
 #' @param dict_lookup Dictionary lookup
-#' @return Data frame: one row per doc, columns f_52 – f_54
+#' @return Data frame: one row per doc, columns f_52 - f_54
 #' @keywords internal
 block_modals_es <- function(tokens, doc_ids, dict_lookup) {
 
@@ -228,15 +228,15 @@ block_modals_es <- function(tokens, doc_ids, dict_lookup) {
     dplyr::rename(f_52_modal_possibility = "n")
 
   # f_53  Necesidad
-  #   deber + INF (sin "de" = necesidad deóntica)
-  #   deber_de + INF (probabilidad epistémica; incluido por convención)
+  #   deber + INF (sin "de" = necesidad deontica)
+  #   deber_de + INF (probabilidad epistemica; incluido por convencion)
   #   tener_que, haber_de, haber_que vienen compuestos del tokenizer
   nec_lemmas <- dictionary_to_lemmas(dict_lookup, "f_53_modal_necessity")
   f53 <- count_modal_periphrasis(tokens, nec_lemmas) %>%
     dplyr::rename(f_53_modal_necessity = "n")
 
   # f_54  Predictivo
-  #   (a) futuro sintético: Tense=Fut + VerbForm=Fin (via extract_feat)
+  #   (a) futuro sintetico: Tense=Fut + VerbForm=Fin (via extract_feat)
   f54_fut <- tokens %>%
     dplyr::filter(
       .data$pos %in% c("VERB", "AUX"),
@@ -246,12 +246,12 @@ block_modals_es <- function(tokens, doc_ids, dict_lookup) {
     dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int)
 
   #   (b) ir_a + INF  (ir con dep_rel aux cuyo head tiene VerbForm=Inf)
-  # 2026-04-20: Filtro de Tense añadido para excluir desplazamiento físico.
-  # Sin filtro, "fue a buscarlo" (Tense=Past) se contaba como futuro perifrástico.
-  # Decisión: se aceptan Tense=Pres (va a hacer) y Tense=Imp (iba a hacer,
+  # 2026-04-20: Filtro de Tense anadido para excluir desplazamiento fisico.
+  # Sin filtro, "fue a buscarlo" (Tense=Past) se contaba como futuro perifrastico.
+  # Decision: se aceptan Tense=Pres (va a hacer) y Tense=Imp (iba a hacer,
   # futuro del pasado / condicional). Se excluyen Tense=Past (fue a + INF =
-  # movimiento físico dirigido) y Tense=Fut (irá a + INF = futuro doble, raro).
-  # Ver: docs/DECISIONES_ES.md §f_54.
+  # movimiento fisico dirigido) y Tense=Fut (ira a + INF = futuro doble, raro).
+  # Ver: docs/DECISIONES_ES.md ?f_54.
   ir_a_inf <- tokens %>%
     dplyr::filter(
       .data$lemma == "ir",
@@ -272,8 +272,8 @@ block_modals_es <- function(tokens, doc_ids, dict_lookup) {
       stringr::str_detect(
         dplyr::coalesce(.data$dep_rel, ""), "^aux"
       ),
-      # Filtro de tiempo: solo futuro próximo (Pres) y futuro del pasado (Imp).
-      # Se excluye Tense=Past (fue a + INF = desplazamiento físico, no modalidad).
+      # Filtro de tiempo: solo futuro proximo (Pres) y futuro del pasado (Imp).
+      # Se excluye Tense=Past (fue a + INF = desplazamiento fisico, no modalidad).
       dplyr::coalesce(extract_feat(.data$feats, "Tense"), "") %in% c("Pres", "Imp")
     ) %>%
     dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int)
@@ -291,16 +291,16 @@ block_modals_es <- function(tokens, doc_ids, dict_lookup) {
     )
 }
 
-# ─────────────────────────────────────────────────────────────────────────────
-# 3.  block_specialized_verbs_es   f_55–f_58
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
+# 3.  block_specialized_verbs_es   f_55-f_58
+# -----------------------------------------------------------------------------
 
 #' Specialized verb class features (Spanish)
 #'
-#' f_55  Verbos públicos  (decir, afirmar, señalar, indicar, declarar…)
-#' f_56  Verbos privados  (creer, pensar, saber, sentir, suponer…)
-#' f_57  Verbos suasivos  (pedir, exigir, recomendar, sugerir, ordenar…)
-#' f_58  Verbos "seem"    (parecer, resultar, aparecer, semejarse…)
+#' f_55  Verbos publicos  (decir, afirmar, senalar, indicar, declarar?)
+#' f_56  Verbos privados  (creer, pensar, saber, sentir, suponer?)
+#' f_57  Verbos suasivos  (pedir, exigir, recomendar, sugerir, ordenar?)
+#' f_58  Verbos "seem"    (parecer, resultar, aparecer, semejarse?)
 #'
 #' Las listas de lemas se leen de dict.yaml (secciones f_55_verb_public,
 #' f_56_verb_private, f_57_verb_suasive, f_58_verb_seem).
@@ -308,7 +308,7 @@ block_modals_es <- function(tokens, doc_ids, dict_lookup) {
 #' @param tokens Annotated token data frame
 #' @param doc_ids One-column data frame with column `doc_id`
 #' @param dict_lookup Dictionary lookup
-#' @return Data frame: one row per doc, columns f_55 – f_58
+#' @return Data frame: one row per doc, columns f_55 - f_58
 #' @keywords internal
 block_specialized_verbs_es <- function(tokens, doc_ids, dict_lookup) {
 

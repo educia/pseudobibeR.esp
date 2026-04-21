@@ -19,7 +19,7 @@ columns: doc_id, token, lemma, pos (UPOS), feats.}
 \item{doc_ids}{One-column data frame with column \code{doc_id}.}
 
 \item{nominalization_suffixes}{Character vector of suffix strings
-(lower-case, without leading dot/caret). Example: c("cion","ción",...)}
+(lower-case, without leading dot/caret). Example: c("cion","cion",...)}
 
 \item{nominalization_stoplist}{Character vector of lexicalized nouns to
 exclude even if they match a suffix.}

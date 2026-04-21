@@ -15,10 +15,10 @@ block_contractions_es(tokens, doc_ids)
 Data frame with f_59_contractions
 }
 \description{
-El español moderno carece de contracciones ortográficas productivas
-equivalentes a las del francés. Esta función devuelve siempre 0 para
+El espanol moderno carece de contracciones ortograficas productivas
+equivalentes a las del frances. Esta funcion devuelve siempre 0 para
 mantener paridad estructural con pseudobibeR.fr.
-Excepción: las contracciones gramaticales \emph{del} (de + el) y \emph{al}
+Excepcion: las contracciones gramaticales \emph{del} (de + el) y \emph{al}
 (a + el) se cuentan como indicadores de registro informal.
 }
 \keyword{internal}

@@ -14,16 +14,16 @@ block_relatives_es(tokens, doc_ids, head_lookup)
 \item{head_lookup}{Pre-built head-token attribute table}
 }
 \value{
-Data frame: one row per doc, columns f_29 – f_34
+Data frame: one row per doc, columns f_29 - f_34
 }
 \description{
 Estrategia UD pura:
 \itemize{
-\item Cláusulas relativas = tokens con dep_rel que comienza por "acl"
+\item Clausulas relativas = tokens con dep_rel que comienza por "acl"
 (acl, acl:relcl) cuyo marcador (dep_rel=mark o ref) es un pronombre
 relativo o wh.
-\item Tipo de relativa (sujeto/objeto) se determina por la función UD
-del pronombre relativo dentro de la cláusula subordinada.
+\item Tipo de relativa (sujeto/objeto) se determina por la funcion UD
+del pronombre relativo dentro de la clausula subordinada.
 }
 }
 \keyword{internal}

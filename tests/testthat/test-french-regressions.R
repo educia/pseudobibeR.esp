@@ -1,4 +1,6 @@
 # nolint start: line_length_linter, object_name_linter
+if (!requireNamespace("pseudobibeR.fr", quietly = TRUE)) skip("French-only test: pseudobibeR.fr not installed")
+
 
 # Regression tests for previously-fixed bugs
 # These tests ensure critical bug fixes remain stable across refactoring

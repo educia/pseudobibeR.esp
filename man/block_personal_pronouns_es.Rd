@@ -15,10 +15,11 @@ block_personal_pronouns_es(
     "anochecer", "atardecer"),
   raising_verbs = c("parecer", "resultar", "continuar", "seguir", "bastar", "convenir",
     "quedar"),
-  wh_question_lemmas = c("quien", "quién", "que", "qué", "cual", "cuál", "cuales",
-    "cuáles", "donde", "dónde", "cuando", "cuándo", "como", "cómo", "cuanto",
-    "cuánto", "cuanta", "cuánta", "cuantos", "cuántos", "cuantas", "cuántas",
-    "por_que", "por_qué")
+  wh_question_lemmas = c("quien", "qui<U+00E9>n", "que", "qu<U+00E9>", "cual",
+    "cu<U+00E1>l", "cuales", "cu<U+00E1>les", "donde", "d<U+00F3>nde", "cuando",
+    "cu<U+00E1>ndo", "como", "c<U+00F3>mo", "cuanto", "cu<U+00E1>nto", "cuanta",
+    "cu<U+00E1>nta", "cuantos", "cu<U+00E1>ntos", "cuantas", "cu<U+00E1>ntas", "por_que",
+    "por_qu<U+00E9>")
 )
 }
 \arguments{
@@ -41,7 +42,7 @@ block_personal_pronouns_es(
 \item{wh_question_lemmas}{WH-word lemmas (default provided)}
 }
 \value{
-Data frame: one row per doc, columns f_06 … f_09, f_13
+Data frame: one row per doc, columns f_06 ? f_09, f_13
 }
 \description{
 Personal pronoun, expletive, and WH-question features (Spanish)

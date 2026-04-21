@@ -1,0 +1,21 @@
+"prediccion","descripcion","passed"
+"P1_past_narr_gt_acad","f_01 (imperfecto) narr > acad",TRUE
+"P2_present_acad_gt_narr","f_03 (presente) acad > narr",TRUE
+"P3_nomin_acad_highest","f_14 (nominalizaciones) acad es el más alto",TRUE
+"P4_1p_conv_highest","f_06 (1ª persona) conv es el más alto",TRUE
+"P5_2p_conv_highest","f_07 (2ª persona) conv es el más alto",TRUE
+"P6_prep_acad_gt_conv","f_39 (preposiciones) acad > conv",TRUE
+"P7_agentless_pass_acad_gt_conv","f_17 (pasivas sin agente) acad > conv",TRUE
+"P8_ttr_acad_gt_conv","f_43 (TTR) acad > conv",TRUE
+"P9_wordlen_acad_gt_conv","f_44 (long. media) acad > conv",TRUE
+"P10_private_verbs_conv_gt_acad","f_56 (verbos privados) conv > acad",TRUE
+"P11_discourse_conv_highest","f_50 (partículas discursivas) conv es el más alto",TRUE
+"P12_causal_acad_gt_conv","f_35 (causales) acad > conv",FALSE
+"P13_attr_adj_acad_gt_conv","f_40 (adj. atributivos) acad > conv",TRUE
+"P14_be_main_conv_gt_acad","f_19 (ser/estar principal) conv > acad",TRUE
+"P15_neg_analytic_conv_gt_acad","f_67 (negación analítica) conv > acad",TRUE
+"P16_that_verb_acad_gt_conv","f_21 (comp. verb que) acad > conv",FALSE
+"P17_public_verbs_pren_highest","f_55 (verbos públicos) pren >= conv",TRUE
+"P18_possibility_modal_acad_gt_narr","f_52 (modales posibilidad) acad > narr",TRUE
+"P19_demonstr_not_zero","f_10 (dem. pronominales) > 0 en al menos 3 géneros",FALSE
+"P20_f54_narr_not_absurd","f_54 (predictivos) narr < 3 × acad (sanity check post-fix)",TRUE

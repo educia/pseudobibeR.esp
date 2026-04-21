@@ -29,11 +29,22 @@ parse_biber_features <- function(tokens, measure, normalize,
 
   df <- list()
 
+  # 2026-04-21: UDPipe expands contractions (al -> a+el, del -> de+el) as
+  # multi-word tokens (MWT) with token_id like "4-5" and pos=NA.
+  # The old filter `pos != "SPACE"` dropped NA rows, silently discarding MWTs.
+  # Fix: keep rows where pos is NA but the token_id looks like a MWT range
+  # (contains "-"), AND the surface token is one of the Spanish contractions.
+  # All other NA-pos rows (genuine junk) are still dropped.
   tokens <- tokens %>%
     dplyr::as_tibble() %>%
     dplyr::mutate(token = stringr::str_to_lower(.data$token)) %>%
     dplyr::mutate(pos   = dplyr::if_else(.data$token == "\n", "PUNCT", .data$pos)) %>%
-    dplyr::filter(.data$pos != "SPACE")
+    dplyr::filter(
+      !is.na(.data$pos) & .data$pos != "SPACE" |
+      (is.na(.data$pos) &
+         grepl("-", .data$token_id, fixed = TRUE) &
+         .data$token %in% c("al", "del"))
+    )
 
   if (nrow(tokens) == 0) stop("No valid tokens found after filtering.", call. = FALSE)
 
@@ -378,8 +389,8 @@ parse_biber_features <- function(tokens, measure, normalize,
     replace_nas()
 
   # Merge duplicate columns that appear from both dict and code paths.
-  # pmax_features: counts the same thing twice → take max (not sum).
-  # sum_features:  complementary counts → add together.
+  # pmax_features: counts the same thing twice -> take max (not sum).
+  # sum_features:  complementary counts -> add together.
   pmax_features <- c(
     "f_04_place_adverbials", "f_05_time_adverbials",
     "f_06_first_person_pronouns", "f_07_second_person_pronouns",
@@ -460,14 +471,26 @@ parse_biber_features <- function(tokens, measure, normalize,
     biber_counts <- normalize_counts(biber_counts)
   }
 
+  # 2026-04-21: textstat_lexdiv produces a second f_43_type_token AFTER the
+  # combine_features deduplication loop, so the .x/.y collision was never
+  # resolved. Fix: if f_43_type_token already exists from block_lexical_
+  # complexity_es, replace it in-place with the textstat_lexdiv value (which
+  # uses the user-chosen measure); otherwise join as before.
   if (measure != "none") {
     if (min(quanteda::ntoken(biber_tks)) < 200) {
       message("Setting type-to-token ratio to TTR")
       measure <- "TTR"
     }
-    f_43_type_token <- quanteda.textstats::textstat_lexdiv(biber_tks, measure = measure) %>%
+    f_43_new <- quanteda.textstats::textstat_lexdiv(biber_tks, measure = measure) %>%
       dplyr::rename(doc_id = "document", f_43_type_token := !!measure)
-    biber_counts <- dplyr::full_join(biber_counts, f_43_type_token, by = "doc_id")
+    if ("f_43_type_token" %in% colnames(biber_counts)) {
+      # Update in-place: drop the block-computed column and join the lexdiv one
+      biber_counts <- biber_counts %>%
+        dplyr::select(-dplyr::any_of("f_43_type_token")) %>%
+        dplyr::full_join(f_43_new, by = "doc_id")
+    } else {
+      biber_counts <- dplyr::full_join(biber_counts, f_43_new, by = "doc_id")
+    }
   }
 
   # f_44 fallback: if not already provided by block_lexical_complexity_es,
@@ -484,7 +507,7 @@ parse_biber_features <- function(tokens, measure, normalize,
 
   biber_counts <- biber_counts %>% replace_nas()
 
-  # ── Enforce canonical column order (Fix 5) ─────────────────────────────────
+  # -- Enforce canonical column order (Fix 5) ---------------------------------
   canonical_order <- c(
     "doc_id",
     "f_01_past_tense", "f_02_perfect_aspect", "f_03_present_tense",

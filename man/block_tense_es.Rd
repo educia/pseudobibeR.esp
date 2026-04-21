@@ -27,7 +27,7 @@ block_tense_es(
 \item{indefinite_pronouns}{Character vector of indefinite pronoun lemmas (f_11)}
 }
 \value{
-Data frame: one row per doc, columns f_01–f_05, f_11, f_12, f_71
+Data frame: one row per doc, columns f_01-f_05, f_11, f_12, f_71
 }
 \description{
 Tense, aspect, adverbial, and indefinite-pronoun features (Spanish)

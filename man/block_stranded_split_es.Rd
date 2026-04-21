@@ -15,14 +15,14 @@ block_stranded_split_es(tokens, doc_ids)
 Data frame with f_61_stranded_preposition, f_62_split_infinitive
 }
 \description{
-f_61  Preposición varada: ADP precede inmediatamente a pronombre
+f_61  Preposicion varada: ADP precede inmediatamente a pronombre
 relativo/interrogativo ("a quien", "de lo que").
-En español la preposición varada en relativas es marginal y
+En espanol la preposicion varada en relativas es marginal y
 muy marcada; este rasgo discrimina registros informales orales.
 }
 \details{
-f_62  Infinitivo escindido: preposición + adverbio(s) + infinitivo
+f_62  Infinitivo escindido: preposicion + adverbio(s) + infinitivo
 ("para realmente entender", "al nunca poder salir").
-Patrón raro pero documentado en registros cultos y periodísticos.
+Patron raro pero documentado en registros cultos y periodisticos.
 }
 \keyword{internal}

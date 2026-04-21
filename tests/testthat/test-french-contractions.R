@@ -1,5 +1,7 @@
 # Tests for f_59_contractions feature
 # Contractions are informal reductions (t'es, p'tit), NOT grammatical elisions (l', d', qu')
+if (!requireNamespace("pseudobibeR.fr", quietly = TRUE)) skip("French-only test: pseudobibeR.fr not installed")
+
 
 library(testthat)
 library(dplyr)
