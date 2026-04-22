@@ -57,40 +57,63 @@ feature_labels <- data.frame(
     "f_71_preterit"
   ),
   grupo = c(
-    "Tiempo verbal", "Tiempo verbal", "Tiempo verbal",
-    "Adverbiales", "Adverbiales",
-    "Pronombres", "Pronombres", "Pronombres", "Pronombres",
-    "Pronombres", "Pronombres", "Pronombres",
-    "Interrogativas",
-    "Sustantivos", "Sustantivos", "Sustantivos",
-    "Voz pasiva", "Voz pasiva",
-    "Construcciones existenciales", "Construcciones existenciales",
-    "Subordinación", "Subordinación", "Subordinación",
-    "Subordinación", "Subordinación", "Subordinación",
-    "Cláusulas relativas", "Cláusulas relativas",
-    "Cláusulas relativas", "Cláusulas relativas",
-    "Cláusulas relativas", "Cláusulas relativas",
-    "Cláusulas relativas", "Cláusulas relativas",
-    "Subordinación adverbial", "Subordinación adverbial",
-    "Subordinación adverbial", "Subordinación adverbial",
-    "SN elaborado", "SN elaborado", "SN elaborado",
-    "Adverbios",
-    "Complejidad léxica", "Complejidad léxica",
-    "Marcadores discursivos", "Marcadores discursivos",
-    "Marcadores discursivos", "Marcadores discursivos",
-    "Marcadores discursivos", "Marcadores discursivos",
-    "Pronombres",
-    "Modalidad", "Modalidad", "Modalidad",
-    "Verbos especializados", "Verbos especializados",
-    "Verbos especializados", "Verbos especializados",
-    "Estructuras marcadas", "Estructuras marcadas",
-    "Estructuras marcadas", "Estructuras marcadas", "Estructuras marcadas",
-    "Coordinación", "Coordinación",
-    "Negación", "Negación",
-    "Extensión española", "Extensión española",
-    "Extensión española", "Extensión española",
-    "Extensión española", "Extensión española",
-    "Extensión española"
+    # f_01-f_03 — A. Tiempos y aspecto
+    "A. Tiempos y aspecto", "A. Tiempos y aspecto", "A. Tiempos y aspecto",
+    # f_04-f_05 — B. Adverbios de lugar y tiempo
+    "B. Adverbios de lugar y tiempo", "B. Adverbios de lugar y tiempo",
+    # f_06-f_12 — C. Pronombres y pro-verbos
+    "C. Pronombres y pro-verbos", "C. Pronombres y pro-verbos",
+    "C. Pronombres y pro-verbos", "C. Pronombres y pro-verbos",
+    "C. Pronombres y pro-verbos", "C. Pronombres y pro-verbos",
+    "C. Pronombres y pro-verbos",
+    # f_13 — D. Interrogativas
+    "D. Interrogativas",
+    # f_14-f_16 — E. Formas nominales
+    "E. Formas nominales", "E. Formas nominales", "E. Formas nominales",
+    # f_17-f_18 — F. Pasivas
+    "F. Pasivas", "F. Pasivas",
+    # f_19-f_20 — G. Formas estativas
+    "G. Formas estativas", "G. Formas estativas",
+    # f_21-f_34 — H. Subordinaci\u00f3n (complementantes, relativas)
+    "H. Subordinaci\u00f3n", "H. Subordinaci\u00f3n", "H. Subordinaci\u00f3n",
+    "H. Subordinaci\u00f3n", "H. Subordinaci\u00f3n", "H. Subordinaci\u00f3n",
+    "H. Subordinaci\u00f3n", "H. Subordinaci\u00f3n",
+    "H. Subordinaci\u00f3n", "H. Subordinaci\u00f3n",
+    "H. Subordinaci\u00f3n", "H. Subordinaci\u00f3n",
+    "H. Subordinaci\u00f3n", "H. Subordinaci\u00f3n",
+    # f_35-f_38 — H. Subordinaci\u00f3n (adverbial)
+    "H. Subordinaci\u00f3n", "H. Subordinaci\u00f3n",
+    "H. Subordinaci\u00f3n", "H. Subordinaci\u00f3n",
+    # f_39-f_42 — I. PPs, adjetivos, adverbios
+    "I. PPs, adjetivos, adverbios", "I. PPs, adjetivos, adverbios",
+    "I. PPs, adjetivos, adverbios", "I. PPs, adjetivos, adverbios",
+    # f_43-f_44 — J. Especificidad l\u00e9xica
+    "J. Especificidad l\u00e9xica", "J. Especificidad l\u00e9xica",
+    # f_45-f_51 — K. Clases l\u00e9xicas
+    "K. Clases l\u00e9xicas", "K. Clases l\u00e9xicas",
+    "K. Clases l\u00e9xicas", "K. Clases l\u00e9xicas",
+    "K. Clases l\u00e9xicas", "K. Clases l\u00e9xicas",
+    "K. Clases l\u00e9xicas",
+    # f_52-f_54 — L. Modales
+    "L. Modales", "L. Modales", "L. Modales",
+    # f_55-f_58 — M. Verbos especializados
+    "M. Verbos especializados", "M. Verbos especializados",
+    "M. Verbos especializados", "M. Verbos especializados",
+    # f_59-f_63 — N. Formas reducidas y estructuras marcadas
+    "N. Formas reducidas y estructuras marcadas",
+    "N. Formas reducidas y estructuras marcadas",
+    "N. Formas reducidas y estructuras marcadas",
+    "N. Formas reducidas y estructuras marcadas",
+    "N. Formas reducidas y estructuras marcadas",
+    # f_64-f_65 — O. Coordinaci\u00f3n
+    "O. Coordinaci\u00f3n", "O. Coordinaci\u00f3n",
+    # f_66-f_67 — P. Negaci\u00f3n
+    "P. Negaci\u00f3n", "P. Negaci\u00f3n",
+    # f_68-f_71 — Extensiones espa\u00f1olas
+    "Q. Extensiones espa\u00f1olas", "Q. Extensiones espa\u00f1olas",
+    "Q. Extensiones espa\u00f1olas", "Q. Extensiones espa\u00f1olas",
+    "Q. Extensiones espa\u00f1olas", "Q. Extensiones espa\u00f1olas",
+    "Q. Extensiones espa\u00f1olas"
   ),
   descripcion = c(
     "Imperfecto de indicativo",
@@ -173,6 +196,16 @@ feature_labels <- data.frame(
     rep("Extensi\u00f3n espa\u00f1ola", 7)
   ),
   stringsAsFactors = FALSE
+)
+
+# Rasgos destacados en el README (Inicio r\u00e1pido, Paso 4)
+# Estos aparecen resaltados con un icono en la tabla de resultados.
+README_HIGHLIGHTED <- c(
+  "f_01_past_tense",
+  "f_03_present_tense",
+  "f_17_agentless_passives",
+  "f_18_by_passives",
+  "f_20_existential_there"
 )
 
 # ─── UI ──────────────────────────────────────────────────────────────────────
@@ -280,12 +313,20 @@ ui <- fluidPage(
       textAreaInput(
         "texto", label = NULL, value = "", rows = 10,
         placeholder = paste0(
-          "Pega aqu\u00ed el texto en espa\u00f1ol (m\u00ednimo recomendado: 200 palabras).\u2026"
+          "Pega aqu\u00ed el texto en espa\u00f1ol (m\u00ednimo recomendado: 200 palabras).\n",
+          "Se anotar\u00e1 con UDPipe (modelo spanish-gsd) y se extraer\u00e1n los ",
+          "rasgos de Biber (1985/1988)."
         ),
         width = "100%"
       ),
       div(
         actionButton("analizar", "Analizar", icon = icon("magnifying-glass")),
+        actionButton("cargar_ejemplo", "Cargar ejemplo del README",
+                     icon = icon("file-lines"),
+                     style = "background:#f0ece3; color:#1c3d5a; border:1px solid #d4cfc4; margin-left:8px;"),
+        actionButton("limpiar", "Limpiar",
+                     icon = icon("xmark"),
+                     style = "background:#f0ece3; color:#666; border:1px solid #d4cfc4; margin-left:8px;"),
         span(id = "status_msg", textOutput("status_msg", inline = TRUE))
       )
     ),
@@ -297,8 +338,20 @@ ui <- fluidPage(
     ),
 
     div(class = "app-footer",
-      HTML("pseudobibeR.es &mdash; Biber (1985/1988) para espa\u00f1ol
-            &mdash; Anotaci\u00f3n: UDPipe + Spanish-GSD")
+      HTML(paste0(
+        "<strong>pseudobibeR.es</strong> &mdash; ",
+        "Extractor de rasgos l\u00e9xico-gramaticales de Biber (1985/1988) para espa\u00f1ol<br>",
+        "<span style='font-size:.75rem;'>",
+        "Anotaci\u00f3n: <code>UDPipe</code> + modelo <code>spanish-gsd</code> &middot; ",
+        "67 rasgos de Biber + 7 extensiones espa\u00f1olas (f_68\u2013f_71) &middot; ",
+        "<a href='https://github.com/educia/pseudobibeR.esp' target='_blank' ",
+        "style='color:#1c3d5a;'>GitHub</a>",
+        "</span><br>",
+        "<span style='font-size:.72rem; color:#999; font-style:italic; margin-top:6px; display:inline-block;'>",
+        "Cita: Biber, D. (1985). Investigating macroscopic textual variation through ",
+        "multifeature/multidimensional analyses. <em>Linguistics</em>, 23(2), 337\u2013360.",
+        "</span>"
+      ))
     )
   )
 )
@@ -612,6 +665,32 @@ server <- function(input, output, session) {
     else ""
   })
 
+  # ── Texto de ejemplo del README (doc1 + doc2) ──
+  observeEvent(input$cargar_ejemplo, {
+    texto_ejemplo <- paste0(
+      "Este es un texto de prueba. Fue escrito por un estudiante. ",
+      "El trabajo fue revisado por el profesor y corregido con cuidado. ",
+      "Los cambios hab\u00edan sido propuestos la semana anterior.\n\n",
+      "Hay muchos estudios que han analizado la variaci\u00f3n de registros. ",
+      "En la ling\u00fc\u00edstica de corpus, diversas investigaciones muestran ",
+      "que los textos acad\u00e9micos presentan una alta densidad de ",
+      "nominalizaciones y pasivas sin agente. Se han identificado tambi\u00e9n ",
+      "diferencias sistem\u00e1ticas entre el registro hablado y el escrito, ",
+      "tal como se reporta en la bibliograf\u00eda especializada. ",
+      "Existen m\u00faltiples dimensiones funcionales que permiten clasificar ",
+      "los textos seg\u00fan su prop\u00f3sito comunicativo."
+    )
+    updateTextAreaInput(session, "texto", value = texto_ejemplo)
+  })
+
+  # ── Botón Limpiar ──
+  observeEvent(input$limpiar, {
+    updateTextAreaInput(session, "texto", value = "")
+    rv$resultado  <- NULL
+    rv$tokens_raw <- NULL
+    rv$error_msg  <- NULL
+  })
+
   observeEvent(input$analizar, {
     texto <- trimws(input$texto)
     if (nchar(texto) == 0) {
@@ -631,7 +710,7 @@ server <- function(input, output, session) {
       )
       parsed_df <- as.data.frame(parsed)
       rv$tokens_raw <- parsed_df
-      biber_es(parsed_df, measure = "none", normalize = FALSE)
+      biber_es(parsed_df, measure = "MATTR", normalize = FALSE)
     }, error = function(e) {
       rv$error_msg <- conditionMessage(e)
       NULL
@@ -662,12 +741,14 @@ server <- function(input, output, session) {
       res <- rv$resultado
       n_tok <- if ("n_tokens"     %in% names(res)) res$n_tokens[1]     else NA
       n_lex <- if ("n_lex_tokens" %in% names(res)) res$n_lex_tokens[1] else NA
+      ttr   <- if ("f_43_type_token"    %in% names(res)) res$f_43_type_token[1] else NA
+      mwl   <- if ("f_44_mean_word_length" %in% names(res)) res$f_44_mean_word_length[1] else NA
 
+      # Ordenar grupos: A–P primero, luego Q (extensiones)
+      grupos_all <- unique(feature_labels$grupo)
+      grupos_ord <- sort(grupos_all)
       grupo_choices <- c("Todos los grupos" = "",
-                         stats::setNames(
-                           sort(unique(feature_labels$grupo)),
-                           sort(unique(feature_labels$grupo))
-                         ))
+                         stats::setNames(grupos_ord, grupos_ord))
       tipo_choices <- c(
         "Biber original + Extensiones" = "",
         "Solo Biber original (f_01\u2013f_67)" = "Biber original",
@@ -677,10 +758,14 @@ server <- function(input, output, session) {
       tagList(
         div(class = "results-meta",
           HTML(sprintf(
-            "<strong>%s</strong> tokens totales &nbsp;|&nbsp;
-             <strong>%s</strong> tokens l\u00e9xicos",
+            paste0("<strong>%s</strong> tokens totales &nbsp;|&nbsp; ",
+                   "<strong>%s</strong> tokens l\u00e9xicos &nbsp;|&nbsp; ",
+                   "TTR: <strong>%.3f</strong> &nbsp;|&nbsp; ",
+                   "Long. media: <strong>%.2f</strong> car."),
             format(n_tok, big.mark = "."),
-            format(n_lex, big.mark = ".")
+            format(n_lex, big.mark = "."),
+            as.numeric(ttr),
+            as.numeric(mwl)
           ))
         ),
         div(class = "filter-bar",
@@ -740,8 +825,16 @@ server <- function(input, output, session) {
   output$tabla_rasgos <- renderDT({
     df <- tabla_data()
 
+    # Marcar rasgos destacados en el README con un asterisco
+    codigo_display <- ifelse(
+      df$code %in% README_HIGHLIGHTED,
+      paste0("<span title='Rasgo destacado en el README' ",
+             "style='color:#e8a020;'>\u2605</span> ", df$code),
+      df$code
+    )
+
     tabla <- data.frame(
-      Codigo      = df$code,
+      Codigo      = codigo_display,
       Grupo       = df$grupo,
       Descripcion = df$descripcion,
       Tipo        = df$tipo,
