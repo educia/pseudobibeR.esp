@@ -110,10 +110,10 @@ feature_labels <- data.frame(
     # f_66-f_67 — P. Negaci\u00f3n
     "P. Negaci\u00f3n", "P. Negaci\u00f3n",
     # f_68-f_71 — Extensiones espa\u00f1olas
-    "Q. Extensiones espa\u00f1olas", "Q. Extensiones espa\u00f1olas",
-    "Q. Extensiones espa\u00f1olas", "Q. Extensiones espa\u00f1olas",
-    "Q. Extensiones espa\u00f1olas", "Q. Extensiones espa\u00f1olas",
-    "Q. Extensiones espa\u00f1olas"
+    "Extensiones espa\u00f1olas (no-Biber)", "Extensiones espa\u00f1olas (no-Biber)",
+    "Extensiones espa\u00f1olas (no-Biber)", "Extensiones espa\u00f1olas (no-Biber)",
+    "Extensiones espa\u00f1olas (no-Biber)", "Extensiones espa\u00f1olas (no-Biber)",
+    "Extensiones espa\u00f1olas (no-Biber)"
   ),
   descripcion = c(
     "Imperfecto de indicativo",
@@ -744,9 +744,11 @@ server <- function(input, output, session) {
       ttr   <- if ("f_43_type_token"    %in% names(res)) res$f_43_type_token[1] else NA
       mwl   <- if ("f_44_mean_word_length" %in% names(res)) res$f_44_mean_word_length[1] else NA
 
-      # Ordenar grupos: A–P primero, luego Q (extensiones)
+      # Ordenar grupos: A–P (Biber original) primero, Extensiones al final
       grupos_all <- unique(feature_labels$grupo)
-      grupos_ord <- sort(grupos_all)
+      grupos_biber <- sort(grupos_all[grepl("^[A-P]\\. ", grupos_all)])
+      grupos_ext   <- grupos_all[!grepl("^[A-P]\\. ", grupos_all)]
+      grupos_ord   <- c(grupos_biber, grupos_ext)
       grupo_choices <- c("Todos los grupos" = "",
                          stats::setNames(grupos_ord, grupos_ord))
       tipo_choices <- c(
