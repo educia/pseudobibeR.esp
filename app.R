@@ -316,6 +316,22 @@ extract_evidence <- function(raw_tokens) {
   toks$lemma_lc <- tolower(toks$lemma)
   toks$token_lc <- tolower(toks$token)
 
+  # Helper: extrae un atributo morfosintáctico del campo feats de UDPipe
+  # Ej: extract_feat("Tense=Imp|Mood=Ind|VerbForm=Fin", "Tense") → "Imp"
+  # Vectorizado: funciona con vectores de feats
+  extract_feat <- function(feats_vec, attr) {
+    sapply(feats_vec, function(feats) {
+      if (is.na(feats) || feats == "" || is.null(feats)) return(NA_character_)
+      parts <- strsplit(feats, "\\|")[[1]]
+      for (part in parts) {
+        if (grepl(paste0("^", attr, "="), part)) {
+          return(sub(paste0(attr, "="), "", part))
+        }
+      }
+      return(NA_character_)
+    })
+  }
+
   ef <- function(feats, name) extract_feat(feats, name)
 
   # Helper: recoge tokens únicos que cumplen una máscara lógica
