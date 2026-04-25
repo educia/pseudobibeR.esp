@@ -57,63 +57,67 @@ feature_labels <- data.frame(
     "f_71_preterit"
   ),
   grupo = c(
-    # f_01-f_03 — A. Tiempos y aspecto
-    "A. Tiempos y aspecto", "A. Tiempos y aspecto", "A. Tiempos y aspecto",
-    # f_04-f_05 — B. Adverbios de lugar y tiempo
-    "B. Adverbios de lugar y tiempo", "B. Adverbios de lugar y tiempo",
-    # f_06-f_12 — C. Pronombres y pro-verbos
-    "C. Pronombres y pro-verbos", "C. Pronombres y pro-verbos",
-    "C. Pronombres y pro-verbos", "C. Pronombres y pro-verbos",
-    "C. Pronombres y pro-verbos", "C. Pronombres y pro-verbos",
-    "C. Pronombres y pro-verbos",
-    # f_13 — D. Interrogativas
-    "D. Interrogativas",
-    # f_14-f_16 — E. Formas nominales
-    "E. Formas nominales", "E. Formas nominales", "E. Formas nominales",
-    # f_17-f_18 — F. Pasivas
-    "F. Pasivas", "F. Pasivas",
-    # f_19-f_20 — G. Formas estativas
-    "G. Formas estativas", "G. Formas estativas",
-    # f_21-f_34 — H. Subordinaci\u00f3n (complementantes, relativas)
-    "H. Subordinaci\u00f3n", "H. Subordinaci\u00f3n", "H. Subordinaci\u00f3n",
-    "H. Subordinaci\u00f3n", "H. Subordinaci\u00f3n", "H. Subordinaci\u00f3n",
-    "H. Subordinaci\u00f3n", "H. Subordinaci\u00f3n",
-    "H. Subordinaci\u00f3n", "H. Subordinaci\u00f3n",
-    "H. Subordinaci\u00f3n", "H. Subordinaci\u00f3n",
-    "H. Subordinaci\u00f3n", "H. Subordinaci\u00f3n",
-    # f_35-f_38 — H. Subordinaci\u00f3n (adverbial)
-    "H. Subordinaci\u00f3n", "H. Subordinaci\u00f3n",
-    "H. Subordinaci\u00f3n", "H. Subordinaci\u00f3n",
-    # f_39-f_42 — I. PPs, adjetivos, adverbios
-    "I. PPs, adjetivos, adverbios", "I. PPs, adjetivos, adverbios",
-    "I. PPs, adjetivos, adverbios", "I. PPs, adjetivos, adverbios",
-    # f_43-f_44 — J. Especificidad l\u00e9xica
-    "J. Especificidad l\u00e9xica", "J. Especificidad l\u00e9xica",
-    # f_45-f_51 — K. Clases l\u00e9xicas
-    "K. Clases l\u00e9xicas", "K. Clases l\u00e9xicas",
-    "K. Clases l\u00e9xicas", "K. Clases l\u00e9xicas",
-    "K. Clases l\u00e9xicas", "K. Clases l\u00e9xicas",
-    "K. Clases l\u00e9xicas",
-    # f_52-f_54 — L. Modales
-    "L. Modales", "L. Modales", "L. Modales",
-    # f_55-f_58 — M. Verbos especializados
-    "M. Verbos especializados", "M. Verbos especializados",
-    "M. Verbos especializados", "M. Verbos especializados",
-    # f_59-f_63 — N. Formas reducidas y estructuras marcadas
-    "N. Formas reducidas y estructuras marcadas",
-    "N. Formas reducidas y estructuras marcadas",
-    "N. Formas reducidas y estructuras marcadas",
-    "N. Formas reducidas y estructuras marcadas",
-    "N. Formas reducidas y estructuras marcadas",
-    # f_64-f_65 — O. Coordinaci\u00f3n
-    "O. Coordinaci\u00f3n", "O. Coordinaci\u00f3n",
-    # f_66-f_67 — P. Negaci\u00f3n
-    "P. Negaci\u00f3n", "P. Negaci\u00f3n",
-    # f_68-f_71 — Extensiones espa\u00f1olas
-    "Extensiones espa\u00f1olas (no-Biber)", "Extensiones espa\u00f1olas (no-Biber)",
-    "Extensiones espa\u00f1olas (no-Biber)", "Extensiones espa\u00f1olas (no-Biber)",
-    "Extensiones espa\u00f1olas (no-Biber)", "Extensiones espa\u00f1olas (no-Biber)",
-    "Extensiones espa\u00f1olas (no-Biber)"
+    # f_01-f_03 — A. Tense and aspect markers
+    "A. Tense and aspect markers", "A. Tense and aspect markers",
+    "A. Tense and aspect markers",
+    # f_04-f_05 — B. Place and time adverbials
+    "B. Place and time adverbials", "B. Place and time adverbials",
+    # f_06-f_12 — C. Pronouns and pro-verbs
+    "C. Pronouns and pro-verbs", "C. Pronouns and pro-verbs",
+    "C. Pronouns and pro-verbs", "C. Pronouns and pro-verbs",
+    "C. Pronouns and pro-verbs", "C. Pronouns and pro-verbs",
+    "C. Pronouns and pro-verbs",
+    # f_13 — D. Questions
+    "D. Questions",
+    # f_14-f_16 — E. Nominal forms
+    "E. Nominal forms", "E. Nominal forms", "E. Nominal forms",
+    # f_17-f_18 — F. Passives
+    "F. Passives", "F. Passives",
+    # f_19-f_20 — G. Stative forms
+    "G. Stative forms", "G. Stative forms",
+    # f_21-f_34 — H. Subordination features (complementation, relatives)
+    "H. Subordination features", "H. Subordination features",
+    "H. Subordination features", "H. Subordination features",
+    "H. Subordination features", "H. Subordination features",
+    "H. Subordination features", "H. Subordination features",
+    "H. Subordination features", "H. Subordination features",
+    "H. Subordination features", "H. Subordination features",
+    "H. Subordination features", "H. Subordination features",
+    # f_35-f_38 — H. Subordination features (adverbial subordination)
+    "H. Subordination features", "H. Subordination features",
+    "H. Subordination features", "H. Subordination features",
+    # f_39-f_42 — I. Prepositional phrases, adjectives and adverbs
+    "I. Prepositional phrases, adjectives and adverbs",
+    "I. Prepositional phrases, adjectives and adverbs",
+    "I. Prepositional phrases, adjectives and adverbs",
+    "I. Prepositional phrases, adjectives and adverbs",
+    # f_43-f_44 — J. Lexical specificity
+    "J. Lexical specificity", "J. Lexical specificity",
+    # f_45-f_51 — K. Lexical classes
+    "K. Lexical classes", "K. Lexical classes",
+    "K. Lexical classes", "K. Lexical classes",
+    "K. Lexical classes", "K. Lexical classes",
+    "K. Lexical classes",
+    # f_52-f_54 — L. Modals
+    "L. Modals", "L. Modals", "L. Modals",
+    # f_55-f_58 — M. Specialized verb classes
+    "M. Specialized verb classes", "M. Specialized verb classes",
+    "M. Specialized verb classes", "M. Specialized verb classes",
+    # f_59-f_63 — N. Reduced forms and dispreferred structures
+    "N. Reduced forms and dispreferred structures",
+    "N. Reduced forms and dispreferred structures",
+    "N. Reduced forms and dispreferred structures",
+    "N. Reduced forms and dispreferred structures",
+    "N. Reduced forms and dispreferred structures",
+    # f_64-f_65 — O. Coordination
+    "O. Coordination", "O. Coordination",
+    # f_66-f_67 — P. Negation
+    "P. Negation", "P. Negation",
+    # f_68-f_71 — Extensiones espa\u00f1olas (no-Biber)
+    "Spanish extensions (non-Biber)", "Spanish extensions (non-Biber)",
+    "Spanish extensions (non-Biber)", "Spanish extensions (non-Biber)",
+    "Spanish extensions (non-Biber)", "Spanish extensions (non-Biber)",
+    "Spanish extensions (non-Biber)"
   ),
   descripcion = c(
     "Imperfecto de indicativo",
