@@ -23,198 +23,180 @@ udmodel <- udpipe_load_model(MODEL_PATH)
 message("Modelo listo.")
 
 # ─── Catálogo de rasgos ───────────────────────────────────────────────────────
-# 74 filas: 67 rasgos de Biber (1985) + 7 extensiones españolas (f_68–f_71)
+# 59 rasgos: Biber (1985/1988) adaptados al español + extensiones propias.
+# Eliminados (intraducibles): f_09, f_12, f_15, f_28, f_31, f_32,
+#   f_59, f_60, f_61, f_62, f_68.
+# Fusiones: f_29+f_31 → f_29_that_subj; f_30+f_32 → f_30_that_obj.
+# Extensiones propias: f_69 (-mente), f_70 (palabras largas), f_71 (imperfecto).
 feature_labels <- data.frame(
   code = c(
+    # A. Tiempo y aspecto
     "f_01_past_tense", "f_02_perfect_aspect", "f_03_present_tense",
+    # B. Adverbiales de lugar y tiempo
     "f_04_place_adverbials", "f_05_time_adverbials",
+    # C. Pronombres
     "f_06_first_person_pronouns", "f_07_second_person_pronouns",
-    "f_08_third_person_pronouns", "f_09_pronoun_it",
-    "f_10_demonstrative_pronoun", "f_11_indefinite_pronouns", "f_12_proverb_do",
+    "f_08_third_person_pronouns",
+    "f_10_demonstrative_pronoun", "f_11_indefinite_pronouns",
+    # D. Interrogativas
     "f_13_wh_question",
-    "f_14_nominalizations", "f_15_gerunds", "f_16_other_nouns",
+    # E. Formas nominales
+    "f_14_nominalizations", "f_16_other_nouns",
+    # F. Pasivas
     "f_17_agentless_passives", "f_18_by_passives",
+    # G. Formas estativas
     "f_19_be_main_verb", "f_20_existential_there",
+    # H. Subordinación
     "f_21_that_verb_comp", "f_22_that_adj_comp", "f_23_wh_clause",
     "f_24_infinitives", "f_25_present_participle", "f_26_past_participle",
-    "f_27_past_participle_whiz", "f_28_present_participle_whiz",
-    "f_29_that_subj", "f_30_that_obj", "f_31_wh_subj", "f_32_wh_obj",
+    "f_27_past_participle_whiz",
+    "f_29_that_subj", "f_30_that_obj",
     "f_33_pied_piping", "f_34_sentence_relatives",
     "f_35_because", "f_36_though", "f_37_if", "f_38_other_adv_sub",
+    # I. Preposiciones, adjetivos y adverbios
     "f_39_prepositions", "f_40_adj_attr", "f_41_adj_pred", "f_42_adverbs",
+    # J. Especificidad léxica
     "f_43_type_token", "f_44_mean_word_length",
+    # K. Clases léxicas
     "f_45_conjuncts", "f_46_downtoners", "f_47_hedges", "f_48_amplifiers",
     "f_49_emphatics", "f_50_discourse_particles", "f_51_demonstratives",
+    # L. Modales
     "f_52_modal_possibility", "f_53_modal_necessity", "f_54_modal_predictive",
+    # M. Verbos especializados
     "f_55_verb_public", "f_56_verb_private", "f_57_verb_suasive", "f_58_verb_seem",
-    "f_59_contractions", "f_60_that_deletion",
-    "f_61_stranded_preposition", "f_62_split_infinitive", "f_63_split_auxiliary",
+    # N. Estructuras reducidas
+    "f_63_split_auxiliary",
+    # O. Coordinación
     "f_64_phrasal_coordination", "f_65_clausal_coordination",
+    # P. Negación
     "f_66_neg_synthetic", "f_67_neg_analytic",
-    "f_68_nominalization", "f_68_nominalization_rate",
+    # Extensiones españolas
     "f_69_mente_adverbs", "f_69_mente_adverbs_rate",
     "f_70_long_words", "f_70_long_words_rate",
     "f_71_preterit"
   ),
   grupo = c(
-    # f_01-f_03 — A. Tense and aspect markers
-    "A. Tense and aspect markers", "A. Tense and aspect markers",
-    "A. Tense and aspect markers",
-    # f_04-f_05 — B. Place and time adverbials
-    "B. Place and time adverbials", "B. Place and time adverbials",
-    # f_06-f_12 — C. Pronouns and pro-verbs
-    "C. Pronouns and pro-verbs", "C. Pronouns and pro-verbs",
-    "C. Pronouns and pro-verbs", "C. Pronouns and pro-verbs",
-    "C. Pronouns and pro-verbs", "C. Pronouns and pro-verbs",
-    "C. Pronouns and pro-verbs",
-    # f_13 — D. Questions
-    "D. Questions",
-    # f_14-f_16 — E. Nominal forms
-    "E. Nominal forms", "E. Nominal forms", "E. Nominal forms",
-    # f_17-f_18 — F. Passives
-    "F. Passives", "F. Passives",
-    # f_19-f_20 — G. Stative forms
-    "G. Stative forms", "G. Stative forms",
-    # f_21-f_34 — H. Subordination features (complementation, relatives)
-    "H. Subordination features", "H. Subordination features",
-    "H. Subordination features", "H. Subordination features",
-    "H. Subordination features", "H. Subordination features",
-    "H. Subordination features", "H. Subordination features",
-    "H. Subordination features", "H. Subordination features",
-    "H. Subordination features", "H. Subordination features",
-    "H. Subordination features", "H. Subordination features",
-    # f_35-f_38 — H. Subordination features (adverbial subordination)
-    "H. Subordination features", "H. Subordination features",
-    "H. Subordination features", "H. Subordination features",
-    # f_39-f_42 — I. Prepositional phrases, adjectives and adverbs
-    "I. Prepositional phrases, adjectives and adverbs",
-    "I. Prepositional phrases, adjectives and adverbs",
-    "I. Prepositional phrases, adjectives and adverbs",
-    "I. Prepositional phrases, adjectives and adverbs",
-    # f_43-f_44 — J. Lexical specificity
-    "J. Lexical specificity", "J. Lexical specificity",
-    # f_45-f_51 — K. Lexical classes
-    "K. Lexical classes", "K. Lexical classes",
-    "K. Lexical classes", "K. Lexical classes",
-    "K. Lexical classes", "K. Lexical classes",
-    "K. Lexical classes",
-    # f_52-f_54 — L. Modals
-    "L. Modals", "L. Modals", "L. Modals",
-    # f_55-f_58 — M. Specialized verb classes
-    "M. Specialized verb classes", "M. Specialized verb classes",
-    "M. Specialized verb classes", "M. Specialized verb classes",
-    # f_59-f_63 — N. Reduced forms and dispreferred structures
-    "N. Reduced forms and dispreferred structures",
-    "N. Reduced forms and dispreferred structures",
-    "N. Reduced forms and dispreferred structures",
-    "N. Reduced forms and dispreferred structures",
-    "N. Reduced forms and dispreferred structures",
-    # f_64-f_65 — O. Coordination
-    "O. Coordination", "O. Coordination",
-    # f_66-f_67 — P. Negation
-    "P. Negation", "P. Negation",
-    # f_68-f_71 — Extensiones espa\u00f1olas (no-Biber)
-    "Spanish extensions (non-Biber)", "Spanish extensions (non-Biber)",
-    "Spanish extensions (non-Biber)", "Spanish extensions (non-Biber)",
-    "Spanish extensions (non-Biber)", "Spanish extensions (non-Biber)",
-    "Spanish extensions (non-Biber)"
+    "A. Tiempo y aspecto", "A. Tiempo y aspecto", "A. Tiempo y aspecto",
+    "B. Adverbiales lugar/tiempo", "B. Adverbiales lugar/tiempo",
+    "C. Pronombres", "C. Pronombres", "C. Pronombres",
+    "C. Pronombres", "C. Pronombres",
+    "D. Preguntas",
+    "E. Formas nominales", "E. Formas nominales",
+    "F. Pasivas", "F. Pasivas",
+    "G. Formas estativas", "G. Formas estativas",
+    "H. Subordinación", "H. Subordinación", "H. Subordinación",
+    "H. Subordinación", "H. Subordinación", "H. Subordinación",
+    "H. Subordinación",
+    "H. Subordinación", "H. Subordinación",
+    "H. Subordinación", "H. Subordinación",
+    "H. Subordinación", "H. Subordinación", "H. Subordinación", "H. Subordinación",
+    "I. Prep., adj. y adv.", "I. Prep., adj. y adv.",
+    "I. Prep., adj. y adv.", "I. Prep., adj. y adv.",
+    "J. Especificidad léxica", "J. Especificidad léxica",
+    "K. Clases léxicas", "K. Clases léxicas", "K. Clases léxicas",
+    "K. Clases léxicas", "K. Clases léxicas", "K. Clases léxicas", "K. Clases léxicas",
+    "L. Modales", "L. Modales", "L. Modales",
+    "M. Verbos especializados", "M. Verbos especializados",
+    "M. Verbos especializados", "M. Verbos especializados",
+    "N. Estructuras reducidas",
+    "O. Coordinación", "O. Coordinación",
+    "P. Negación", "P. Negación",
+    "Extensiones españolas", "Extensiones españolas",
+    "Extensiones españolas", "Extensiones españolas",
+    "Extensiones españolas"
   ),
   descripcion = c(
-    "Imperfecto de indicativo",
+    # A
+    "Pretérito indefinido (pasado simple)",
     "Aspecto perfecto (haber + part.)",
     "Presente de indicativo",
+    # B
     "Adverbiales de lugar",
     "Adverbiales de tiempo",
-    "Pronombres 1.\u00aa pers.",
-    "Pronombres 2.\u00aa pers.",
-    "Pronombres 3.\u00aa pers.",
-    "Pronombre impersonal",
-    "Pronombres demostrativos",
-    "Pronombres indefinidos",
-    "Pro-verbo hacer",
+    # C
+    "Pronombres 1.ª persona (yo, nosotros…)",
+    "Pronombres 2.ª persona (tú, usted…)",
+    "Pronombres 3.ª persona (él, ella, le…)",
+    "Pronombres demostrativos (este, ese…)",
+    "Pronombres indefinidos (alguien, nadie…)",
+    # D
     "Interrogativas con pronombre QU-",
-    "Nominalizaciones",
-    "Gerundios",
+    # E
+    "Nominalizaciones (-ción, -idad, -miento…)",
     "Otros sustantivos",
+    # F
     "Pasiva sin agente",
     "Pasiva con agente (por)",
+    # G
     "Ser/estar como verbo principal",
     "Existencial (hay)",
-    "Compl. de verbo con que",
-    "Compl. de adj. con que",
-    "Cl\u00e1usula WH",
-    "Infinitivos",
-    "Cl\u00e1usula de participio presente",
-    "Cl\u00e1usula de participio pasado",
-    "Relativa reducida (part. pasado)",
-    "Relativa reducida (part. presente)",
-    "Relativa de sujeto con que",
-    "Relativa de objeto con que",
-    "Relativa QU- de sujeto",
-    "Relativa QU- de objeto",
-    "Pied-piping",
-    "Relativas sentenciales",
-    "Causal (porque)",
-    "Concesiva (aunque)",
-    "Condicional (si)",
-    "Otras sub. adverbiales",
+    # H
+    "Compl. de verbo con que (dijo que…)",
+    "Compl. de adj. con que (es importante que…)",
+    "Cláusula WH indirecta (no sé quién…)",
+    "Infinitivos clausales",
+    "Gerundio adverbial/complemento",
+    "Participio adverbial/absoluto",
+    "Relativa reducida (participio postnominal)",
+    "Relativa de sujeto/objeto con que/quien [f_29+f_31]",
+    "Relativa con quien/cual (obl/obj) [f_30+f_32]",
+    "Pied-piping (prep. + pronombre relativo)",
+    "Relativas sentenciales (lo que, eso que…)",
+    "Subordinada causal (porque)",
+    "Subordinada concesiva (aunque)",
+    "Subordinada condicional (si…)",
+    "Otras subordinadas adverbiales",
+    # I
     "Preposiciones",
-    "Adjetivo atributivo",
-    "Adjetivo predicativo",
+    "Adjetivo atributivo (amod)",
+    "Adjetivo predicativo (cop/xcomp)",
     "Adverbios generales",
+    # J
     "TTR (type-token ratio)",
-    "Longitud media de palabra",
-    "Conjunciones textuales",
-    "Atenuadores (casi, apenas\u2026)",
-    "Marcadores de duda (quiz\u00e1s\u2026)",
-    "Amplificadores (muy, totalmente\u2026)",
-    "Enf\u00e1ticos (realmente, de hecho\u2026)",
-    "Part\u00edculas discursivas",
-    "Demostrativos determinantes",
+    "Longitud media de palabra (tokens léxicos)",
+    # K
+    "Conjunciones textuales (sin embargo, además…)",
+    "Atenuadores (casi, apenas, algo…)",
+    "Marcadores de duda (quizás, tal vez…)",
+    "Amplificadores (muy, totalmente, enormemente…)",
+    "Enfáticos (de hecho, sin duda, realmente…)",
+    "Partículas discursivas",
+    "Demostrativos determinantes (este, ese, aquel)",
+    # L
     "Modal de posibilidad (poder + inf.)",
-    "Modal de necesidad (deber/tener que)",
-    "Modal predictivo (ir a + inf. / futuro)",
-    "Verbos p\u00fablicos (decir, afirmar\u2026)",
-    "Verbos privados (creer, pensar\u2026)",
-    "Verbos suasorios (pedir, exigir\u2026)",
-    "Verbos de apariencia (parecer, resultar\u2026)",
-    "Contracciones (al, del)",
-    "Supresi\u00f3n de que",
-    "Preposici\u00f3n varada",
-    "Infinitivo escindido",
+    "Modal de necesidad (deber / tener que)",
+    "Modal predictivo (ir a + inf. / futuro sint.)",
+    # M
+    "Verbos públicos (decir, afirmar, anunciar…)",
+    "Verbos privados (creer, pensar, saber…)",
+    "Verbos suasorios (pedir, recomendar, exigir…)",
+    "Verbos de apariencia (parecer, resultar…)",
+    # N
     "Auxiliar escindido",
-    "Coordinaci\u00f3n sintagm\u00e1tica",
-    "Coordinaci\u00f3n clausal",
-    "Negaci\u00f3n sint\u00e9tica (nadie, nunca\u2026)",
-    "Negaci\u00f3n anal\u00edtica (no + verbo)",
-    "Nominalizaciones (recuento)",
-    "Nominalizaciones (tasa por 100 pal.)",
+    # O
+    "Coordinación sintagmática",
+    "Coordinación clausal",
+    # P
+    "Negación sintética (nadie, nunca, nada…)",
+    "Negación analítica (no + verbo)",
+    # Extensiones
     "Adverbios en -mente (recuento)",
-    "Adverbios en -mente (tasa por 100 pal.)",
-    "Palabras largas \u22657 letras (recuento)",
-    "Palabras largas \u22657 letras (tasa por 100 pal.)",
-    "Pret\u00e9rito indefinido"
+    "Adverbios en -mente (tasa por 1000 tokens léx.)",
+    "Palabras largas ≥6 caracteres (recuento)",
+    "Palabras largas ≥6 caracteres (tasa por 1000 tokens léx.)",
+    "Pretérito imperfecto (caminaba, decía…)"
   ),
   tipo = c(
-    rep("Biber original", 67),
-    rep("Extensi\u00f3n espa\u00f1ola", 7)
+    rep("Biber adaptado", 57),
+    rep("Extensión española", 4),
+    "Extensión española"   # f_71
   ),
   stringsAsFactors = FALSE
 )
 
-# Rasgos destacados en el README (Inicio r\u00e1pido, Paso 4)
-# Estos aparecen resaltados con un icono en la tabla de resultados.
-README_HIGHLIGHTED <- c(
-  "f_01_past_tense",
-  "f_03_present_tense",
-  "f_17_agentless_passives",
-  "f_18_by_passives",
-  "f_20_existential_there"
-)
-
 # ─── UI ──────────────────────────────────────────────────────────────────────
 ui <- fluidPage(
-  title = "pseudobibeR.es \u2014 Rasgos de Biber",
+  title = "pseudobibeR.es — Rasgos de Biber",
 
   tags$head(
     tags$meta(charset = "UTF-8"),
@@ -306,7 +288,7 @@ ui <- fluidPage(
 
   div(class = "app-header",
     h1("pseudobibeR.es"),
-    p("Extractor de rasgos l\u00e9xico-gramaticales de Biber (1985/1988) para el espa\u00f1ol")
+    p("Extractor de rasgos léxico-gramaticales de Biber (1985/1988) para el español")
   ),
 
   div(class = "main-container",
@@ -317,15 +299,15 @@ ui <- fluidPage(
       textAreaInput(
         "texto", label = NULL, value = "", rows = 10,
         placeholder = paste0(
-          "Pega aqu\u00ed el texto en espa\u00f1ol (m\u00ednimo recomendado: 200 palabras).\n",
-          "Se anotar\u00e1 con UDPipe (modelo spanish-gsd) y se extraer\u00e1n los ",
-          "rasgos de Biber (1985/1988)."
+          "Pega aquí el texto en español (mínimo recomendado: 200 palabras).\n",
+          "Se anotará con UDPipe (modelo spanish-gsd) y se extraerán los ",
+          "rasgos de Biber (1985/1988) adaptados al español."
         ),
         width = "100%"
       ),
       div(
         actionButton("analizar", "Analizar", icon = icon("magnifying-glass")),
-        actionButton("cargar_ejemplo", "Cargar ejemplo del README",
+        actionButton("cargar_ejemplo", "Cargar ejemplo",
                      icon = icon("file-lines"),
                      style = "background:#f0ece3; color:#1c3d5a; border:1px solid #d4cfc4; margin-left:8px;"),
         actionButton("limpiar", "Limpiar",
@@ -344,16 +326,14 @@ ui <- fluidPage(
     div(class = "app-footer",
       HTML(paste0(
         "<strong>pseudobibeR.es</strong> &mdash; ",
-        "Extractor de rasgos l\u00e9xico-gramaticales de Biber (1985/1988) para espa\u00f1ol<br>",
+        "Extractor de rasgos léxico-gramaticales de Biber (1985/1988) para español<br>",
         "<span style='font-size:.75rem;'>",
-        "Anotaci\u00f3n: <code>UDPipe</code> + modelo <code>spanish-gsd</code> &middot; ",
-        "67 rasgos de Biber + 7 extensiones espa\u00f1olas (f_68\u2013f_71) &middot; ",
-        "<a href='https://github.com/educia/pseudobibeR.esp' target='_blank' ",
-        "style='color:#1c3d5a;'>GitHub</a>",
+        "Anotación: <code>UDPipe</code> + modelo <code>spanish-gsd</code> &middot; ",
+        "57 rasgos de Biber adaptados al español + 4 extensiones propias (f_69&ndash;f_71) &middot; ",
+        "11 rasgos intraducibles eliminados (f_09, f_12, f_15, f_28, f_31, f_32, f_59&ndash;f_62, f_68)",
         "</span><br>",
         "<span style='font-size:.72rem; color:#999; font-style:italic; margin-top:6px; display:inline-block;'>",
-        "Cita: Biber, D. (1985). Investigating macroscopic textual variation through ",
-        "multifeature/multidimensional analyses. <em>Linguistics</em>, 23(2), 337\u2013360.",
+        "Cita: Biber, D. (1988). <em>Variation across Speech and Writing</em>. Cambridge University Press.",
         "</span>"
       ))
     )
@@ -367,43 +347,47 @@ extract_evidence <- function(raw_tokens) {
   data("word_lists", package = "pseudobibeR.es", envir = environment())
 
   toks <- raw_tokens
-  # UDPipe raw output uses "upos"; feature functions expect "pos"
   if ("upos" %in% colnames(toks) && !"pos" %in% colnames(toks))
     toks$pos <- toks$upos
   toks$lemma_lc <- tolower(toks$lemma)
   toks$token_lc <- tolower(toks$token)
 
-  # Helper: extrae un atributo morfosintáctico del campo feats de UDPipe
-  # Ej: extract_feat("Tense=Imp|Mood=Ind|VerbForm=Fin", "Tense") → "Imp"
-  # Vectorizado: funciona con vectores de feats
-  extract_feat <- function(feats_vec, attr) {
-    sapply(feats_vec, function(feats) {
-      if (is.na(feats) || feats == "" || is.null(feats)) return(NA_character_)
-      parts <- strsplit(feats, "\\|")[[1]]
-      for (part in parts) {
-        if (grepl(paste0("^", attr, "="), part)) {
-          return(sub(paste0(attr, "="), "", part))
-        }
-      }
-      return(NA_character_)
-    })
+  # Extrae un atributo morfosintáctico del campo feats de UDPipe
+  ef <- function(feats_vec, attr) {
+    pattern <- paste0("(?:^|\\|)", attr, "=([^|]+)")
+    m <- regmatches(
+      dplyr::coalesce(feats_vec, ""),
+      regexpr(pattern, dplyr::coalesce(feats_vec, ""), perl = TRUE)
+    )
+    ifelse(lengths(regmatches(feats_vec, gregexpr(pattern, dplyr::coalesce(feats_vec, ""), perl = TRUE))) > 0,
+           sub(paste0(".*", attr, "=([^|]+).*"), "\\1",
+               regmatches(dplyr::coalesce(feats_vec, ""),
+                          regexpr(pattern, dplyr::coalesce(feats_vec, ""), perl = TRUE))),
+           NA_character_)
   }
+  # Versión segura usando stringr si disponible, o fallback
+  extract_feat_safe <- function(feats_vec, attr) {
+    pat <- paste0("(?:^|[|])", attr, "=([^|]+)")
+    sapply(dplyr::coalesce(feats_vec, ""), function(f) {
+      m <- regmatches(f, regexpr(pat, f, perl = TRUE))
+      if (length(m) == 0 || m == "") return(NA_character_)
+      sub(paste0(".*", attr, "="), "", m)
+    }, USE.NAMES = FALSE)
+  }
+  ef <- extract_feat_safe
 
-  ef <- function(feats, name) extract_feat(feats, name)
-
-  # Helper: recoge tokens únicos que cumplen una máscara lógica
+  # Recoge tokens únicos que cumplen una máscara lógica
   collect <- function(mask, col = "token", max_n = 8) {
     mask[is.na(mask)] <- FALSE
     if (sum(mask) == 0) return("")
     words <- unique(toks[[col]][mask])
     if (length(words) > max_n)
-      paste0(paste(words[seq_len(max_n)], collapse = ", "), ", \u2026")
+      paste0(paste(words[seq_len(max_n)], collapse = ", "), ", …")
     else
       paste(words, collapse = ", ")
   }
 
-  # Helper: lemas del diccionario (solo entradas de una palabra;
-  #         las multi-word se detectan por quanteda, no por token suelto)
+  # Lemas del diccionario (solo entradas de una palabra)
   dict_lemmas <- function(key) {
     if (!key %in% names(dict)) return(character(0))
     single <- dict[[key]][!grepl("_", dict[[key]])]
@@ -412,238 +396,228 @@ extract_evidence <- function(raw_tokens) {
 
   ev <- list()
 
-  # — Grupo 1: Morfológicos (tiempo, aspecto) —
+  # ── A. Tiempo y aspecto ──────────────────────────────────────────────────
+  # f_01: pretérito indefinido (Tense=Past, Mood=Ind, VerbForm=Fin)
   ev[["f_01_past_tense"]] <- collect(
-    toks$pos %in% c("VERB","AUX") &
-    dplyr::coalesce(ef(toks$feats, "Tense"), "") == "Imp" &
-    dplyr::coalesce(ef(toks$feats, "Mood"), "")  == "Ind" &
+    toks$pos %in% c("VERB", "AUX") &
+    dplyr::coalesce(ef(toks$feats, "Tense"),    "") == "Past" &
+    dplyr::coalesce(ef(toks$feats, "Mood"),     "") == "Ind"  &
     dplyr::coalesce(ef(toks$feats, "VerbForm"), "") == "Fin"
   )
+  # f_02: aspecto perfecto (haber como AUX de participio)
   ev[["f_02_perfect_aspect"]] <- collect(
     toks$lemma_lc %in% c("haber") &
-    toks$pos %in% c("AUX","VERB") &
+    toks$pos %in% c("AUX", "VERB") &
     grepl("^aux", dplyr::coalesce(toks$dep_rel, ""))
   )
+  # f_03: presente de indicativo (Tense=Pres, Mood=Ind, VerbForm=Fin)
   ev[["f_03_present_tense"]] <- collect(
-    toks$pos %in% c("VERB","AUX") &
-    dplyr::coalesce(ef(toks$feats, "Tense"), "") == "Pres" &
-    dplyr::coalesce(ef(toks$feats, "Mood"), "")  == "Ind" &
+    toks$pos %in% c("VERB", "AUX") &
+    dplyr::coalesce(ef(toks$feats, "Tense"),    "") == "Pres" &
+    dplyr::coalesce(ef(toks$feats, "Mood"),     "") == "Ind"  &
     dplyr::coalesce(ef(toks$feats, "VerbForm"), "") == "Fin"
   )
+  # f_71 (extensión española): pretérito imperfecto (Tense=Imp, Mood=Ind)
   ev[["f_71_preterit"]] <- collect(
-    toks$pos %in% c("VERB","AUX") &
-    dplyr::coalesce(ef(toks$feats, "Tense"), "") == "Past" &
-    dplyr::coalesce(ef(toks$feats, "Mood"), "")  == "Ind" &
+    toks$pos %in% c("VERB", "AUX") &
+    dplyr::coalesce(ef(toks$feats, "Tense"),    "") == "Imp" &
+    dplyr::coalesce(ef(toks$feats, "Mood"),     "") == "Ind" &
     dplyr::coalesce(ef(toks$feats, "VerbForm"), "") == "Fin"
   )
 
-  # — Grupo 2: Dict-based (lemma lookup) —
-  dict_features <- c(
-    "f_04_place_adverbials", "f_05_time_adverbials",
-    "f_11_indefinite_pronoun",
-    "f_45_conjuncts", "f_46_downtoners", "f_47_hedges",
-    "f_48_amplifiers", "f_49_emphatics", "f_50_discourse_particles",
-    "f_55_verb_public", "f_56_verb_private",
-    "f_57_verb_suasive", "f_58_verb_seem"
-  )
-  for (feat in dict_features) {
+  # ── B. Adverbiales ───────────────────────────────────────────────────────
+  for (feat in c("f_04_place_adverbials", "f_05_time_adverbials")) {
     lems <- dict_lemmas(feat)
-    # El código de feature sin el prefijo del dict puede diferir
-    code <- feat
-    # f_11 en dict es "f_11_indefinite_pronoun" pero en output "f_11_indefinite_pronouns"
-    if (feat == "f_11_indefinite_pronoun") code <- "f_11_indefinite_pronouns"
-    ev[[code]] <- collect(toks$lemma_lc %in% lems)
+    ev[[feat]] <- collect(toks$lemma_lc %in% lems)
   }
 
-  # — Grupo 3: Pronombres por persona —
-  pron_06 <- dict_lemmas("f_06_first_person_pronouns")
-  pron_07 <- dict_lemmas("f_07_second_person_pronouns")
-  pron_08 <- dict_lemmas("f_08_third_person_pronouns")
-  ev[["f_06_first_person_pronouns"]]  <- collect(toks$lemma_lc %in% pron_06 & toks$pos == "PRON")
-  ev[["f_07_second_person_pronouns"]] <- collect(toks$lemma_lc %in% pron_07 & toks$pos == "PRON")
-  ev[["f_08_third_person_pronouns"]]  <- collect(toks$lemma_lc %in% pron_08 & toks$pos == "PRON")
+  # ── C. Pronombres ────────────────────────────────────────────────────────
+  reflexive_deps <- c("expl:pv", "expl:impers", "expl")
+  non_refl <- !dplyr::coalesce(toks$dep_rel, "") %in% reflexive_deps
 
-  # f_09: impersonal se/ello
-  ev[["f_09_pronoun_it"]] <- collect(
-    toks$lemma_lc %in% c("ello","se") & toks$pos == "PRON" &
-    grepl("^expl", dplyr::coalesce(toks$dep_rel, ""))
-  )
+  pron_06 <- tolower(c("yo", "nosotros", "nosotras", "me", "nos", "mí", "conmigo"))
+  pron_07 <- tolower(c("tú", "vos", "vosotros", "vosotras", "usted", "ustedes",
+                        "te", "ti", "contigo", "os"))
+  pron_08 <- tolower(c("él", "ella", "ello", "ellos", "ellas",
+                        "le", "lo", "la", "les", "los", "las", "consigo"))
+  ev[["f_06_first_person_pronouns"]]  <- collect(toks$lemma_lc %in% pron_06 & toks$pos == "PRON" & non_refl)
+  ev[["f_07_second_person_pronouns"]] <- collect(toks$lemma_lc %in% pron_07 & toks$pos == "PRON" & non_refl)
+  ev[["f_08_third_person_pronouns"]]  <- collect(toks$lemma_lc %in% pron_08 & toks$pos == "PRON" & non_refl)
 
-  # f_10, f_51: demostrativos (pronombre vs determinante)
   dem_lemmas <- dict_lemmas("f_51_demonstratives")
   ev[["f_10_demonstrative_pronoun"]] <- collect(toks$lemma_lc %in% dem_lemmas & toks$pos == "PRON")
-  ev[["f_51_demonstratives"]]        <- collect(toks$lemma_lc %in% dem_lemmas & toks$pos == "DET")
 
-  # f_12: pro-verbo hacer
-  ev[["f_12_proverb_do"]] <- collect(toks$lemma_lc == "hacer" & toks$pos == "VERB")
+  indef_lems <- dict_lemmas("f_11_indefinite_pronoun")
+  ev[["f_11_indefinite_pronouns"]] <- collect(toks$lemma_lc %in% indef_lems & toks$pos %in% c("PRON", "DET"))
 
-  # f_13: interrogativas WH
-  wh <- c("qu\u00e9", "qui\u00e9n", "qui\u00e9nes", "cu\u00e1l", "cu\u00e1les",
-          "cu\u00e1nto", "cu\u00e1nta", "cu\u00e1ntos", "cu\u00e1ntas",
-          "cu\u00e1ndo", "d\u00f3nde", "c\u00f3mo")
-  ev[["f_13_wh_question"]] <- collect(toks$lemma_lc %in% wh & toks$pos %in% c("PRON","ADV","DET","ADJ"))
+  # ── D. Interrogativas ────────────────────────────────────────────────────
+  wh_q <- c("qué", "quién", "quiénes", "cuál", "cuáles",
+             "cuánto", "cuánta", "cuántos", "cuántas",
+             "cuándo", "dónde", "cómo")
+  ev[["f_13_wh_question"]] <- collect(toks$lemma_lc %in% tolower(wh_q) &
+                                       toks$pos %in% c("PRON", "ADV", "DET", "ADJ"))
 
-  # f_14: nominalizaciones (sufijo)
+  # ── E. Formas nominales ──────────────────────────────────────────────────
   nom_suffixes <- word_lists$nominalization_suffixes
   if (length(nom_suffixes) > 0) {
     nom_regex <- paste0("(", paste(nom_suffixes, collapse = "|"), ")$")
-    ev[["f_14_nominalizations"]] <- collect(
-      toks$pos == "NOUN" & grepl(nom_regex, toks$lemma_lc)
-    )
-  } else ev[["f_14_nominalizations"]] <- ""
+    ev[["f_14_nominalizations"]] <- collect(toks$pos == "NOUN" & grepl(nom_regex, toks$lemma_lc))
+  } else {
+    ev[["f_14_nominalizations"]] <- ""
+  }
+  ev[["f_16_other_nouns"]] <- collect(toks$pos %in% c("NOUN", "PROPN"), max_n = 6)
 
-  # f_15: gerundios
-  ev[["f_15_gerunds"]] <- collect(
-    dplyr::coalesce(ef(toks$feats, "VerbForm"), "") == "Ger"
-  )
-
-  # f_16: otros sustantivos
-  ev[["f_16_other_nouns"]] <- collect(toks$pos %in% c("NOUN","PROPN"), max_n = 6)
-
-  # f_17/f_18: pasivas
+  # ── F. Pasivas ───────────────────────────────────────────────────────────
   ev[["f_17_agentless_passives"]] <- collect(
-    grepl("^(aux:pass|expl:pass)", dplyr::coalesce(toks$dep_rel, ""))
+    grepl("^aux:pass", dplyr::coalesce(toks$dep_rel, ""))
   )
-  ev[["f_18_by_passives"]] <- ""
+  # f_18: buscar "por" en función obl:agent tras participio pasivo
+  ev[["f_18_by_passives"]] <- collect(
+    toks$lemma_lc == "por" &
+    dplyr::coalesce(toks$dep_rel, "") %in% c("case", "obl:agent")
+  )
 
-  # f_19: ser/estar copulativo
+  # ── G. Formas estativas ───────────────────────────────────────────────────
   ev[["f_19_be_main_verb"]] <- collect(
-    toks$lemma_lc %in% c("ser","estar") &
-    !grepl("^aux", dplyr::coalesce(toks$dep_rel, ""))
+    toks$lemma_lc %in% c("ser", "estar") &
+    toks$pos %in% c("VERB", "AUX")
   )
-
-  # f_20: existencial hay
   ev[["f_20_existential_there"]] <- collect(
     toks$lemma_lc == "haber" &
-    toks$token_lc %in% c("hay","hab\u00eda","habr\u00e1","habr\u00eda","hubo","habido")
+    toks$token_lc %in% c("hay", "había", "habrá", "habría", "hubo", "haya")
   )
 
-  # f_21, f_22: que complementante (se muestra "que" genéricamente)
+  # ── H. Subordinación ─────────────────────────────────────────────────────
   ev[["f_21_that_verb_comp"]] <- collect(
     toks$lemma_lc == "que" & toks$pos == "SCONJ" &
     dplyr::coalesce(toks$dep_rel, "") == "mark"
   )
-  ev[["f_22_that_adj_comp"]] <- ev[["f_21_that_verb_comp"]]
-
-  # f_23: cláusulas WH indirectas
+  ev[["f_22_that_adj_comp"]]  <- ev[["f_21_that_verb_comp"]]  # misma forma superficial
   ev[["f_23_wh_clause"]] <- collect(
-    toks$lemma_lc %in% c("qu\u00e9","qui\u00e9n","qui\u00e9nes","cu\u00e1l","cu\u00e1les",
-                          "cu\u00e1ndo","d\u00f3nde","c\u00f3mo","cu\u00e1nto") &
+    toks$lemma_lc %in% tolower(c("qué", "quién", "quiénes", "cuál", "cuáles",
+                                   "cuándo", "dónde", "cómo", "cuánto")) &
     grepl("^(obj|obl|nsubj|iobj|mark|advmod|nmod)", dplyr::coalesce(toks$dep_rel, ""))
   )
-
-  # f_24: infinitivos clausales
   ev[["f_24_infinitives"]] <- collect(
     dplyr::coalesce(ef(toks$feats, "VerbForm"), "") == "Inf" &
     grepl("^(xcomp|ccomp|advcl|acl|obj)", dplyr::coalesce(toks$dep_rel, ""))
   )
-
-  # f_25: participios presentes
   ev[["f_25_present_participle"]] <- collect(
     dplyr::coalesce(ef(toks$feats, "VerbForm"), "") == "Ger" &
     grepl("^(advcl|ccomp)", dplyr::coalesce(toks$dep_rel, ""))
   )
-
-  # f_26: participios pasados
   ev[["f_26_past_participle"]] <- collect(
     dplyr::coalesce(ef(toks$feats, "VerbForm"), "") == "Part" &
     grepl("^(advcl|ccomp|acl)", dplyr::coalesce(toks$dep_rel, ""))
   )
-
-  # f_27, f_28: whiz-deletion relativas
   ev[["f_27_past_participle_whiz"]] <- collect(
     dplyr::coalesce(ef(toks$feats, "VerbForm"), "") == "Part" &
-    dplyr::coalesce(toks$dep_rel, "") == "acl"
+    dplyr::coalesce(toks$dep_rel, "") == "acl" &
+    toks$pos %in% c("VERB", "ADJ")
   )
-  ev[["f_28_present_participle_whiz"]] <- collect(
-    dplyr::coalesce(ef(toks$feats, "VerbForm"), "") == "Ger" &
-    dplyr::coalesce(toks$dep_rel, "") == "acl"
+  # f_29: "que" relativo (SCONJ/mark + acl:relcl head) O pronombres QU- sujeto
+  ev[["f_29_that_subj"]] <- collect(
+    (toks$lemma_lc == "que" & toks$pos == "SCONJ" &
+     dplyr::coalesce(toks$dep_rel, "") == "mark") |
+    (toks$lemma_lc %in% c("quien", "quienes", "cual", "cuales") &
+     toks$pos == "PRON" &
+     grepl("^nsubj", dplyr::coalesce(toks$dep_rel, "")))
+  )
+  # f_30: pronombres QU- en posición objeto/oblicuo
+  ev[["f_30_that_obj"]] <- collect(
+    toks$lemma_lc %in% c("quien", "quienes", "cual", "cuales") &
+    toks$pos == "PRON" &
+    grepl("^(obj|iobj|obl|nmod)", dplyr::coalesce(toks$dep_rel, ""))
+  )
+  ev[["f_33_pied_piping"]] <- collect(
+    toks$lemma_lc %in% c("que", "quien", "quienes", "cual", "cuales") &
+    toks$pos %in% c("PRON", "DET")
+  )
+  ev[["f_34_sentence_relatives"]] <- collect(
+    toks$lemma_lc %in% c("lo", "eso", "esto", "ello") & toks$pos == "PRON"
   )
 
-  # f_29–f_34: relativas
-  ev[["f_29_that_subj"]] <- collect(toks$lemma_lc == "que" & grepl("^nsubj", dplyr::coalesce(toks$dep_rel, "")))
-  ev[["f_30_that_obj"]]  <- collect(toks$lemma_lc == "que" & grepl("^(obj|iobj|obl)", dplyr::coalesce(toks$dep_rel, "")))
-  rel_pron <- c("quien","quienes","cual","cuales")
-  ev[["f_31_wh_subj"]] <- collect(toks$lemma_lc %in% rel_pron & grepl("^nsubj", dplyr::coalesce(toks$dep_rel, "")))
-  ev[["f_32_wh_obj"]]  <- collect(toks$lemma_lc %in% rel_pron & grepl("^(obj|iobj|obl)", dplyr::coalesce(toks$dep_rel, "")))
-  ev[["f_33_pied_piping"]] <- collect(toks$lemma_lc %in% c("que","quien","quienes","cual","cuales") & toks$pos %in% c("PRON","DET"))
-  ev[["f_34_sentence_relatives"]] <- ""
+  causal_lems <- dict_lemmas("f_35_because"); if (!length(causal_lems)) causal_lems <- "porque"
+  conc_lems   <- dict_lemmas("f_36_though");  if (!length(conc_lems))   conc_lems   <- "aunque"
+  cond_lems   <- dict_lemmas("f_37_if");      if (!length(cond_lems))   cond_lems   <- "si"
 
-  # f_35–f_38: subordinación adverbial
-  causal_lems <- dict_lemmas("f_35_because")
-  if (length(causal_lems) == 0) causal_lems <- c("porque","pues","como")
-  ev[["f_35_because"]] <- collect(toks$lemma_lc %in% causal_lems & toks$pos %in% c("SCONJ","CCONJ","ADV"))
-
-  conc_lems <- dict_lemmas("f_36_though")
-  if (length(conc_lems) == 0) conc_lems <- c("aunque")
-  ev[["f_36_though"]] <- collect(toks$lemma_lc %in% conc_lems & toks$pos %in% c("SCONJ","CCONJ","ADV"))
-
-  cond_lems <- dict_lemmas("f_37_if")
-  if (length(cond_lems) == 0) cond_lems <- c("si")
-  ev[["f_37_if"]] <- collect(toks$lemma_lc %in% cond_lems & toks$pos %in% c("SCONJ","ADV"))
-
+  ev[["f_35_because"]] <- collect(toks$lemma_lc %in% causal_lems & toks$pos %in% c("SCONJ", "CCONJ", "ADV"))
+  ev[["f_36_though"]]  <- collect(toks$lemma_lc %in% conc_lems   & toks$pos %in% c("SCONJ", "CCONJ", "ADV"))
+  ev[["f_37_if"]]      <- collect(toks$lemma_lc %in% cond_lems   & toks$pos %in% c("SCONJ", "CCONJ", "ADV"))
   ev[["f_38_other_adv_sub"]] <- collect(
-    toks$pos %in% c("SCONJ","ADP","ADV") &
+    toks$pos %in% c("SCONJ", "ADP", "ADV") &
     dplyr::coalesce(toks$dep_rel, "") == "mark" &
-    !(toks$lemma_lc %in% c("que", causal_lems, conc_lems, cond_lems))
+    !toks$lemma_lc %in% c("que", causal_lems, conc_lems, cond_lems)
   )
 
-  # f_39–f_42: preposiciones, adjetivos, adverbios
-  ev[["f_39_prepositions"]] <- collect(toks$pos == "ADP" & dplyr::coalesce(toks$dep_rel, "") %in% c("case","fixed"))
+  # ── I. Prep., adj. y adv. ─────────────────────────────────────────────────
+  ev[["f_39_prepositions"]] <- collect(toks$pos == "ADP" & dplyr::coalesce(toks$dep_rel, "") %in% c("case", "fixed"))
   ev[["f_40_adj_attr"]]     <- collect(toks$pos == "ADJ" & dplyr::coalesce(toks$dep_rel, "") == "amod")
-  ev[["f_41_adj_pred"]]     <- collect(toks$pos == "ADJ" & dplyr::coalesce(toks$dep_rel, "") %in% c("xcomp","acomp"))
+  ev[["f_41_adj_pred"]]     <- collect(
+    toks$pos == "ADJ" & (
+      dplyr::coalesce(toks$dep_rel, "") %in% c("xcomp", "acomp") |
+      dplyr::coalesce(toks$dep_rel, "") == "root"   # ADJ como raíz en oración copulativa
+    )
+  )
   ev[["f_42_adverbs"]]      <- collect(toks$pos == "ADV", max_n = 6)
 
-  # f_43, f_44: métricas computadas
-  ev[["f_43_type_token"]]     <- "(m\u00e9trica: TTR)"
-  ev[["f_44_mean_word_length"]] <- "(m\u00e9trica: long. media)"
+  # ── J. Especificidad léxica ───────────────────────────────────────────────
+  ev[["f_43_type_token"]]       <- "(métrica: TTR)"
+  ev[["f_44_mean_word_length"]] <- "(métrica: longitud media)"
 
-  # f_52–f_54: modales
+  # ── K. Clases léxicas ────────────────────────────────────────────────────
+  for (feat in c("f_45_conjuncts", "f_46_downtoners", "f_47_hedges",
+                 "f_48_amplifiers", "f_49_emphatics", "f_50_discourse_particles")) {
+    lems <- dict_lemmas(feat)
+    ev[[feat]] <- collect(toks$lemma_lc %in% lems)
+  }
+  ev[["f_51_demonstratives"]] <- collect(toks$lemma_lc %in% dem_lemmas & toks$pos == "DET")
+
+  # ── L. Modales ────────────────────────────────────────────────────────────
   mod_pos <- dict_lemmas("f_52_modal_possibility")
   mod_nec <- dict_lemmas("f_53_modal_necessity")
-  ev[["f_52_modal_possibility"]] <- collect(toks$lemma_lc %in% mod_pos & toks$pos %in% c("VERB","AUX"))
-  ev[["f_53_modal_necessity"]]   <- collect(toks$lemma_lc %in% mod_nec & toks$pos %in% c("VERB","AUX"))
+  ev[["f_52_modal_possibility"]] <- collect(toks$lemma_lc %in% mod_pos & toks$pos %in% c("VERB", "AUX"))
+  ev[["f_53_modal_necessity"]]   <- collect(toks$lemma_lc %in% mod_nec & toks$pos %in% c("VERB", "AUX"))
   ev[["f_54_modal_predictive"]]  <- collect(
     (dplyr::coalesce(ef(toks$feats, "Tense"), "") == "Fut" &
      dplyr::coalesce(ef(toks$feats, "VerbForm"), "") == "Fin") |
     (toks$lemma_lc == "ir" & grepl("^aux", dplyr::coalesce(toks$dep_rel, "")))
   )
 
-  # f_59: contracciones
-  ev[["f_59_contractions"]] <- collect(toks$token_lc %in% c("del","al"))
-
-  # f_60: supresión de que
-  ev[["f_60_that_deletion"]] <- ""
-
-  # f_61–f_63: estructuras marcadas
-  ev[["f_61_stranded_preposition"]] <- ""
-  ev[["f_62_split_infinitive"]]     <- ""
-  ev[["f_63_split_auxiliary"]]      <- ""
-
-  # f_64–f_65: coordinación
-  ev[["f_64_phrasal_coordination"]] <- collect(toks$pos == "CCONJ" & dplyr::coalesce(toks$dep_rel, "") == "cc")
-  ev[["f_65_clausal_coordination"]] <- collect(toks$pos == "CCONJ" & dplyr::coalesce(toks$dep_rel, "") == "cc")
-
-  # f_66–f_67: negación
-  neg_syn <- c("nadie","nada","ninguno","ninguna","nunca","jam\u00e1s")
-  neg_ana <- tolower(word_lists$negation_particles)
-  ev[["f_66_neg_synthetic"]] <- collect(toks$lemma_lc %in% neg_syn)
-  ev[["f_67_neg_analytic"]]  <- collect(toks$lemma_lc %in% neg_ana & dplyr::coalesce(toks$dep_rel, "") == "advmod")
-
-  # f_68–f_70: extensiones españolas
-  if (length(nom_suffixes) > 0) {
-    ev[["f_68_nominalization"]]      <- ev[["f_14_nominalizations"]]
-    ev[["f_68_nominalization_rate"]]  <- ev[["f_14_nominalizations"]]
-  } else {
-    ev[["f_68_nominalization"]] <- ""
-    ev[["f_68_nominalization_rate"]] <- ""
+  # ── M. Verbos especializados ──────────────────────────────────────────────
+  for (feat in c("f_55_verb_public", "f_56_verb_private",
+                 "f_57_verb_suasive", "f_58_verb_seem")) {
+    lems <- dict_lemmas(feat)
+    ev[[feat]] <- collect(toks$lemma_lc %in% lems & toks$pos %in% c("VERB", "AUX"))
   }
 
+  # ── N. Estructuras reducidas ──────────────────────────────────────────────
+  ev[["f_63_split_auxiliary"]] <- collect(
+    toks$pos %in% c("AUX") &
+    grepl("^aux", dplyr::coalesce(toks$dep_rel, ""))
+  )
+
+  # ── O. Coordinación ───────────────────────────────────────────────────────
+  ev[["f_64_phrasal_coordination"]] <- collect(
+    toks$pos == "CCONJ" & dplyr::coalesce(toks$dep_rel, "") == "cc"
+  )
+  ev[["f_65_clausal_coordination"]] <- ev[["f_64_phrasal_coordination"]]
+
+  # ── P. Negación ───────────────────────────────────────────────────────────
+  neg_syn  <- c("nadie", "nada", "ninguno", "ninguna", "nunca", "jamás", "tampoco")
+  neg_part <- tolower(c("no", "ni", "tampoco"))
+  ev[["f_66_neg_synthetic"]] <- collect(toks$lemma_lc %in% neg_syn & toks$pos %in% c("PRON", "ADV", "DET"))
+  ev[["f_67_neg_analytic"]]  <- collect(
+    toks$lemma_lc %in% neg_part &
+    dplyr::coalesce(toks$dep_rel, "") == "advmod"
+  )
+
+  # ── Extensiones españolas ────────────────────────────────────────────────
   ev[["f_69_mente_adverbs"]]      <- collect(toks$pos == "ADV" & grepl("mente$", toks$token_lc))
   ev[["f_69_mente_adverbs_rate"]] <- ev[["f_69_mente_adverbs"]]
 
   ev[["f_70_long_words"]]      <- collect(
-    toks$pos %in% c("NOUN","VERB","ADJ","ADV","PROPN") & nchar(toks$token) >= 7,
+    toks$pos %in% c("NOUN", "VERB", "ADJ", "ADV", "PROPN") & nchar(toks$token) >= 6,
     max_n = 6
   )
   ev[["f_70_long_words_rate"]] <- ev[["f_70_long_words"]]
@@ -663,26 +637,26 @@ server <- function(input, output, session) {
 
   output$status_msg <- renderText({
     if (rv$procesando)
-      "Procesando\u2026 (puede tardar 10\u201330 s)"
+      "Procesando… (puede tardar 10–30 s)"
     else if (!is.null(rv$error_msg))
       paste("Error:", rv$error_msg)
     else ""
   })
 
-  # ── Texto de ejemplo del README (doc1 + doc2) ──
+  # ── Texto de ejemplo ──
   observeEvent(input$cargar_ejemplo, {
     texto_ejemplo <- paste0(
       "Este es un texto de prueba. Fue escrito por un estudiante. ",
       "El trabajo fue revisado por el profesor y corregido con cuidado. ",
-      "Los cambios hab\u00edan sido propuestos la semana anterior.\n\n",
-      "Hay muchos estudios que han analizado la variaci\u00f3n de registros. ",
-      "En la ling\u00fc\u00edstica de corpus, diversas investigaciones muestran ",
-      "que los textos acad\u00e9micos presentan una alta densidad de ",
-      "nominalizaciones y pasivas sin agente. Se han identificado tambi\u00e9n ",
-      "diferencias sistem\u00e1ticas entre el registro hablado y el escrito, ",
-      "tal como se reporta en la bibliograf\u00eda especializada. ",
-      "Existen m\u00faltiples dimensiones funcionales que permiten clasificar ",
-      "los textos seg\u00fan su prop\u00f3sito comunicativo."
+      "Los cambios habían sido propuestos la semana anterior.\n\n",
+      "Hay muchos estudios que han analizado la variación de registros. ",
+      "En la lingüística de corpus, diversas investigaciones muestran ",
+      "que los textos académicos presentan una alta densidad de ",
+      "nominalizaciones y pasivas sin agente. Se han identificado también ",
+      "diferencias sistemáticas entre el registro hablado y el escrito, ",
+      "tal como se reporta en la bibliografía especializada. ",
+      "Existen múltiples dimensiones funcionales que permiten clasificar ",
+      "los textos según su propósito comunicativo."
     )
     updateTextAreaInput(session, "texto", value = texto_ejemplo)
   })
@@ -712,7 +686,7 @@ server <- function(input, output, session) {
         object = udmodel, x = texto,
         tagger = "default", parser = "default"
       )
-      parsed_df <- as.data.frame(parsed)
+      parsed_df     <- as.data.frame(parsed)
       rv$tokens_raw <- parsed_df
       biber_es(parsed_df, measure = "MATTR", normalize = FALSE)
     }, error = function(e) {
@@ -728,44 +702,43 @@ server <- function(input, output, session) {
   output$results_area <- renderUI({
     if (rv$procesando) {
       div(class = "placeholder-msg",
-        div(class = "icon", "\u23f3"),
-        p("Anotando y extrayendo rasgos\u2026")
+        div(class = "icon", "⏳"),
+        p("Anotando y extrayendo rasgos…")
       )
     } else if (!is.null(rv$error_msg)) {
       div(class = "placeholder-msg",
-        div(class = "icon", "\u26a0\ufe0f"),
+        div(class = "icon", "⚠️"),
         p(strong("Error:"), code(rv$error_msg))
       )
     } else if (is.null(rv$resultado)) {
       div(class = "placeholder-msg",
-        div(class = "icon", "\ud83d\udcdd"),
+        div(class = "icon", "📝"),
         p("Pega un texto arriba y pulsa", strong("Analizar"), ".")
       )
     } else {
       res <- rv$resultado
-      n_tok <- if ("n_tokens"     %in% names(res)) res$n_tokens[1]     else NA
-      n_lex <- if ("n_lex_tokens" %in% names(res)) res$n_lex_tokens[1] else NA
-      ttr   <- if ("f_43_type_token"    %in% names(res)) res$f_43_type_token[1] else NA
+      n_tok <- if ("n_tokens"          %in% names(res)) res$n_tokens[1]          else NA
+      n_lex <- if ("n_lex_tokens"      %in% names(res)) res$n_lex_tokens[1]      else NA
+      ttr   <- if ("f_43_type_token"   %in% names(res)) res$f_43_type_token[1]   else NA
       mwl   <- if ("f_44_mean_word_length" %in% names(res)) res$f_44_mean_word_length[1] else NA
 
-      # Ordenar grupos: A–P (Biber original) primero, Extensiones al final
-      grupos_all <- unique(feature_labels$grupo)
+      grupos_all   <- unique(feature_labels$grupo)
       grupos_biber <- sort(grupos_all[grepl("^[A-P]\\. ", grupos_all)])
       grupos_ext   <- grupos_all[!grepl("^[A-P]\\. ", grupos_all)]
       grupos_ord   <- c(grupos_biber, grupos_ext)
       grupo_choices <- c("Todos los grupos" = "",
                          stats::setNames(grupos_ord, grupos_ord))
       tipo_choices <- c(
-        "Biber original + Extensiones" = "",
-        "Solo Biber original (f_01\u2013f_67)" = "Biber original",
-        "Solo extensiones espa\u00f1olas (f_68\u2013f_71)" = "Extensi\u00f3n espa\u00f1ola"
+        "Todos los rasgos"             = "",
+        "Rasgos de Biber adaptados"    = "Biber adaptado",
+        "Extensiones españolas"        = "Extensión española"
       )
 
       tagList(
         div(class = "results-meta",
           HTML(sprintf(
             paste0("<strong>%s</strong> tokens totales &nbsp;|&nbsp; ",
-                   "<strong>%s</strong> tokens l\u00e9xicos &nbsp;|&nbsp; ",
+                   "<strong>%s</strong> tokens léxicos &nbsp;|&nbsp; ",
                    "TTR: <strong>%.3f</strong> &nbsp;|&nbsp; ",
                    "Long. media: <strong>%.2f</strong> car."),
             format(n_tok, big.mark = "."),
@@ -775,11 +748,11 @@ server <- function(input, output, session) {
           ))
         ),
         div(class = "filter-bar",
-          div(style = "display:inline-block; width:220px;",
+          div(style = "display:inline-block; width:240px;",
             selectInput("fil_grupo", "Filtrar por grupo:",
                         choices = grupo_choices, selected = "")
           ),
-          div(style = "display:inline-block; width:300px; margin-left:10px;",
+          div(style = "display:inline-block; width:280px; margin-left:10px;",
             selectInput("fil_tipo", "Tipo:",
                         choices = tipo_choices, selected = "")
           )
@@ -797,16 +770,13 @@ server <- function(input, output, session) {
     feat_cols <- grep("^f_", names(res), value = TRUE)
     valores   <- as.numeric(unlist(res[1, feat_cols, drop = TRUE]))
 
-    df_raw <- data.frame(code = feat_cols, valor = valores,
-                         stringsAsFactors = FALSE)
-
+    df_raw <- data.frame(code = feat_cols, valor = valores, stringsAsFactors = FALSE)
     df <- merge(df_raw, feature_labels, by = "code", all.x = TRUE, sort = FALSE)
     df <- df[match(feat_cols, df$code), ]
-    df$grupo[is.na(df$grupo)]              <- "Otros"
-    df$descripcion[is.na(df$descripcion)]  <- df$code[is.na(df$descripcion)]
-    df$tipo[is.na(df$tipo)]                <- "Biber original"
+    df$grupo[is.na(df$grupo)]             <- "Otros"
+    df$descripcion[is.na(df$descripcion)] <- df$code[is.na(df$descripcion)]
+    df$tipo[is.na(df$tipo)]               <- "Biber adaptado"
 
-    # Evidencia de palabras marcadas (solo para rasgos con valor > 0)
     ev <- if (!is.null(rv$tokens_raw)) {
       tryCatch(extract_evidence(rv$tokens_raw), error = function(e) list())
     } else list()
@@ -816,13 +786,10 @@ server <- function(input, output, session) {
       if (!is.na(val) && val != 0 && code %in% names(ev)) ev[[code]] else ""
     }, character(1))
 
-    # Aplicar filtros
     grp  <- input$fil_grupo
     tipo <- input$fil_tipo
-    if (!is.null(grp) && nchar(grp) > 0)
-      df <- df[df$grupo == grp, ]
-    if (!is.null(tipo) && nchar(tipo) > 0)
-      df <- df[df$tipo == tipo, ]
+    if (!is.null(grp)  && nchar(grp)  > 0) df <- df[df$grupo == grp,  ]
+    if (!is.null(tipo) && nchar(tipo) > 0) df <- df[df$tipo  == tipo, ]
 
     df
   })
@@ -831,16 +798,8 @@ server <- function(input, output, session) {
   output$tabla_rasgos <- renderDT({
     df <- tabla_data()
 
-    # Marcar rasgos destacados en el README con un asterisco
-    codigo_display <- ifelse(
-      df$code %in% README_HIGHLIGHTED,
-      paste0("<span title='Rasgo destacado en el README' ",
-             "style='color:#e8a020;'>\u2605</span> ", df$code),
-      df$code
-    )
-
     tabla <- data.frame(
-      Codigo      = codigo_display,
+      Codigo      = df$code,
       Grupo       = df$grupo,
       Descripcion = df$descripcion,
       Tipo        = df$tipo,
@@ -848,55 +807,53 @@ server <- function(input, output, session) {
       Palabras    = df$palabras,
       stringsAsFactors = FALSE
     )
-    colnames(tabla) <- c(
-      "C\u00f3digo", "Grupo", "Descripci\u00f3n", "Tipo", "Valor", "Palabras"
-    )
+    colnames(tabla) <- c("Código", "Grupo", "Descripción", "Tipo", "Valor", "Palabras")
 
     datatable(
       tabla,
-      rownames  = FALSE,
-      escape    = FALSE,
-      class     = "compact stripe hover",
+      rownames   = FALSE,
+      escape     = FALSE,
+      class      = "compact stripe hover",
       extensions = "Buttons",
-      options   = list(
-        pageLength    = 80,
-        dom           = "Bfrtip",
-        buttons       = list(
+      options    = list(
+        pageLength     = 80,
+        dom            = "Bfrtip",
+        buttons        = list(
           list(extend = "csv",   text = "Exportar CSV"),
           list(extend = "excel", text = "Exportar Excel")
         ),
-        scrollY       = "540px",
+        scrollY        = "540px",
         scrollCollapse = TRUE,
-        columnDefs    = list(
-          list(width = "120px", targets = 0),
-          list(width = "150px", targets = 1),
-          list(width = "250px", targets = 2),
-          list(width = "120px", targets = 3),
+        columnDefs     = list(
+          list(width = "160px", targets = 0),
+          list(width = "160px", targets = 1),
+          list(width = "280px", targets = 2),
+          list(width = "130px", targets = 3),
           list(width = "65px",  targets = 4, className = "dt-right"),
-          list(width = "260px", targets = 5)
+          list(width = "220px", targets = 5)
         ),
         rowCallback = JS(
           "function(row, data) {",
-          "  if (data[3] === 'Extensi\u00f3n espa\u00f1ola') {",
+          "  if (data[3] === 'Extensión española') {",
           "    $(row).addClass('row-ext');",
           "  }",
           "}"
         ),
         language = list(
-          search     = "Buscar:",
-          info       = "Rasgos _START_\u2013_END_ de _TOTAL_",
-          infoEmpty  = "Sin resultados",
-          paginate   = list(first = "\u00ab", last = "\u00bb",
-                            previous = "\u2039", `next` = "\u203a"),
+          search      = "Buscar:",
+          info        = "Rasgos _START_–_END_ de _TOTAL_",
+          infoEmpty   = "Sin resultados",
+          paginate    = list(first = "«", last = "»",
+                             previous = "‹", `next` = "›"),
           zeroRecords = "No se encontraron rasgos"
         )
       )
     ) %>%
       formatStyle(
         "Tipo",
-        target     = "cell",
-        fontStyle  = styleEqual("Extensi\u00f3n espa\u00f1ola", "italic"),
-        color      = styleEqual("Extensi\u00f3n espa\u00f1ola", "#7a4000")
+        target    = "cell",
+        fontStyle = styleEqual("Extensión española", "italic"),
+        color     = styleEqual("Extensión española", "#7a4000")
       ) %>%
       formatStyle(
         "Valor",
