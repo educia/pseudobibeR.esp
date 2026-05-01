@@ -23,11 +23,11 @@ udmodel <- udpipe_load_model(MODEL_PATH)
 message("Modelo listo.")
 
 # ─── Catálogo de rasgos ───────────────────────────────────────────────────────
-# 59 rasgos: Biber (1985/1988) adaptados al español + extensiones propias.
+# 57 rasgos de Biber (1985/1988) adaptados al español.
 # Eliminados (intraducibles): f_09, f_12, f_15, f_28, f_31, f_32,
 #   f_59, f_60, f_61, f_62, f_68.
 # Fusiones: f_29+f_31 → f_29_that_subj; f_30+f_32 → f_30_that_obj.
-# Extensiones propias: f_69 (-mente), f_70 (palabras largas), f_71 (imperfecto).
+# Extensiones propias (f_69-f_71) calculadas por biber_es() pero no mostradas.
 feature_labels <- data.frame(
   code = c(
     # A. Tiempo y aspecto
@@ -69,11 +69,7 @@ feature_labels <- data.frame(
     # O. Coordinación
     "f_64_phrasal_coordination", "f_65_clausal_coordination",
     # P. Negación
-    "f_66_neg_synthetic", "f_67_neg_analytic",
-    # Extensiones españolas
-    "f_69_mente_adverbs", "f_69_mente_adverbs_rate",
-    "f_70_long_words", "f_70_long_words_rate",
-    "f_71_preterit"
+    "f_66_neg_synthetic", "f_67_neg_analytic"
   ),
   grupo = c(
     "A. Tiempo y aspecto", "A. Tiempo y aspecto", "A. Tiempo y aspecto",
@@ -100,10 +96,7 @@ feature_labels <- data.frame(
     "M. Verbos especializados", "M. Verbos especializados",
     "N. Estructuras reducidas",
     "O. Coordinación", "O. Coordinación",
-    "P. Negación", "P. Negación",
-    "Extensiones españolas", "Extensiones españolas",
-    "Extensiones españolas", "Extensiones españolas",
-    "Extensiones españolas"
+    "P. Negación", "P. Negación"
   ),
   descripcion = c(
     # A
@@ -178,18 +171,7 @@ feature_labels <- data.frame(
     "Coordinación clausal",
     # P
     "Negación sintética (nadie, nunca, nada…)",
-    "Negación analítica (no + verbo)",
-    # Extensiones
-    "Adverbios en -mente (recuento)",
-    "Adverbios en -mente (tasa por 1000 tokens léx.)",
-    "Palabras largas ≥6 caracteres (recuento)",
-    "Palabras largas ≥6 caracteres (tasa por 1000 tokens léx.)",
-    "Pretérito imperfecto (caminaba, decía…)"
-  ),
-  tipo = c(
-    rep("Biber adaptado", 57),
-    rep("Extensión española", 4),
-    "Extensión española"   # f_71
+    "Negación analítica (no + verbo)"
   ),
   stringsAsFactors = FALSE
 )
@@ -281,8 +263,6 @@ ui <- fluidPage(
       }
       table.dataTable tbody tr:nth-child(even) { background: #f8f7f2; }
       table.dataTable tbody tr:hover           { background: #edf4fa !important; }
-      .row-ext td { background: #f5f0ea !important; color: #5a3a00 !important; }
-      .row-ext:hover td { background: #ede4d6 !important; }
     "))
   ),
 
@@ -329,7 +309,7 @@ ui <- fluidPage(
         "Extractor de rasgos léxico-gramaticales de Biber (1985/1988) para español<br>",
         "<span style='font-size:.75rem;'>",
         "Anotación: <code>UDPipe</code> + modelo <code>spanish-gsd</code> &middot; ",
-        "57 rasgos de Biber adaptados al español + 4 extensiones propias (f_69&ndash;f_71) &middot; ",
+        "57 rasgos de Biber adaptados al español &middot; ",
         "11 rasgos intraducibles eliminados (f_09, f_12, f_15, f_28, f_31, f_32, f_59&ndash;f_62, f_68)",
         "</span><br>",
         "<span style='font-size:.72rem; color:#999; font-style:italic; margin-top:6px; display:inline-block;'>",
@@ -612,16 +592,6 @@ extract_evidence <- function(raw_tokens) {
     dplyr::coalesce(toks$dep_rel, "") == "advmod"
   )
 
-  # ── Extensiones españolas ────────────────────────────────────────────────
-  ev[["f_69_mente_adverbs"]]      <- collect(toks$pos == "ADV" & grepl("mente$", toks$token_lc))
-  ev[["f_69_mente_adverbs_rate"]] <- ev[["f_69_mente_adverbs"]]
-
-  ev[["f_70_long_words"]]      <- collect(
-    toks$pos %in% c("NOUN", "VERB", "ADJ", "ADV", "PROPN") & nchar(toks$token) >= 6,
-    max_n = 6
-  )
-  ev[["f_70_long_words_rate"]] <- ev[["f_70_long_words"]]
-
   ev
 }
 
@@ -728,11 +698,6 @@ server <- function(input, output, session) {
       grupos_ord   <- c(grupos_biber, grupos_ext)
       grupo_choices <- c("Todos los grupos" = "",
                          stats::setNames(grupos_ord, grupos_ord))
-      tipo_choices <- c(
-        "Todos los rasgos"             = "",
-        "Rasgos de Biber adaptados"    = "Biber adaptado",
-        "Extensiones españolas"        = "Extensión española"
-      )
 
       tagList(
         div(class = "results-meta",
@@ -751,10 +716,6 @@ server <- function(input, output, session) {
           div(style = "display:inline-block; width:240px;",
             selectInput("fil_grupo", "Filtrar por grupo:",
                         choices = grupo_choices, selected = "")
-          ),
-          div(style = "display:inline-block; width:280px; margin-left:10px;",
-            selectInput("fil_tipo", "Tipo:",
-                        choices = tipo_choices, selected = "")
           )
         ),
         DTOutput("tabla_rasgos")
@@ -768,6 +729,7 @@ server <- function(input, output, session) {
     res <- rv$resultado
 
     feat_cols <- grep("^f_", names(res), value = TRUE)
+    feat_cols <- feat_cols[!grepl("^f_(69|70|71)_", feat_cols)]  # ocultar extensiones
     valores   <- as.numeric(unlist(res[1, feat_cols, drop = TRUE]))
 
     df_raw <- data.frame(code = feat_cols, valor = valores, stringsAsFactors = FALSE)
@@ -775,7 +737,6 @@ server <- function(input, output, session) {
     df <- df[match(feat_cols, df$code), ]
     df$grupo[is.na(df$grupo)]             <- "Otros"
     df$descripcion[is.na(df$descripcion)] <- df$code[is.na(df$descripcion)]
-    df$tipo[is.na(df$tipo)]               <- "Biber adaptado"
 
     ev <- if (!is.null(rv$tokens_raw)) {
       tryCatch(extract_evidence(rv$tokens_raw), error = function(e) list())
@@ -786,10 +747,8 @@ server <- function(input, output, session) {
       if (!is.na(val) && val != 0 && code %in% names(ev)) ev[[code]] else ""
     }, character(1))
 
-    grp  <- input$fil_grupo
-    tipo <- input$fil_tipo
-    if (!is.null(grp)  && nchar(grp)  > 0) df <- df[df$grupo == grp,  ]
-    if (!is.null(tipo) && nchar(tipo) > 0) df <- df[df$tipo  == tipo, ]
+    grp <- input$fil_grupo
+    if (!is.null(grp) && nchar(grp) > 0) df <- df[df$grupo == grp, ]
 
     df
   })
@@ -802,12 +761,11 @@ server <- function(input, output, session) {
       Codigo      = df$code,
       Grupo       = df$grupo,
       Descripcion = df$descripcion,
-      Tipo        = df$tipo,
       Valor       = df$valor,
       Palabras    = df$palabras,
       stringsAsFactors = FALSE
     )
-    colnames(tabla) <- c("Código", "Grupo", "Descripción", "Tipo", "Valor", "Palabras")
+    colnames(tabla) <- c("Código", "Grupo", "Descripción", "Valor", "Palabras")
 
     datatable(
       tabla,
@@ -827,17 +785,9 @@ server <- function(input, output, session) {
         columnDefs     = list(
           list(width = "160px", targets = 0),
           list(width = "160px", targets = 1),
-          list(width = "280px", targets = 2),
-          list(width = "130px", targets = 3),
-          list(width = "65px",  targets = 4, className = "dt-right"),
-          list(width = "220px", targets = 5)
-        ),
-        rowCallback = JS(
-          "function(row, data) {",
-          "  if (data[3] === 'Extensión española') {",
-          "    $(row).addClass('row-ext');",
-          "  }",
-          "}"
+          list(width = "300px", targets = 2),
+          list(width = "65px",  targets = 3, className = "dt-right"),
+          list(width = "240px", targets = 4)
         ),
         language = list(
           search      = "Buscar:",
@@ -849,12 +799,6 @@ server <- function(input, output, session) {
         )
       )
     ) %>%
-      formatStyle(
-        "Tipo",
-        target    = "cell",
-        fontStyle = styleEqual("Extensión española", "italic"),
-        color     = styleEqual("Extensión española", "#7a4000")
-      ) %>%
       formatStyle(
         "Valor",
         target     = "cell",
