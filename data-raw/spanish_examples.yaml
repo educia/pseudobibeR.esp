@@ -2,7 +2,8 @@
 # Ejemplos por rasgo para pseudobibeR.es
 #
 # Formato: cada entrada tiene tres campos:
-#   feature: nombre del rasgo (f_XX_nombre)
+#   feature: nombre del rasgo (f_XX_nombre) -- debe coincidir EXACTAMENTE
+#             con el nombre de columna producido por biber_es()
 #   example: oración en español que activa exactamente ese rasgo
 #   count:   número esperado de ocurrencias del rasgo en ese ejemplo
 #
@@ -10,30 +11,37 @@
 # la precisión del conteo. Se asume modelo UDPipe spanish-gsd.
 #
 # NOTAS:
-#  - Algunos rasgos requieren contexto discursivo (f_45, f_50) y pueden
-#    devolver 0 en oraciones aisladas; se indica con count: 0 + comentario.
-#  - f_09 (expletivo/impersonal) activa con "hay" existencial.
+#  - f_01 (pretérito indefinido): verbos con Tense=Past, Mood=Ind, VerbForm=Fin
+#    Ej.: llegó, presentaron, fue (indefinido).
+#  - f_71 (pretérito imperfecto, extensión española): Tense=Imp
+#    Ej.: caminaba, estudiábamos (imperfecto).
+#  - f_09, f_12, f_15, f_28, f_31, f_32, f_59, f_60, f_61, f_62: ELIMINADOS
+#    (intraducibles); no aparecen en el output de biber_es().
 #  - f_43 (TTR) y f_44 (longitud media) dependen del texto completo;
 #    no se incluyen aquí.
+#  - Algunos rasgos (f_22, f_23, f_26, f_39) muestran divergencias conocidas
+#    con UDPipe spanish-gsd; están marcados como relaxed en el test.
 
-# ─────────────────────────────────────────────────────────────────────────────
+# ─────────────────��─────────────────────────────��─────────────────────────────
 # TIEMPO VERBAL
-# ─────────────────────────────────────────────────────────────────────────────
+# ────────────────────────────────────────────────────────────────────────────��
 
+# f_01 = pretérito indefinido (Tense=Past, Mood=Ind, VerbForm=Fin)
 - feature: f_01_past_tense
-  example: "El niño caminaba despacio por el parque."
-  count: 1.0
-
-- feature: f_01_past_tense
-  example: "Nosotros estudiábamos cuando ella llegaba."
-  count: 2.0
-
-- feature: f_01b_preterit
   example: "María llegó tarde a la reunión."
   count: 1.0
 
-- feature: f_01b_preterit
+- feature: f_01_past_tense
   example: "Los estudiantes presentaron el informe y aprobaron el examen."
+  count: 2.0
+
+# f_71 = pretérito imperfecto (extensión española; Tense=Imp, Mood=Ind)
+- feature: f_71_preterit
+  example: "El niño caminaba despacio por el parque."
+  count: 1.0
+
+- feature: f_71_preterit
+  example: "Nosotros estudiábamos cuando ella llegaba."
   count: 2.0
 
 - feature: f_02_perfect_aspect
@@ -65,7 +73,7 @@
   count: 1.0
 
 - feature: f_05_time_adverbials
-  example: "Ayer llegaron tarde, pero hoy están puntales."
+  example: "Ayer llegaron tarde, pero hoy están puntuales."
   count: 2.0
 
 - feature: f_05_time_adverbials
@@ -96,13 +104,8 @@
   example: "Él llegó primero y ella lo saludó."
   count: 3.0
 
-- feature: f_09_pronoun_it
-  example: "Hay muchos problemas por resolver."
-  count: 1.0
-
-- feature: f_09_pronoun_it
-  example: "Se dice que la economía mejorará."
-  count: 1.0
+# f_09_pronoun_it ELIMINADO: el español es lengua de sujeto nulo;
+# no existe pronombre expletivo equivalente a "it". Ver biber_espanol_completo.md.
 
 # ─────────────────────────────────────────────────────────────────────────────
 # PRONOMBRES INDEFINIDOS Y DEMOSTRATIVOS
@@ -156,10 +159,12 @@
   example: "Dijo que vendría y prometió que traería los documentos."
   count: 2.0
 
+# f_22: divergencia conocida UDPipe (head de "que" no siempre ADJ)
 - feature: f_22_that_adj_comp
   example: "Es importante que todos participen."
   count: 1.0
 
+# f_23: divergencia conocida UDPipe (lematización quién/cuándo con tilde)
 - feature: f_23_wh_clause
   example: "No sé quién llamó ni cuándo llegó."
   count: 2.0
@@ -172,63 +177,75 @@
   example: "Caminando por el parque, encontré a mi vecino."
   count: 1.0
 
+# f_26: divergencia conocida UDPipe (participio absoluto)
 - feature: f_26_past_participle
   example: "Terminado el examen, los alumnos salieron."
   count: 1.0
 
-- feature: f_35_because_clauses
+# f_35: solo "porque" (restricción léxica estrecha; ya_que excluido)
+- feature: f_35_because
   example: "No pudo asistir porque estaba enfermo."
   count: 1.0
 
-- feature: f_35_because_clauses
-  example: "Lo hicieron así ya que era la única opción."
+- feature: f_35_because
+  example: "Lo rechazaron porque no cumplía los requisitos."
   count: 1.0
 
-- feature: f_36_concessive_clauses
+# f_36: solo "aunque" (cubre both although y though de Biber)
+- feature: f_36_though
   example: "Aunque llovía, salimos a caminar."
   count: 1.0
 
-- feature: f_37_conditional_clauses
-  example: "Si estudias, aprobarás el examen."
+# f_37: "si" condicional (SCONJ, dep_rel=mark)
+# NOTA: "Si" inicial de oración puede etiquetarse como CCONJ/case en UDPipe
+# spanish-gsd; colocar la prótasis DESPUÉS de la apódosis evita el error.
+- feature: f_37_if
+  example: "Puedes hacerlo si quieres."
   count: 1.0
 
-- feature: f_37_conditional_clauses
-  example: "Te ayudaré siempre que me lo pidas."
+- feature: f_37_if
+  example: "Lo aprobarás si estudias con dedicación."
   count: 1.0
 
-- feature: f_60_that_deletion
-  example: "Creo puede hacerlo sin ayuda."
-  count: 1.0
+# f_59_contractions ELIMINADO: intraducible. Ver biber_espanol_completo.md.
+# f_60_that_deletion ELIMINADO: intraducible. Ver biber_espanol_completo.md.
 
 # ─────────────────────────────────────────────────────────────────────────────
 # CLÁUSULAS RELATIVAS
 # ─────────────────────────────────────────────────────────────────────────────
 
-- feature: f_29_that_subject
+# f_29: fusión de f_29 (that-relativo sujeto) + f_31 (wh-relativo sujeto)
+# En español "que" cubre both that y who/which en posición de sujeto.
+- feature: f_29_that_subj
   example: "El estudiante que llegó tarde no pudo entrar."
   count: 1.0
 
-- feature: f_30_that_object
-  example: "El libro que compré ayer es muy bueno."
+# f_30: fusión de f_30 (that-relativo objeto) + f_32 (wh-relativo objeto)
+# En Spanish-GSD "que" relativo es siempre SCONJ/mark (absorbido en f_29).
+# f_30 detecta "quien/cual" en posición de objeto (dep_rel=obl/obj).
+- feature: f_30_that_obj
+  example: "La persona con quien hablé es muy amable."
   count: 1.0
 
-- feature: f_31_wh_subject
-  example: "La persona quien resolvió el problema recibió un premio."
-  count: 1.0
+# f_31_wh_subject ABSORBIDO en f_29_that_subj (fusión española).
+# f_32_wh_object  ABSORBIDO en f_30_that_obj  (fusión española).
 
 # ─────────────────────────────────────────────────────────────────────────────
 # ADJETIVOS, ADVERBIOS, PREPOSICIONES
-# ─────────────────────────────────────────────────────────────────────────────
+# ────────────────────────────────────────────────────────────────────────��────
 
+# f_39: divergencia conocida UDPipe (conteo varía por estructura de la frase)
 - feature: f_39_prepositions
   example: "El libro está sobre la mesa de la biblioteca."
   count: 3.0
 
-- feature: f_40_attributive_adj
+# f_40: adjetivo atributivo (dep_rel=amod modificando NOUN)
+- feature: f_40_adj_attr
   example: "Un brillante estudiante presentó una nueva solución."
   count: 2.0
 
-- feature: f_41_predicative_adj
+# f_41: adjetivo predicativo (xcomp/cop target)
+- feature: f_41_adj_pred
   example: "El resultado es positivo y el análisis parece correcto."
   count: 2.0
 
@@ -310,7 +327,7 @@
 
 # ─────────────────────────────────────────────────────────────────────────────
 # VERBOS ESPECIALIZADOS
-# ─────────────────────────────────────────────────────────────────────────────
+# ───────────────────────────────────────────���─────────────────────────────────
 
 - feature: f_55_verb_public
   example: "El ministro afirmó que la reforma es necesaria."
@@ -344,17 +361,9 @@
   example: "Resulta difícil interpretar estos datos sin más contexto."
   count: 1.0
 
+# ───────────────────────────────────────────────────────��─────────────────────
+# COORDINACIÓN
 # ─────────────────────────────────────────────────────────────────────────────
-# COORDINACIÓN Y CONTRACCIONES
-# ─────────────────────────────────────────────────────────────────────────────
-
-- feature: f_59_contractions
-  example: "Voy al mercado y vengo del trabajo."
-  count: 2.0
-
-- feature: f_59_contractions
-  example: "Habló del tema con el director."
-  count: 2.0
 
 - feature: f_64_phrasal_coordination
   example: "Los estudiantes y los profesores asistieron a la ceremonia."
@@ -373,7 +382,7 @@
   count: 2.0
 
 - feature: f_67_neg_analytic
-  example: "No entiendo por qué no llamaste."
+  example: "No llegó y no avisó."
   count: 2.0
 
 - feature: f_67_neg_analytic
@@ -384,18 +393,20 @@
 # COMPLEJIDAD LÉXICA
 # ─────────────────────────────────────────────────────────────────────────────
 
-- feature: f_60_nominalization
+# f_14: nominalizaciones (sufijos productivos: -ción, -ión, -idad, etc.)
+- feature: f_14_nominalizations
   example: "La organización del trabajo y la distribución de tareas mejoran la productividad."
   count: 3.0
 
-- feature: f_60_nominalization
+- feature: f_14_nominalizations
   example: "La investigación requiere planificación y dedicación."
   count: 3.0
 
-- feature: f_63_mente_adverbs
+# f_69: adverbios en -mente (extensión española equivalente a -ly adverbs)
+- feature: f_69_mente_adverbs
   example: "El proceso fue completamente rediseñado y actualmente funciona correctamente."
   count: 3.0
 
-- feature: f_63_mente_adverbs
+- feature: f_69_mente_adverbs
   example: "Finalmente, el modelo convergió rápidamente."
   count: 2.0

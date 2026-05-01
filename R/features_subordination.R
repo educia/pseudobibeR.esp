@@ -17,21 +17,21 @@
 #   f_25  Gerundio adverbial / complemento       (VerbForm=Ger, dep_rel=advcl|ccomp)
 #   f_26  Participio adverbial / absoluto        (VerbForm=Part, dep_rel=advcl|ccomp|acl)
 #   f_27  Participio postnominal (whiz-deletion) (VerbForm=Part, dep_rel=acl, head=NOUN)
-#   f_28  Gerundio postnominal  (whiz-deletion)  (VerbForm=Ger,  dep_rel=acl, head=NOUN)
-#   f_29  Relativa de sujeto con <<que>>
-#   f_30  Relativa de objeto con <<que>>
-#   f_31  Relativa de sujeto con pronombre-wh    (quien, cual)
-#   f_32  Relativa de objeto con pronombre-wh
+#   f_28  ELIMINADO (intraducible): gerundio no puede ser modificador nominal
+#   f_29  Relativa sujeto con <<que>>/quien/cual  [fusion f_29+f_31]
+#   f_30  Relativa objeto con <<que>>/quien/cual  [fusion f_30+f_32]
+#   f_31  ABSORBIDO en f_29
+#   f_32  ABSORBIDO en f_30
 #   f_33  Pied-piping (prep + pronombre relativo)
 #   f_34  Relativa oracional (eso que, lo que)
-#   f_35  Subordinada causal (porque, ya que, puesto que?)
-#   f_36  Subordinada concesiva (aunque, si bien, a pesar de que?)
-#   f_37  Subordinada condicional (si, en caso de que?)
+#   f_35  Subordinada causal (solo: porque)
+#   f_36  Subordinada concesiva (solo: aunque)
+#   f_37  Subordinada condicional (si, a_menos_que, salvo_que)
 #   f_38  Otros subordinadores adverbiales
-#   f_60  That-deletion (elipsis de <<que>> complementizador)
+#   f_60  ELIMINADO (intraducible): <<que>> obligatorio en espanol
 
 # -----------------------------------------------------------------------------
-# 1.  block_participial_clauses_es   f_24-f_28
+# 1.  block_participial_clauses_es   f_24-f_27 (f_28 eliminado)
 # -----------------------------------------------------------------------------
 
 #' Participial and infinitive clause features (Spanish)
@@ -39,7 +39,7 @@
 #' @param tokens Annotated token data frame (UD format)
 #' @param doc_ids One-column data frame with column `doc_id`
 #' @param head_lookup Pre-built head-token attribute table
-#' @return Data frame: one row per doc, columns f_24 - f_28
+#' @return Data frame: one row per doc, columns f_24 - f_27
 #' @keywords internal
 block_participial_clauses_es <- function(tokens, doc_ids, head_lookup) {
 
@@ -115,32 +115,18 @@ block_participial_clauses_es <- function(tokens, doc_ids, head_lookup) {
     ) %>%
     count_feature("f_27_past_participle_whiz")
 
-  # -- f_28  Gerundio postnominal (whiz-deletion) ----------------------------
-  # VerbForm=Ger, dep_rel=acl, head es NOUN/PROPN
-  f28 <- tokens %>%
-    dplyr::filter(
-      .data$pos %in% c("VERB", "AUX"),
-      .data$.vf  == "Ger",
-      stringr::str_detect(
-        dplyr::coalesce(.data$dep_rel, ""), "^acl"
-      ),
-      !is.na(.data$head_token_id_int)
-    ) %>%
-    dplyr::left_join(
-      head_lookup,
-      by = c("doc_id", "sentence_id", "head_token_id_int" = "token_id_int")
-    ) %>%
-    dplyr::filter(
-      dplyr::coalesce(.data$head_pos, "") %in% c("NOUN", "PROPN")
-    ) %>%
-    count_feature("f_28_present_participle_whiz")
+  # f_28 (gerundio postnominal / whiz-deletion) ELIMINADO:
+  # El gerundio espanol no puede funcionar como modificador nominal postnominal;
+  # su uso en esa posicion es agramatical en espanol normativo. La funcion
+  # equivalente se realiza mediante clausulas de relativo completas (f_29/f_30).
+  # Mapear f_28 a esas relativas supondria doblar el conteo. Intraducible.
+  # Ver biber_espanol_completo.md sec. F_28.
 
   doc_ids %>%
     dplyr::left_join(f24, by = "doc_id") %>%
     dplyr::left_join(f25, by = "doc_id") %>%
     dplyr::left_join(f26, by = "doc_id") %>%
     dplyr::left_join(f27, by = "doc_id") %>%
-    dplyr::left_join(f28, by = "doc_id") %>%
     dplyr::mutate(
       dplyr::across(-dplyr::any_of("doc_id"), ~ dplyr::coalesce(., 0L))
     )
@@ -175,7 +161,9 @@ block_relatives_es <- function(tokens, doc_ids, head_lookup) {
     "donde", "cuando", "como"
   )
   rel_subj_roles <- c("nsubj", "nsubj:pass")
-  rel_obj_roles  <- c("obj", "iobj", "obl", "obl:agent")
+  # "nmod" se añade para capturar "quien/cual" tras preposición (dep_rel=nmod
+  # en Spanish-GSD cuando el pronombre relativo es el objeto de una PP).
+  rel_obj_roles  <- c("obj", "iobj", "obl", "obl:agent", "nmod")
 
   # Tokens que son pronombres relativos (PronType=Rel o dep_rel=ref|mark
   # y lemma en lista)
@@ -215,8 +203,17 @@ block_relatives_es <- function(tokens, doc_ids, head_lookup) {
       ant_pos = .data$pos
     )
 
-  # -- f_29  Relativa de sujeto con <<que>> ------------------------------------
-  f29 <- rel_tokens %>%
+  # -- f_29  Relativa de sujeto (que + quien/cual fusionados) ----------------
+  # FUSION f_29 + f_31 segun biber_espanol_completo.md:
+  # En espanol "que" cubre tanto "that" (f_29) como "who/which" (f_31) en
+  # posicion de sujeto de relativa especificativa. "Quien/quienes" y
+  # "cual/cuales" son variantes formales que se absorben en f_29.
+  # El colapso formal hace imposible distinguir f_29 y f_31 en superficie.
+
+  # Pronombres relativos que pueden ser sujeto de relativa (que + quien/cual)
+  rel_subj_lemmas <- c("que", "quien", "quienes", "cual", "cuales")
+
+  f29_que <- rel_tokens %>%
     dplyr::filter(
       .data$lemma == "que",
       dplyr::coalesce(.data$dep_rel, "") %in% rel_subj_roles
@@ -227,41 +224,101 @@ block_relatives_es <- function(tokens, doc_ids, head_lookup) {
              "head_token_id_int" = "acl_head_id")
     ) %>%
     dplyr::inner_join(antecedents,
-                      by = c("doc_id", "sentence_id", "antecedent_id")) %>%
-    count_feature("f_29_that_subj")
+                      by = c("doc_id", "sentence_id", "antecedent_id"))
 
-  # -- f_30  Relativa de objeto con <<que>> ------------------------------------
-  f30 <- rel_tokens %>%
+  # Rama adicional para Spanish-GSD: "que" relativo etiquetado como SCONJ/mark
+  # cuyo head inmediato es un verbo con dep_rel=acl* (relativa especificativa).
+  # En Spanish-GSD el pronombre relativo "que" se anota como SCONJ/mark,
+  # no como PRON/nsubj. Esta rama captura ambas posiciones (sujeto y objeto)
+  # puesto que en espanol pro-drop no es posible distinguirlas fiablemente.
+  f29_que_sconj <- tokens %>%
     dplyr::filter(
       .data$lemma == "que",
-      dplyr::coalesce(.data$dep_rel, "") %in% rel_obj_roles
+      .data$pos   == "SCONJ",
+      dplyr::coalesce(.data$dep_rel, "") == "mark",
+      !is.na(.data$head_token_id_int)
     ) %>%
     dplyr::left_join(
       acl_heads,
       by = c("doc_id", "sentence_id",
              "head_token_id_int" = "acl_head_id")
     ) %>%
+    dplyr::filter(!is.na(.data$antecedent_id)) %>%
     dplyr::inner_join(antecedents,
-                      by = c("doc_id", "sentence_id", "antecedent_id")) %>%
-    count_feature("f_30_that_obj")
+                      by = c("doc_id", "sentence_id", "antecedent_id"))
 
   wh_pronouns <- c("quien", "quienes", "cual", "cuales")
 
-  # -- f_31  Relativa de sujeto con pronombre-wh -----------------------------
-  f31 <- rel_tokens %>%
+  f29_wh <- rel_tokens %>%
     dplyr::filter(
       .data$lemma %in% wh_pronouns,
       dplyr::coalesce(.data$dep_rel, "") %in% rel_subj_roles
-    ) %>%
-    count_feature("f_31_wh_subj")
+    )
 
-  # -- f_32  Relativa de objeto con pronombre-wh -----------------------------
-  f32 <- rel_tokens %>%
+  f29 <- dplyr::bind_rows(
+    f29_que       %>% dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int),
+    f29_que_sconj %>% dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int),
+    f29_wh        %>% dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int)
+  ) %>%
+    dplyr::distinct() %>%
+    count_feature("f_29_that_subj")
+
+  # -- f_30  Relativa de objeto (que + quien/cual fusionados) ---------------
+  # FUSION f_30 + f_32 segun biber_espanol_completo.md:
+  # Mismo razonamiento que f_29+f_31 para posicion de objeto.
+
+  f30_que <- rel_tokens %>%
+    dplyr::filter(
+      .data$lemma == "que",
+      dplyr::coalesce(.data$dep_rel, "") %in% rel_obj_roles
+    ) %>%
+    dplyr::left_join(
+      acl_heads,
+      by = c("doc_id", "sentence_id",
+             "head_token_id_int" = "acl_head_id")
+    ) %>%
+    dplyr::inner_join(antecedents,
+                      by = c("doc_id", "sentence_id", "antecedent_id"))
+
+  # Rama SCONJ/mark para "que" objeto: cuando el verbo acl:relcl tiene
+  # sujeto explícito (no pro-dropped), el gap corresponde al objeto.
+  # En la práctica, f_30 captura qui/cual en posición objeto (detectable)
+  # y "que"/SCONJ/mark cuya cláusula relativa tiene nsubj explícito.
+  f30_que_obj <- tokens %>%
+    dplyr::filter(
+      .data$lemma == "que",
+      .data$pos   == "SCONJ",
+      dplyr::coalesce(.data$dep_rel, "") == "mark",
+      !is.na(.data$head_token_id_int)
+    ) %>%
+    dplyr::left_join(
+      acl_heads,
+      by = c("doc_id", "sentence_id",
+             "head_token_id_int" = "acl_head_id")
+    ) %>%
+    dplyr::filter(!is.na(.data$antecedent_id)) %>%
+    dplyr::inner_join(antecedents,
+                      by = c("doc_id", "sentence_id", "antecedent_id")) %>%
+    # Solo contamos como f_30 si ya fue contado en f_29 (evitar doble conteo):
+    # En pro-drop el gap no es distinguible; dejamos f_30 para wh-pronombres
+    dplyr::filter(FALSE)  # desactivado: toda "que" relativa va a f_29
+
+  f30_wh <- rel_tokens %>%
     dplyr::filter(
       .data$lemma %in% wh_pronouns,
       dplyr::coalesce(.data$dep_rel, "") %in% rel_obj_roles
-    ) %>%
-    count_feature("f_32_wh_obj")
+    )
+
+  f30 <- dplyr::bind_rows(
+    f30_que     %>% dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int),
+    f30_que_obj %>% dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int),
+    f30_wh      %>% dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int)
+  ) %>%
+    dplyr::distinct() %>%
+    count_feature("f_30_that_obj")
+
+  # f_31 y f_32 absorbidos en f_29 y f_30 respectivamente.
+  # No se generan columnas independientes en el output.
 
   # -- f_33  Pied-piping (preposicion + pronombre relativo) ------------------
   # El pronombre relativo tiene dep_rel = obl* o nmod y su head inmediato
@@ -306,11 +363,11 @@ block_relatives_es <- function(tokens, doc_ids, head_lookup) {
     ) %>%
     count_feature("f_34_sentence_relatives")
 
+  # f_31 y f_32 han sido absorbidos en f_29 y f_30 respectivamente
+  # (fusion segun biber_espanol_completo.md); no se generan columnas separadas.
   doc_ids %>%
     dplyr::left_join(f29, by = "doc_id") %>%
     dplyr::left_join(f30, by = "doc_id") %>%
-    dplyr::left_join(f31, by = "doc_id") %>%
-    dplyr::left_join(f32, by = "doc_id") %>%
     dplyr::left_join(f33, by = "doc_id") %>%
     dplyr::left_join(f34, by = "doc_id") %>%
     dplyr::mutate(
@@ -319,7 +376,7 @@ block_relatives_es <- function(tokens, doc_ids, head_lookup) {
 }
 
 # -----------------------------------------------------------------------------
-# 3.  block_clause_embedding_es   f_21-f_23, f_35-f_38, f_60
+# 3.  block_clause_embedding_es   f_21-f_23, f_35-f_38 (f_60 eliminado)
 # -----------------------------------------------------------------------------
 
 #' Complementizer, subordinator, and clause-embedding features (Spanish)
@@ -327,17 +384,20 @@ block_relatives_es <- function(tokens, doc_ids, head_lookup) {
 #' f_21  That-complementizador tras VERB ("dijo que", "sabe que")
 #' f_22  That-complementizador tras ADJ  ("seguro de que", "feliz de que")
 #' f_23  Clausula-wh (relativa/interrogativa indirecta)
-#' f_35  Subordinada causal    (porque, ya_que, puesto_que, dado_que?)
-#' f_36  Subordinada concesiva (aunque, si_bien, a_pesar_de_que?)
-#' f_37  Subordinada condicional (si, en_caso_de_que, siempre_que?)
+#' f_35  Subordinada causal    (solo: porque)
+#' f_36  Subordinada concesiva (solo: aunque)
+#' f_37  Subordinada condicional (si, a_menos_que, salvo_que)
 #' f_38  Otros subordinadores adverbiales (cuando, mientras, antes_de_que?)
-#' f_60  That-deletion (ccomp/xcomp sin <<que>> complementizador)
+#'
+#' f_60 (that-deletion) ELIMINADO: intraducible. En espanol el complementante
+#' <<que>> es practicamente obligatorio; su omision es agramatical.
+#' biber_espanol_completo.md sec. F_60.
 #'
 #' @param tokens Annotated token data frame
 #' @param doc_ids One-column data frame with column `doc_id`
 #' @param head_lookup Pre-built head-token attribute table
 #' @param dict_lookup Dictionary lookup (para listas de subordinadores)
-#' @return Data frame: one row per doc, columns f_21-f_23, f_35-f_38, f_60
+#' @return Data frame: one row per doc, columns f_21-f_23, f_35-f_38
 #' @keywords internal
 block_clause_embedding_es <- function(tokens, doc_ids, head_lookup,
                                        dict_lookup = NULL) {
@@ -410,11 +470,10 @@ block_clause_embedding_es <- function(tokens, doc_ids, head_lookup,
     count_feature("f_23_wh_clause")
 
   # -- f_35  Causal ----------------------------------------------------------
-  causal_lemmas <- c(
-    "porque", "ya_que", "puesto_que", "dado_que",
-    "pues", "como",   # "como" causal: "Como llueve, me quedo"
-    "en_vista_de_que", "habida_cuenta_de_que"
-  )
+  # Solo "porque" -- restriccion lexica estrecha paralela a "because" en Biber
+  # (1985), que tampoco incluye since/as causales. Se excluyen ya_que,
+  # puesto_que, dado_que, pues, como causal. biber_espanol_completo.md F_35.
+  causal_lemmas <- c("porque")
 
   f35 <- tokens %>%
     dplyr::filter(
@@ -428,11 +487,10 @@ block_clause_embedding_es <- function(tokens, doc_ids, head_lookup,
     count_feature("f_35_because")
 
   # -- f_36  Concesiva -------------------------------------------------------
-  concessive_lemmas <- c(
-    "aunque", "si_bien", "a_pesar_de_que", "aun_cuando",
-    "por_m\u00e1s_que", "por_mucho_que", "pese_a_que",
-    "con_todo", "sin_embargo"  # conectores concesivos
-  )
+  # Solo "aunque" -- cubre tanto "although" como "though" de Biber (1985).
+  # Se excluyen si_bien, aun_cuando, a_pesar_de_que, pese_a_que.
+  # biber_espanol_completo.md F_36.
+  concessive_lemmas <- c("aunque")
 
   f36 <- tokens %>%
     dplyr::filter(
@@ -446,11 +504,11 @@ block_clause_embedding_es <- function(tokens, doc_ids, head_lookup,
     count_feature("f_36_though")
 
   # -- f_37  Condicional -----------------------------------------------------
-  conditional_lemmas <- c(
-    "si", "en_caso_de_que", "siempre_que", "siempre_y_cuando",
-    "con_tal_de_que", "a_condici\u00f3n_de_que", "a_menos_que",
-    "a_no_ser_que", "salvo_que", "excepto_que"
-  )
+  # "si" condicional + "a_menos_que" y "salvo_que" como equivalentes de
+  # "unless". Se excluyen en_caso_de_que, siempre_que, siempre_y_cuando,
+  # con_tal_de_que (estructuralmente paralelo a excluir provided/as_long_as
+  # en Biber). biber_espanol_completo.md F_37.
+  conditional_lemmas <- c("si", "a_menos_que", "salvo_que")
 
   f37 <- tokens %>%
     dplyr::filter(
@@ -480,48 +538,8 @@ block_clause_embedding_es <- function(tokens, doc_ids, head_lookup,
     ) %>%
     count_feature("f_38_other_adv_sub")
 
-  # -- f_60  That-deletion ---------------------------------------------------
-  # Clausulas ccomp/xcomp sin marcador <<que>>
-  # Paso 1: clausulas que SI tienen <<que>> como mark
-  has_que_mark <- tokens %>%
-    dplyr::filter(
-      .data$lemma == "que",
-      .data$pos   == "SCONJ",
-      dplyr::coalesce(.data$dep_rel, "") == "mark",
-      !is.na(.data$head_token_id_int)
-    ) %>%
-    dplyr::transmute(
-      .data$doc_id, .data$sentence_id,
-      clause_head_id = .data$head_token_id_int,
-      has_que = TRUE
-    ) %>%
-    dplyr::distinct()
-
-  # Paso 2: clausulas complemento cuyo head es VERB/AUX/ADJ Y no tienen <<que>>
-  f60 <- tokens %>%
-    dplyr::filter(
-      stringr::str_detect(
-        dplyr::coalesce(.data$dep_rel, ""), "^(ccomp|xcomp)"
-      ),
-      !is.na(.data$head_token_id_int)
-    ) %>%
-    dplyr::left_join(
-      head_lookup,
-      by = c("doc_id", "sentence_id", "head_token_id_int" = "token_id_int")
-    ) %>%
-    dplyr::filter(
-      dplyr::coalesce(.data$head_pos, "") %in% c("VERB", "AUX", "ADJ")
-    ) %>%
-    dplyr::left_join(
-      has_que_mark,
-      by = c(
-        "doc_id", "sentence_id",
-        "token_id_int" = "clause_head_id"
-      )
-    ) %>%
-    dplyr::filter(is.na(.data$has_que)) %>%
-    dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int) %>%
-    count_feature("f_60_that_deletion")
+  # f_60 (that-deletion) ELIMINADO: intraducible.
+  # Ver docstring y biber_espanol_completo.md sec. F_60.
 
   doc_ids %>%
     dplyr::left_join(f21, by = "doc_id") %>%
@@ -531,7 +549,6 @@ block_clause_embedding_es <- function(tokens, doc_ids, head_lookup,
     dplyr::left_join(f36, by = "doc_id") %>%
     dplyr::left_join(f37, by = "doc_id") %>%
     dplyr::left_join(f38, by = "doc_id") %>%
-    dplyr::left_join(f60, by = "doc_id") %>%
     dplyr::mutate(
       dplyr::across(-dplyr::any_of("doc_id"), ~ dplyr::coalesce(., 0L))
     )

@@ -1,6 +1,16 @@
 # features_coordination_negation.R
 # Coordination, split structures, negation, and lexical features (Spanish)
-# f_59, f_61-f_67 + f_10 (demonstratives), f_14-f_16 (nouns)
+#
+# RASGOS PRODUCIDOS: f_10, f_14, f_16, f_51 (nouns/demonstratives),
+#                    f_63-f_65 (split aux, coordination),
+#                    f_66-f_67 (negation)
+#
+# RASGOS ELIMINADOS (intraducibles):
+#   f_59 (contractions): morfologia inexistente en espanol estandar
+#   f_61 (stranded prepositions): agramatical en espanol
+#   f_62 (split infinitives): requiere marcador preverbal "to" inexistente
+#   f_15 (gerunds as nouns): gerundio espanol no es nominal
+# Ver biber_espanol_completo.md para justificacion completa.
 #
 # NOTA LINGUISTICA -- negacion espanola:
 #
@@ -24,29 +34,18 @@
 
 #' Contraction features (Spanish)
 #'
-#' El espanol moderno carece de contracciones ortograficas productivas
-#' equivalentes a las del frances. Esta funcion devuelve siempre 0 para
-#' mantener paridad estructural con pseudobibeR.fr.
-#' Excepcion: las contracciones gramaticales *del* (de + el) y *al*
-#' (a + el) se cuentan como indicadores de registro informal.
+#' f_59 (contracciones) ELIMINADO: intraducible.
+#' El espanol no tiene contracciones morfologicas equivalentes al ingles
+#' (I'm, don't, etc.). "del" y "al" son obligatorias en espanol estandar
+#' y no discriminan registro informal. biber_espanol_completo.md sec. F_59.
 #'
 #' @param tokens Annotated token data frame
 #' @param doc_ids One-column data frame with column `doc_id`
-#' @return Data frame with f_59_contractions
+#' @return doc_ids unchanged (sin columnas adicionales)
 #' @keywords internal
 block_contractions_es <- function(tokens, doc_ids) {
-  # "del" y "al" son las unicas contracciones gramaticales del espanol.
-  # Los parsers UD las tratan como tokens multi-word (MWT) o como un
-  # token unico; contamos el token superficial.
-  f59 <- tokens %>%
-    dplyr::filter(
-      stringr::str_to_lower(.data$token) %in% c("del", "al")
-    ) %>%
-    count_feature("f_59_contractions")
-
-  doc_ids %>%
-    dplyr::left_join(f59, by = "doc_id") %>%
-    dplyr::mutate(f_59_contractions = dplyr::coalesce(.data$f_59_contractions, 0L))
+  # f_59 eliminado -- devuelve doc_ids sin columnas adicionales.
+  doc_ids
 }
 
 # -----------------------------------------------------------------------------
@@ -55,108 +54,22 @@ block_contractions_es <- function(tokens, doc_ids) {
 
 #' Stranded preposition and split infinitive features (Spanish)
 #'
-#' f_61  Preposicion varada: ADP precede inmediatamente a pronombre
-#'       relativo/interrogativo ("a quien", "de lo que").
-#'       En espanol la preposicion varada en relativas es marginal y
-#'       muy marcada; este rasgo discrimina registros informales orales.
+#' f_61 (preposicion varada) ELIMINADO: intraducible.
+#' Las preposiciones varadas son categoricamente agramaticales en espanol.
+#' Lo que en ingles se distribuye entre f_33 (formal) y f_61 (informal)
+#' cae en espanol enteramente en f_33. biber_espanol_completo.md sec. F_61.
 #'
-#' f_62  Infinitivo escindido: preposicion + adverbio(s) + infinitivo
-#'       ("para realmente entender", "al nunca poder salir").
-#'       Patron raro pero documentado en registros cultos y periodisticos.
+#' f_62 (infinitivo escindido) ELIMINADO: intraducible.
+#' La construccion requiere un marcador preverbal (*to*) que el espanol
+#' no tiene. biber_espanol_completo.md sec. F_62.
 #'
 #' @param tokens Annotated token data frame
 #' @param doc_ids One-column data frame with column `doc_id`
-#' @return Data frame with f_61_stranded_preposition, f_62_split_infinitive
+#' @return doc_ids unchanged (sin columnas adicionales)
 #' @keywords internal
 block_stranded_split_es <- function(tokens, doc_ids) {
-
-  tokens_ctx <- tokens %>%
-    dplyr::group_by(.data$doc_id, .data$sentence_id) %>%
-    dplyr::arrange(.data$token_id_int, .by_group = TRUE) %>%
-    dplyr::mutate(
-      lead1_pos      = dplyr::lead(.data$pos,   default = NA_character_),
-      lead1_lemma    = dplyr::lead(.data$lemma, default = NA_character_),
-      lead1_sent     = dplyr::lead(.data$sentence_id, default = NA_integer_),
-      lead1_prontype = dplyr::lead(
-        extract_feat(.data$feats, "PronType"), default = NA_character_
-      ),
-      lag1_pos    = dplyr::lag(.data$pos,          default = NA_character_),
-      lag1_lemma  = dplyr::lag(.data$lemma,        default = NA_character_),
-      lag1_sent   = dplyr::lag(.data$sentence_id,  default = NA_integer_),
-      lag2_pos    = dplyr::lag(.data$pos,    2,    default = NA_character_),
-      lag2_lemma  = dplyr::lag(.data$lemma,  2,    default = NA_character_),
-      lag2_sent   = dplyr::lag(.data$sentence_id, 2, default = NA_integer_),
-      lag3_pos    = dplyr::lag(.data$pos,    3,    default = NA_character_),
-      lag3_lemma  = dplyr::lag(.data$lemma, 3,    default = NA_character_),
-      lag3_sent   = dplyr::lag(.data$sentence_id, 3, default = NA_integer_),
-      lag4_pos    = dplyr::lag(.data$pos,    4,    default = NA_character_),
-      lag4_lemma  = dplyr::lag(.data$lemma,  4,    default = NA_character_),
-      lag4_sent   = dplyr::lag(.data$sentence_id, 4, default = NA_integer_)
-    ) %>%
-    dplyr::ungroup()
-
-  stranded_rel <- c("quien", "quienes", "que", "cual", "cuales", "donde")
-
-  # f_61
-  f61 <- tokens_ctx %>%
-    dplyr::filter(
-      .data$pos == "ADP",
-      !is.na(.data$lead1_sent),
-      .data$lead1_sent == .data$sentence_id,
-      .data$lead1_pos  %in% c("PRON", "DET", "ADV"),
-      .data$lead1_lemma %in% stranded_rel,
-      stringr::str_detect(
-        dplyr::coalesce(.data$lead1_prontype, ""), "Rel|Int"
-      )
-    ) %>%
-    dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int) %>%
-    count_feature("f_61_stranded_preposition")
-
-  inf_prepositions <- c("a", "al", "de", "del", "por", "para")
-  filler_pos       <- c("ADV", "PART", "PRON", "DET")
-
-  # f_62: patron ADP (+filler*) + ADV + INF
-  f62_candidates <- tokens_ctx %>%
-    dplyr::filter(
-      .data$pos %in% c("VERB", "AUX"),
-      dplyr::coalesce(extract_feat(.data$feats, "VerbForm"), "") == "Inf"
-    ) %>%
-    dplyr::mutate(
-      same1 = !is.na(.data$lag1_sent) & .data$lag1_sent == .data$sentence_id,
-      same2 = !is.na(.data$lag2_sent) & .data$lag2_sent == .data$sentence_id,
-      same3 = !is.na(.data$lag3_sent) & .data$lag3_sent == .data$sentence_id,
-      same4 = !is.na(.data$lag4_sent) & .data$lag4_sent == .data$sentence_id,
-      # patron de 2: ADP ADV INF
-      split2 = .data$same2 &
-        .data$lag2_pos   == "ADP" &
-        .data$lag2_lemma %in% inf_prepositions &
-        .data$same1 & .data$lag1_pos == "ADV",
-      # patron de 3: ADP filler ADV INF
-      split3 = .data$same3 &
-        .data$lag3_pos   == "ADP" &
-        .data$lag3_lemma %in% inf_prepositions &
-        .data$same2 & .data$lag2_pos %in% filler_pos &
-        .data$same1 & .data$lag1_pos == "ADV",
-      # patron de 4: ADP filler filler ADV INF
-      split4 = .data$same4 &
-        .data$lag4_pos   == "ADP" &
-        .data$lag4_lemma %in% inf_prepositions &
-        .data$same3 & .data$lag3_pos %in% filler_pos &
-        .data$same2 & .data$lag2_pos %in% filler_pos &
-        .data$same1 & .data$lag1_pos == "ADV"
-    ) %>%
-    dplyr::filter(.data$split2 | .data$split3 | .data$split4)
-
-  f62 <- f62_candidates %>%
-    dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int) %>%
-    count_feature("f_62_split_infinitive")
-
-  doc_ids %>%
-    dplyr::left_join(f61, by = "doc_id") %>%
-    dplyr::left_join(f62, by = "doc_id") %>%
-    dplyr::mutate(
-      dplyr::across(-dplyr::any_of("doc_id"), ~ dplyr::coalesce(., 0L))
-    )
+  # f_61 y f_62 eliminados -- devuelve doc_ids sin columnas adicionales.
+  doc_ids
 }
 
 # -----------------------------------------------------------------------------
@@ -392,18 +305,21 @@ block_negation_es <- function(tokens, doc_ids,
 # 5.  block_lexical_membership_es   f_10 (dem.), f_14-f_16 (nouns)
 # -----------------------------------------------------------------------------
 
-#' Demonstrative pronoun, nominalization, gerund, and noun features (Spanish)
+#' Demonstrative pronoun, nominalization, and noun features (Spanish)
 #'
 #' f_10  Pronombres demostrativos (este, ese, aquel + formas)
 #' f_14  Nominalizaciones (sustantivos con sufijos productivos)
-#' f_15  Gerundios
-#' f_16  Otros sustantivos (= total NOUN/PROPN - nominalizaciones - gerundios-NOUN)
+#' f_15  ELIMINADO (intraducible): el gerundio espanol no funciona como
+#'       sustantivo; las funciones nominales del -ing ingles se realizan
+#'       mediante infinitivos (f_24) y nominalizaciones (f_14).
+#'       biber_espanol_completo.md sec. F_15.
+#' f_16  Otros sustantivos (= total NOUN/PROPN - f_14; sin resta de f_15)
 #' f_51  Demostrativos determinantes (mismo este/ese/aquel en funcion DET)
 #'
 #' @param tokens Annotated token data frame
 #' @param doc_ids One-column data frame with column `doc_id`
 #' @param word_lists_lookup Word lists lookup
-#' @return Data frame with f_10, f_14, f_15, f_16, f_51
+#' @return Data frame with f_10, f_14, f_16, f_51
 #' @keywords internal
 block_lexical_membership_es <- function(tokens, doc_ids, word_lists_lookup) {
 
@@ -417,9 +333,7 @@ block_lexical_membership_es <- function(tokens, doc_ids, word_lists_lookup) {
   nominalization_stop   <- normalize_terms(
     get_word_list(word_lists_lookup, "nominalization_stoplist")
   )
-  gerund_stop           <- normalize_terms(
-    get_word_list(word_lists_lookup, "gerund_stoplist")
-  )
+  # gerund_stop eliminado: f_15 es intraducible, gerundio espanol no es nominal.
 
   # -- f_10  Pronombres demostrativos ----------------------------------------
   # 2026-04-20: cambiado de pronoun_terms a demonstr_terms.
@@ -464,44 +378,16 @@ block_lexical_membership_es <- function(tokens, doc_ids, word_lists_lookup) {
     ) %>%
     count_feature("f_14_nominalizations")
 
-  # -- f_15  Gerundios -------------------------------------------------------
-  # Por morfologia UD (VerbForm=Ger)
-  f15_morph <- tokens %>%
-    dplyr::filter(
-      .data$pos %in% c("VERB", "AUX"),
-      dplyr::coalesce(extract_feat(.data$feats, "VerbForm"), "") == "Ger",
-      !.data$lemma %in% gerund_stop
-    )
-
-  # Fallback: NOUN con lema en -ando/-iendo precedido de preposicion <<en>>
-  f15_fallback <- tokens %>%
-    dplyr::group_by(.data$doc_id, .data$sentence_id) %>%
-    dplyr::arrange(.data$token_id_int, .by_group = TRUE) %>%
-    dplyr::filter(
-      .data$pos %in% c("NOUN", "PROPN"),
-      stringr::str_detect(
-        stringr::str_to_lower(.data$lemma), "(ando|iendo)$"
-      ),
-      dplyr::lag(.data$token, default = "") == "en",
-      dplyr::lag(.data$pos,   default = "") == "ADP",
-      !.data$lemma %in% gerund_stop
-    ) %>%
-    dplyr::ungroup()
-
-  f15_tokens <- dplyr::bind_rows(f15_morph, f15_fallback) %>%
-    dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int,
-                    .keep_all = TRUE)
-
-  gerunds_noun_n <- f15_tokens %>%
-    dplyr::filter(.data$pos %in% c("NOUN", "PROPN")) %>%
-    dplyr::group_by(.data$doc_id) %>%
-    dplyr::tally() %>%
-    dplyr::rename(gerunds_noun_n = "n")
-
-  f15 <- f15_tokens %>%
-    count_feature("f_15_gerunds")
+  # f_15 (gerundios) ELIMINADO: intraducible.
+  # El gerundio espanol no funciona como sustantivo; su uso nominal esta
+  # practicamente restringido a compuestos lexicalizados. Las funciones
+  # nominales del -ing ingles se realizan mediante infinitivos (f_24) y
+  # nominalizaciones (f_14). Ver biber_espanol_completo.md sec. F_15.
 
   # -- f_16  Otros sustantivos -----------------------------------------------
+  # En espanol: f_16 = total NOUN/PROPN - f_14 (nominalizaciones).
+  # No se resta f_15 porque f_15 es intraducible.
+  # biber_espanol_completo.md sec. F_16.
   f16_raw <- tokens %>%
     dplyr::filter(
       .data$pos %in% c("NOUN", "PROPN"),
@@ -514,14 +400,9 @@ block_lexical_membership_es <- function(tokens, doc_ids, word_lists_lookup) {
       f14 %>% dplyr::rename(n_nom = "f_14_nominalizations"),
       by = "doc_id"
     ) %>%
-    dplyr::left_join(gerunds_noun_n, by = "doc_id") %>%
     dplyr::mutate(
-      n_nom        = dplyr::coalesce(.data$n_nom, 0L),
-      gerunds_noun_n = dplyr::coalesce(.data$gerunds_noun_n, 0L),
-      f_16_other_nouns = pmax(
-        0L,
-        .data$f_16_other_nouns - .data$n_nom - .data$gerunds_noun_n
-      )
+      n_nom = dplyr::coalesce(.data$n_nom, 0L),
+      f_16_other_nouns = pmax(0L, .data$f_16_other_nouns - .data$n_nom)
     ) %>%
     dplyr::select("doc_id", "f_16_other_nouns")
 
@@ -529,7 +410,6 @@ block_lexical_membership_es <- function(tokens, doc_ids, word_lists_lookup) {
     dplyr::left_join(f10,  by = "doc_id") %>%
     dplyr::left_join(f51,  by = "doc_id") %>%
     dplyr::left_join(f14,  by = "doc_id") %>%
-    dplyr::left_join(f15,  by = "doc_id") %>%
     dplyr::left_join(f16,  by = "doc_id") %>%
     dplyr::mutate(
       dplyr::across(-dplyr::any_of("doc_id"), ~ dplyr::coalesce(., 0L))

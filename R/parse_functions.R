@@ -507,22 +507,30 @@ parse_biber_features <- function(tokens, measure, normalize,
 
   biber_counts <- biber_counts %>% replace_nas()
 
-  # -- Enforce canonical column order (Fix 5) ---------------------------------
+  # -- Enforce canonical column order -----------------------------------------
+  # Intraducibles eliminados del output espanol:
+  #   f_09 (pronoun it), f_12 (proverb do), f_15 (gerunds),
+  #   f_28 (present_participle_whiz), f_31 (wh_subj; absorbido en f_29),
+  #   f_32 (wh_obj; absorbido en f_30), f_59 (contractions),
+  #   f_60 (that_deletion), f_61 (stranded_preposition),
+  #   f_62 (split_infinitive).
+  # f_68_nominalization eliminado: duplicado de f_14.
+  # Ver biber_espanol_completo.md y AUDIT_REPORT.md para justificacion.
   canonical_order <- c(
     "doc_id",
     "f_01_past_tense", "f_02_perfect_aspect", "f_03_present_tense",
     "f_04_place_adverbials", "f_05_time_adverbials",
     "f_06_first_person_pronouns", "f_07_second_person_pronouns",
-    "f_08_third_person_pronouns", "f_09_pronoun_it",
-    "f_10_demonstrative_pronoun", "f_11_indefinite_pronouns", "f_12_proverb_do",
+    "f_08_third_person_pronouns",
+    "f_10_demonstrative_pronoun", "f_11_indefinite_pronouns",
     "f_13_wh_question",
-    "f_14_nominalizations", "f_15_gerunds", "f_16_other_nouns",
+    "f_14_nominalizations", "f_16_other_nouns",
     "f_17_agentless_passives", "f_18_by_passives",
     "f_19_be_main_verb", "f_20_existential_there",
     "f_21_that_verb_comp", "f_22_that_adj_comp", "f_23_wh_clause",
     "f_24_infinitives", "f_25_present_participle", "f_26_past_participle",
-    "f_27_past_participle_whiz", "f_28_present_participle_whiz",
-    "f_29_that_subj", "f_30_that_obj", "f_31_wh_subj", "f_32_wh_obj",
+    "f_27_past_participle_whiz",
+    "f_29_that_subj", "f_30_that_obj",
     "f_33_pied_piping", "f_34_sentence_relatives",
     "f_35_because", "f_36_though", "f_37_if", "f_38_other_adv_sub",
     "f_39_prepositions", "f_40_adj_attr", "f_41_adj_pred", "f_42_adverbs",
@@ -531,11 +539,9 @@ parse_biber_features <- function(tokens, measure, normalize,
     "f_49_emphatics", "f_50_discourse_particles", "f_51_demonstratives",
     "f_52_modal_possibility", "f_53_modal_necessity", "f_54_modal_predictive",
     "f_55_verb_public", "f_56_verb_private", "f_57_verb_suasive", "f_58_verb_seem",
-    "f_59_contractions", "f_60_that_deletion",
-    "f_61_stranded_preposition", "f_62_split_infinitive", "f_63_split_auxiliary",
+    "f_63_split_auxiliary",
     "f_64_phrasal_coordination", "f_65_clausal_coordination",
     "f_66_neg_synthetic", "f_67_neg_analytic",
-    "f_68_nominalization", "f_68_nominalization_rate",
     "f_69_mente_adverbs", "f_69_mente_adverbs_rate",
     "f_70_long_words", "f_70_long_words_rate",
     "f_71_preterit",

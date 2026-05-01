@@ -146,9 +146,15 @@ block_adj_prep_adv_es <- function(tokens, doc_ids, dict_lookup,
   }
 
   # f_41  Adjetivo predicativo
-  #   dep_rel = xcomp o acomp, o ADJ cuyo head directo es SER/ESTAR
-  linking_verbs <- c("ser", "estar", "parecer", "resultar", "quedar",
-                     "volverse", "hacerse", "ponerse", "tornarse")
+  # Lista de verbos copulativos/pseudocopulativos segun biber_espanol_completo.md:
+  # ser, estar, parecer, volverse, quedarse, ponerse, resultar, permanecer.
+  # En UD el lema de "quedarse" es "quedar"; de "volverse" puede ser "volver".
+  # Se excluyen "hacerse" y "tornarse" (no mencionados en el documento).
+  linking_verbs <- c("ser", "estar", "parecer", "resultar",
+                     "quedar",       # quedarse
+                     "volver",       # volverse
+                     "poner",        # ponerse
+                     "permanecer")
 
   f41_dep <- tokens %>%
     dplyr::filter(
@@ -156,7 +162,26 @@ block_adj_prep_adv_es <- function(tokens, doc_ids, dict_lookup,
       dplyr::coalesce(.data$dep_rel, "") %in% c("xcomp", "acomp")
     )
 
-  f41_cop <- tokens %>%
+  # ADJ que tiene como dependiente un verbo copulativo (cop):
+  # "es positivo" → "positivo" es root con cop=ser.
+  # En UD espanol el ADJ predicativo es el HEAD de la oracion copulativa.
+  f41_cop_head <- tokens %>%
+    dplyr::filter(.data$pos == "ADJ") %>%
+    dplyr::inner_join(
+      tokens %>%
+        dplyr::filter(
+          dplyr::coalesce(.data$dep_rel, "") == "cop",
+          .data$lemma %in% linking_verbs
+        ) %>%
+        dplyr::transmute(
+          .data$doc_id, .data$sentence_id,
+          token_id_int = .data$head_token_id_int   # el ADJ es el head del cop
+        ),
+      by = c("doc_id", "sentence_id", "token_id_int")
+    )
+
+  # ADJ dependiente de verbo copulativo (patrón alternativo menos frecuente)
+  f41_cop_dep <- tokens %>%
     dplyr::filter(
       .data$pos == "ADJ",
       !is.na(.data$head_token_id_int)
@@ -172,7 +197,7 @@ block_adj_prep_adv_es <- function(tokens, doc_ids, dict_lookup,
     ) %>%
     dplyr::filter(.data$head_lemma %in% linking_verbs)
 
-  f41 <- dplyr::bind_rows(f41_dep, f41_cop) %>%
+  f41 <- dplyr::bind_rows(f41_dep, f41_cop_head, f41_cop_dep) %>%
     dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int) %>%
     count_feature("f_41_adj_pred")
 
@@ -236,11 +261,25 @@ block_modals_es <- function(tokens, doc_ids, dict_lookup) {
     dplyr::rename(f_53_modal_necessity = "n")
 
   # f_54  Predictivo
-  #   (a) futuro sintetico: Tense=Fut + VerbForm=Fin (via extract_feat)
+  # Segun biber_espanol_completo.md:
+  #   (a) Futuro sintetico: Tense=Fut + VerbForm=Fin
+  #   (b) Condicional simple y compuesto: Mood=Cnd + VerbForm=Fin
+  #   (c) Ir a + INF: perifr. futura (incluida por ser equivalente funcional de "will")
+  # Nota: en UDPipe spanish-gsd el condicional lleva Mood=Cnd (hablaria, habria).
+
   f54_fut <- tokens %>%
     dplyr::filter(
       .data$pos %in% c("VERB", "AUX"),
       dplyr::coalesce(extract_feat(.data$feats, "Tense"),    "") == "Fut",
+      dplyr::coalesce(extract_feat(.data$feats, "VerbForm"), "") == "Fin"
+    ) %>%
+    dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int)
+
+  #   (a2) Condicional (Mood=Cnd + VerbForm=Fin): hablaria, habria hablado, etc.
+  f54_cnd <- tokens %>%
+    dplyr::filter(
+      .data$pos %in% c("VERB", "AUX"),
+      dplyr::coalesce(extract_feat(.data$feats, "Mood"),     "") == "Cnd",
       dplyr::coalesce(extract_feat(.data$feats, "VerbForm"), "") == "Fin"
     ) %>%
     dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int)
@@ -278,7 +317,7 @@ block_modals_es <- function(tokens, doc_ids, dict_lookup) {
     ) %>%
     dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int)
 
-  f54 <- dplyr::bind_rows(f54_fut, ir_a_inf) %>%
+  f54 <- dplyr::bind_rows(f54_fut, f54_cnd, ir_a_inf) %>%
     dplyr::distinct() %>%
     count_feature("f_54_modal_predictive")
 

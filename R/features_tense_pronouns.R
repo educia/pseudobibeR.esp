@@ -54,10 +54,11 @@ count_feature <- function(tbl, col_name) {
 
 # -----------------------------------------------------------------------------
 # 1.  block_tense_es
-#     f_01  tiempo pasado (imperfecto)   f_02  aspecto perfecto
+#     f_01  preterito indefinido         f_02  aspecto perfecto
 #     f_03  tiempo presente              f_04  adv. de lugar
-#     f_05  adv. de tiempo              f_11  pronombres indefinidos
-#     f_12  pro-verbo hacer             f_71  preterito indefinido (ext. espanola)
+#     f_05  adv. de tiempo               f_11  pronombres indefinidos
+#     f_71  preterito imperfecto (ext. espanola)
+#     f_12  ELIMINADO (intraducible): pro-verbo "do" inexistente en espanol
 # -----------------------------------------------------------------------------
 
 #' Tense, aspect, adverbial, and indefinite-pronoun features (Spanish)
@@ -68,7 +69,7 @@ count_feature <- function(tbl, col_name) {
 #' @param place_adverbials Character vector of place-adverbial lemmas (f_04)
 #' @param time_adverbials  Character vector of time-adverbial lemmas (f_05)
 #' @param indefinite_pronouns Character vector of indefinite pronoun lemmas (f_11)
-#' @return Data frame: one row per doc, columns f_01-f_05, f_11, f_12, f_71
+#' @return Data frame: one row per doc, columns f_01-f_05, f_11, f_71
 #' @keywords internal
 block_tense_es <- function(
     tokens,
@@ -79,34 +80,31 @@ block_tense_es <- function(
     indefinite_pronouns
 ) {
 
-  # -- f_01  Tiempo pasado (imperfecto) -------------------------------------
-  # f_01 DECISION DE DISE?O (2026-04-20):
-  # En pseudobibeR.es, f_01 captura SOLO el preterito imperfecto (Tense=Imp).
-  # El preterito indefinido vive en f_71; el perfecto compuesto en f_02.
-  # Esto difiere de pseudobibeR.fr donde f_01 agrega TODOS los pasados.
-  # Justificacion: en espanol imperfecto e indefinido tienen valores
-  # aspectuales distintos (imperfectivo vs perfectivo); mantenerlos separados
-  # aumenta el poder discriminativo del analisis. Para comparaciones
-  # translingues FR?ES, usar f_01 + f_02 + f_71 como proxy de "total pasado".
-  # Ver: docs/DECISIONES_ES.md ?f_01.
+  # -- f_01  Tiempo pasado (preterito indefinido / perfecto simple) ----------
+  # DECISION segun biber_espanol_completo.md:
+  # f_01 mapea al PRETERITO INDEFINIDO (Tense=Past, Mood=Ind, VerbForm=Fin),
+  # equivalente funcional directo del "simple past" de Biber en contextos
+  # narrativos (hablo, dijo, fue).
+  # El preterito imperfecto se recoge en f_71 (extension espanola).
+  # El perfecto compuesto (ha hablado) se recoge en f_02.
+  # Para comparaciones translingues: f_01 + f_02 + f_71 = proxy "total pasado".
   f01 <- tokens %>%
     dplyr::filter(
       .data$pos %in% c("VERB", "AUX"),
-      dplyr::coalesce(extract_feat(.data$feats, "Tense"), "") == "Imp",
+      dplyr::coalesce(extract_feat(.data$feats, "Tense"), "") == "Past",
       dplyr::coalesce(extract_feat(.data$feats, "Mood"),  "") == "Ind",
       dplyr::coalesce(extract_feat(.data$feats, "VerbForm"), "") == "Fin"
     ) %>%
     count_feature("f_01_past_tense")
 
-  # -- f_71  Preterito indefinido (extension espanola) ----------------------
-  # Tense=Past, Mood=Ind, VerbForm=Fin.
-  # No existe en pseudobibeR.fr ni en el catalogo original de Biber (1985).
-  # Se anade como rasgo extendido del espanol (f_71) siguiendo
-  # Davies et al. (2006) Dimension 5.
+  # -- f_71  Preterito imperfecto (extension espanola) ----------------------
+  # Tense=Imp, Mood=Ind, VerbForm=Fin (caminaba, decia, era).
+  # No existe en el catalogo original de Biber (1985).
+  # Se mantiene como rasgo extendido del espanol; ver biber_espanol_completo.md.
   f71 <- tokens %>%
     dplyr::filter(
       .data$pos %in% c("VERB", "AUX"),
-      dplyr::coalesce(extract_feat(.data$feats, "Tense"), "") == "Past",
+      dplyr::coalesce(extract_feat(.data$feats, "Tense"), "") == "Imp",
       dplyr::coalesce(extract_feat(.data$feats, "Mood"),  "") == "Ind",
       dplyr::coalesce(extract_feat(.data$feats, "VerbForm"), "") == "Fin"
     ) %>%
@@ -191,33 +189,10 @@ block_tense_es <- function(
     ) %>%
     count_feature("f_11_indefinite_pronoun")
 
-  # -- f_12  Pro-verbo "hacer" -----------------------------------------------
-  # Equivalente espanol de Biber's "pro-verb do".
-  # Detectamos "hacer" como VERB (no AUX) cuando tiene como dependiente
-  # directo un clitico de objeto (lo/la/los/las) con dep_rel obj/iobj/expl.
-  # Este patron captura usos proverbales como "lo hace", "hazlo", etc.
-  # Se excluye "hacer" en locuciones fijas (hacer_falta, hacer_caso?) que
-  # el tokenizador puede dejar como token unico (handled by semi_join scope).
-  hacer_clitic_deps <- tokens %>%
-    dplyr::filter(
-      .data$lemma %in% c("lo", "la", "los", "las"),
-      .data$pos   == "PRON",
-      dplyr::coalesce(.data$dep_rel, "") %in% c("obj", "iobj", "expl"),
-      !is.na(.data$head_token_id_int)
-    ) %>%
-    dplyr::select("doc_id", "sentence_id",
-                  token_id_int = "head_token_id_int")
-
-  f12 <- tokens %>%
-    dplyr::filter(
-      .data$lemma == "hacer",
-      .data$pos   == "VERB"
-    ) %>%
-    dplyr::semi_join(
-      hacer_clitic_deps,
-      by = c("doc_id", "sentence_id", "token_id_int")
-    ) %>%
-    count_feature("f_12_proverb_do")
+  # f_12 (pro-verb do): INTRADUCIBLE en espanol.
+  # El espanol resuelve la anafora verbal mediante elision, sin pro-verbo
+  # equivalente a "do". Ver biber_espanol_completo.md sec. F_12.
+  # Columna eliminada del output desde la auditoria de Fase 2.
 
   # -- Ensamblar --------------------------------------------------------------
   doc_ids %>%
@@ -228,7 +203,6 @@ block_tense_es <- function(
     dplyr::left_join(f04,  by = "doc_id") %>%
     dplyr::left_join(f05,  by = "doc_id") %>%
     dplyr::left_join(f11,  by = "doc_id") %>%
-    dplyr::left_join(f12,  by = "doc_id") %>%
     dplyr::mutate(
       dplyr::across(-dplyr::any_of("doc_id"), ~ dplyr::coalesce(., 0L))
     )
@@ -237,7 +211,8 @@ block_tense_es <- function(
 # -----------------------------------------------------------------------------
 # 2.  block_personal_pronouns_es
 #     f_06  1a persona   f_07  2a persona   f_08  3a persona
-#     f_09  expletivo/impersonal            f_13  pregunta-que
+#     f_13  pregunta-que
+#     f_09  ELIMINADO (intraducible): espanol es lengua de sujeto nulo, no hay "it" expletivo
 # -----------------------------------------------------------------------------
 
 #' Personal pronoun, expletive, and WH-question features (Spanish)
@@ -251,7 +226,7 @@ block_tense_es <- function(
 #' @param weather_lemmas Impersonal weather verb lemmas (default provided)
 #' @param raising_verbs  Raising / impers-tendency verb lemmas (default provided)
 #' @param wh_question_lemmas WH-word lemmas (default provided)
-#' @return Data frame: one row per doc, columns f_06 ? f_09, f_13
+#' @return Data frame: one row per doc, columns f_06-f_08, f_13
 #' @keywords internal
 block_personal_pronouns_es <- function(
     tokens,
@@ -326,88 +301,11 @@ block_personal_pronouns_es <- function(
     dplyr::tally() %>%
     dplyr::rename(f_08_third_person_pronouns = "n")
 
-  # -- f_09  Pronombre expletivo / impersonal -------------------------------
-  # Cubre:
-  #   (a) "ello" como sujeto impersonal ("Ello implica que?")
-  #   (b) "se" con dep_rel expl:impers o expl (se impersonal)
-  #   (c) haber impersonal (hay, habia?) sin sujeto explicito
-  pronoun_it_candidates <- tokens %>%
-    dplyr::filter(
-      .data$pos == "PRON",
-      .data$lemma %in% c("ello", "se"),
-      !is.na(.data$head_token_id_int)
-    ) %>%
-    dplyr::left_join(
-      head_lookup,
-      by = c("doc_id", "sentence_id",
-             "head_token_id_int" = "token_id_int")
-    ) %>%
-    dplyr::left_join(de_markers,
-                     by = c("doc_id", "sentence_id",
-                            "head_token_id_int")) %>%
-    dplyr::left_join(que_markers,
-                     by = c("doc_id", "sentence_id",
-                            "head_token_id_int")) %>%
-    dplyr::left_join(clause_complements,
-                     by = c("doc_id", "sentence_id",
-                            "head_token_id_int")) %>%
-    dplyr::mutate(
-      has_de_marker   = dplyr::coalesce(.data$has_de_marker,   FALSE),
-      has_que_marker  = dplyr::coalesce(.data$has_que_marker,  FALSE),
-      has_clause_comp = dplyr::coalesce(.data$has_clause_comp, FALSE),
-      is_weather          = .data$head_lemma %in% weather_lemmas,
-      is_raising_verb     = .data$head_lemma %in% raising_verbs,
-      has_control_marker  =
-        .data$has_de_marker | .data$has_que_marker | .data$has_clause_comp
-    ) %>%
-    dplyr::filter(
-      stringr::str_detect(
-        dplyr::coalesce(.data$dep_rel, ""), "^expl"
-      ) |
-        (stringr::str_detect(
-          dplyr::coalesce(.data$dep_rel, ""), "^nsubj"
-        ) &
-           .data$lemma == "ello" &
-           (.data$is_weather |
-              (.data$head_pos == "ADJ" & .data$has_control_marker) |
-              (.data$head_pos %in% c("VERB", "AUX") &
-                 (.data$is_raising_verb |
-                    .data$has_control_marker))))
-    )
-
-  # haber impersonal sin nsubj dependiente
-  haber_impersonal <- tokens %>%
-    dplyr::filter(
-      .data$lemma == "haber",
-      .data$pos   %in% c("VERB", "AUX"),
-      dplyr::coalesce(.data$dep_rel, "") %in%
-        c("root", "ccomp", "xcomp", "advcl", "parataxis", "")
-    ) %>%
-    dplyr::anti_join(
-      tokens %>%
-        dplyr::filter(
-          stringr::str_detect(
-            dplyr::coalesce(.data$dep_rel, ""), "^nsubj"
-          )
-        ) %>%
-        dplyr::transmute(
-          .data$doc_id, .data$sentence_id,
-          head_token_id_int = .data$head_token_id_int
-        ),
-      by = c("doc_id", "sentence_id",
-             "token_id_int" = "head_token_id_int")
-    )
-
-  f09 <- dplyr::bind_rows(
-    pronoun_it_candidates %>%
-      dplyr::distinct(.data$doc_id, .data$sentence_id,
-                      .data$token_id_int),
-    haber_impersonal %>%
-      dplyr::distinct(.data$doc_id, .data$sentence_id,
-                      .data$token_id_int)
-  ) %>%
-    dplyr::distinct() %>%
-    count_feature("f_09_pronoun_it")
+  # f_09 (pronombre it): INTRADUCIBLE en espanol.
+  # El espanol es lengua de sujeto nulo; no existe expletivo equivalente a "it".
+  # El haber impersonal (hay, habia...) se captura en f_20.
+  # Ver biber_espanol_completo.md sec. F_09.
+  # Columna eliminada del output desde la auditoria de Fase 2.
 
   # -- f_13  Preguntas con palabra interrogativa ---------------------------
   question_sentences <- tokens %>%
@@ -431,7 +329,6 @@ block_personal_pronouns_es <- function(
     dplyr::left_join(f06, by = "doc_id") %>%
     dplyr::left_join(f07, by = "doc_id") %>%
     dplyr::left_join(f08, by = "doc_id") %>%
-    dplyr::left_join(f09, by = "doc_id") %>%
     dplyr::left_join(f13, by = "doc_id") %>%
     dplyr::mutate(
       dplyr::across(-dplyr::any_of("doc_id"),

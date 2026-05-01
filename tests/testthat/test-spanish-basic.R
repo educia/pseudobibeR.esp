@@ -20,22 +20,22 @@ run_es <- function(tokens, normalize = FALSE) {
 
 # ─── Tiempo verbal ────────────────────────────────────────────────────────
 
-test_that("f_01_past_tense cuenta imperfecto de indicativo", {
+test_that("f_01_past_tense cuenta pretérito indefinido (Tense=Past)", {
   tks <- make_es_tokens(
-    ~doc_id, ~sentence_id, ~token_id, ~token,    ~lemma,    ~upos,  ~xpos,  ~dep_rel, ~head_token_id, ~feats,
-    "d1",    1L,           1L,        "caminaba", "caminar", "VERB", "VERB", "root",   NA_integer_,    "Mood=Ind|Number=Sing|Person=3|Tense=Imp|VerbForm=Fin",
-    "d1",    1L,           2L,        ".",        ".",       "PUNCT","PUNCT","punct",  1L,             NA_character_
+    ~doc_id, ~sentence_id, ~token_id, ~token,  ~lemma,   ~upos,  ~xpos,  ~dep_rel, ~head_token_id, ~feats,
+    "d1",    1L,           1L,        "llegó", "llegar", "VERB", "VERB", "root",   NA_integer_,    "Mood=Ind|Number=Sing|Person=3|Tense=Past|VerbForm=Fin",
+    "d1",    1L,           2L,        ".",     ".",      "PUNCT","PUNCT","punct",  1L,             NA_character_
   )
   res <- run_es(tks)
   expect_equal(res$f_01_past_tense, 1)
   expect_equal(res$f_71_preterit,  0)
 })
 
-test_that("f_71_preterit cuenta pretérito indefinido", {
+test_that("f_71_preterit cuenta pretérito imperfecto (Tense=Imp)", {
   tks <- make_es_tokens(
-    ~doc_id, ~sentence_id, ~token_id, ~token,   ~lemma,   ~upos,  ~xpos,  ~dep_rel, ~head_token_id, ~feats,
-    "d1",    1L,           1L,        "llegó",  "llegar", "VERB", "VERB", "root",   NA_integer_,    "Mood=Ind|Number=Sing|Person=3|Tense=Past|VerbForm=Fin",
-    "d1",    1L,           2L,        ".",      ".",      "PUNCT","PUNCT","punct",  1L,             NA_character_
+    ~doc_id, ~sentence_id, ~token_id, ~token,    ~lemma,    ~upos,  ~xpos,  ~dep_rel, ~head_token_id, ~feats,
+    "d1",    1L,           1L,        "caminaba","caminar", "VERB", "VERB", "root",   NA_integer_,    "Mood=Ind|Number=Sing|Person=3|Tense=Imp|VerbForm=Fin",
+    "d1",    1L,           2L,        ".",       ".",       "PUNCT","PUNCT","punct",  1L,             NA_character_
   )
   res <- run_es(tks)
   expect_equal(res$f_71_preterit,  1)
@@ -150,19 +150,20 @@ test_that("f_67 cuenta negación analítica (no + verbo)", {
 })
 
 # ─── Contracciones ────────────────────────────────────────────────────────
+# f_59_contractions fue ELIMINADO (intraducible): en UD las contracciones del/al
+# se tokenzan en dos tokens (de+el, a+el); no existe contracción ortográfica
+# equivalente al inglés. La columna no aparece en el output de biber_es().
 
-test_that("f_59 cuenta contracciones del y al", {
+test_that("f_59_contractions ausente del output (feature eliminado)", {
   tks <- make_es_tokens(
     ~doc_id, ~sentence_id, ~token_id, ~token, ~lemma, ~upos,  ~xpos,  ~dep_rel, ~head_token_id, ~feats,
     "d1",    1L,           1L,        "voy",  "ir",   "VERB", "VERB", "root",   NA_integer_,    "Mood=Ind|Number=Sing|Person=1|Tense=Pres|VerbForm=Fin",
     "d1",    1L,           2L,        "al",   "al",   "ADP",  "ADP",  "case",   3L,             NA_character_,
     "d1",    1L,           3L,        "mercado","mercado","NOUN","NOUN","obl",   1L,             NA_character_,
-    "d1",    1L,           4L,        "del",  "del",  "ADP",  "ADP",  "case",   5L,             NA_character_,
-    "d1",    1L,           5L,        "trabajo","trabajo","NOUN","NOUN","obl",  1L,             NA_character_,
-    "d1",    1L,           6L,        ".",    ".",    "PUNCT","PUNCT","punct",  1L,             NA_character_
+    "d1",    1L,           4L,        ".",    ".",    "PUNCT","PUNCT","punct",  1L,             NA_character_
   )
   res <- run_es(tks)
-  expect_equal(res$f_59_contractions, 2)
+  expect_false("f_59_contractions" %in% colnames(res))
 })
 
 # ─── Estructura de salida ─────────────────────────────────────────────────

@@ -643,12 +643,14 @@ f_52_modal_possibility:
   - caber   # "cabe la posibilidad de"
 
 f_53_modal_necessity:
-  # Obligación / necesidad
+  # Obligación / necesidad -- equivalentes de ought/should/must en Biber (1985).
+  # biber_espanol_completo.md F_53: deber+inf, tener_que+inf, hay_que+inf.
+  # necesitar eliminado: es verbo pleno, no modal gramaticalizado; su inclusion
+  # sobreestimaría f_53 en textos con verbos de necesidad lexica.
   - deber
   - tener_que
   - haber_de
   - haber_que
-  - necesitar  # "necesita estudiar" (modal de necesidad en español)
 
 # ─────────────────────────────────────────────────────────────────────────────
 # VERBOS ESPECIALIZADOS (f_55–f_58)
@@ -660,6 +662,8 @@ f_53_modal_necessity:
 f_55_verb_public:
   # Verbos de comunicación pública (speech act verbs)
   # Biber: acknowledge, admit, agree, announce, argue, claim, deny...
+  # biber_espanol_completo.md F_55. notar añadido (docto); concluir, reconocer
+  # movidos a f_56 (cognitivos). observar y opinar solo en f_55.
   - admitir
   - acordar
   - afirmar
@@ -674,7 +678,6 @@ f_55_verb_public:
   - clamar
   - comentar
   - comunicar
-  - concluir
   - confirmar
   - contestar
   - convenir  # "convino en que"
@@ -700,9 +703,10 @@ f_55_verb_public:
   - mencionar
   - narrar
   - negar
+  - notar    # perceptivo-comunicativo: "nota que..." (solo f_55, no f_56)
   - objetar
-  - observar
-  - opinar
+  - observar  # solo f_55, no f_56
+  - opinar    # solo f_55, no f_56
   - plantear
   - preguntar
   - presentar
@@ -712,7 +716,6 @@ f_55_verb_public:
   - protestar
   - publicar
   - recalcar
-  - reconocer
   - referir
   - relatar
   - repetir
@@ -734,7 +737,7 @@ f_56_verb_private:
   - asumir
   - calcular  # "calcula que serán unos cien"
   - concebir
-  - concluir  # cognitivo: llegar a una conclusión mental
+  - concluir  # cognitivo: llegar a una conclusion mental (solo f_56, no f_55)
   - conocer
   - considerar
   - convencer  # "se convence de que"
@@ -759,16 +762,13 @@ f_56_verb_private:
   - intuir
   - juzgar
   - lamentar
-  - notar
-  - observar  # perceptivo: "observa que la luz cambió"
   - olvidar
-  - opinar
   - pensar
   - percibir
   - prever
   - querer
   - razonar
-  - reconocer  # cognitivo: "reconoce el problema"
+  - reconocer  # cognitivo: "reconoce el problema" (solo f_56, no f_55)
   - recordar
   - reflexionar
   - saber
@@ -829,17 +829,13 @@ f_57_verb_suasive:
   - suplicar
 
 f_58_verb_seem:
-  # Verbos de apariencia / semblanza (seem-type / linking verbs)
-  # Biber: appear, seem, tend, turn out...
-  - aparecer
-  - aparentar
-  - lucir   # "luce cansado"
+  # Verbos de evidencialidad epistemica (seem/appear en Biber 1985).
+  # biber_espanol_completo.md F_58: solo parecer como equivalente principal.
+  # resultar y verse como equivalentes adicionales en registros especificos.
+  # Eliminados: aparecer (significado fisico), aparentar, lucir, presentarse,
+  # revelarse, sonar, tender, tornarse, volverse (no epistemicos o ya
+  # cubiertos por f_41_adj_pred como linking verbs).
+  # NOTA: parecer NO se dobla con f_56_verb_private.
   - parecer
-  - presentarse  # "se presenta como"
   - resultar
-  - revelarse  # "se revela como"
-  - sonar   # "suena razonable"
-  - tender
-  - tornarse
-  - verse   # "se ve cansado"
-  - volverse  # "se volvió imposible"
+  - verse
