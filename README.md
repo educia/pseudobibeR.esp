@@ -13,8 +13,8 @@ Este paquete **no** realiza el etiquetado gramatical por sí mismo. En su lugar,
 
 El español plantea desafíos específicos respecto al inglés o el francés: el sujeto nulo (*pro-drop*) hace innecesario un pronombre expletivo equivalente al inglés *it*; la negación opera con palabras negativas preverbales o posverbales; y las relativas introducidas por *que* funcionan tanto en posición de sujeto como de objeto. Estas diferencias se han tenido en cuenta en el diseño del extractor:
 
-- **57 rasgos de Biber adaptados** (de los 67 originales): 10 rasgos intraducibles han sido eliminados.
-- **2 fusiones** de rasgos: `f_29+f_31 → f_29_that_subj`; `f_30+f_32 → f_30_that_obj`.
+- **57 rasgos de Biber adaptados** (de los 67 originales): 8 eliminados por intraducibles al español + 2 absorbidos en fusiones.
+- **2 fusiones**: `f_29+f_31 → f_29_that_subj`; `f_30+f_32 → f_30_that_obj`.
 
 **Nota:** Textos con ortografía muy irregular, puntuación no normativa o lenguaje muy especializado pueden producir salidas menos fiables salvo que el modelo UD se haya ajustado a ese dominio.
 
@@ -258,7 +258,7 @@ Al usar `pseudobibeR.es` en tu investigación, cita:
 
 ## Rasgos lingüísticos extraídos
 
-El paquete extrae **57 rasgos de Biber adaptados al español**, organizados en 16 categorías. Ocho rasgos del catálogo original han sido eliminados por ser intraducibles al español (f_09, f_12, f_15, f_28, f_59, f_60, f_61, f_62); dos pares de rasgos se han fusionado (f_29+f_31; f_30+f_32).
+El paquete extrae **57 rasgos de Biber adaptados al español**, organizados en 16 categorías. De los 67 originales, 8 han sido eliminados por ser intraducibles al español (f_09, f_12, f_15, f_28, f_59, f_60, f_61, f_62) y 2 han sido absorbidos por fusión (f_31 → f_29; f_32 → f_30), resultando en 67 − 8 − 2 = 57 rasgos.
 
 ### Categorías de rasgos
 
@@ -359,20 +359,27 @@ El paquete extrae **57 rasgos de Biber adaptados al español**, organizados en 1
 | f_66_neg_synthetic | *Nadie sabe nada* / *Nunca llegó* / *Tampoco avisó* |
 | f_67_neg_analytic | *No llegó* / *El resultado no es válido* |
 
-### Rasgos eliminados (intraducibles al español)
+### Rasgos eliminados y fusionados
 
-| Rasgo | Motivo de eliminación |
-|-------|-----------------------|
+**8 rasgos eliminados** (intraducibles al español):
+
+| Rasgo | Motivo |
+|-------|--------|
 | f_09_pronoun_it | El español es lengua de sujeto nulo; no existe pronombre expletivo equivalente |
 | f_12_proverb_do | *Hacer* pro-verbal no tiene el mismo comportamiento que *do* en inglés |
-| f_15_gerunds | El gerundio español tiene distribución distinta; no existe categoría equivalente a los gerundios nominales del inglés |
-| f_28_present_participle_whiz | Fusionado en f_25 o eliminado por baja frecuencia en UD español |
-| f_31_wh_subj | Fusionado en f_29_that_subj (*que* cubre sujeto y objeto en español) |
-| f_32_wh_obj | Fusionado en f_30_that_obj (*quien/cual* en posición oblicua) |
-| f_59_contractions | No existen contracciones ortográficas equivalentes en español estándar escrito |
+| f_15_gerunds | El gerundio español tiene distribución distinta; no existe equivalente a los gerundios nominales del inglés |
+| f_28_present_participle_whiz | Sin equivalente productivo en español escrito estándar |
+| f_59_contractions | No existen contracciones ortográficas equivalentes en español escrito |
 | f_60_that_deletion | La omisión de *que* complementante es marginal en español escrito |
 | f_61_stranded_preposition | La preposición varada no existe en español (siempre precede al relativo) |
 | f_62_split_infinitive | El infinitivo no se escinde en español |
+
+**2 rasgos fusionados** (absorbidos en rasgos existentes):
+
+| Rasgos originales | Fusión | Motivo |
+|-------------------|--------|--------|
+| f_29_that_subj + f_31_wh_subj | → **f_29_that_subj** | En español, *que* relativo cubre tanto sujeto como objeto; la distinción that/wh no aplica |
+| f_30_that_obj + f_32_wh_obj | → **f_30_that_obj** | *Quien/cual* en posición oblicua absorbe el rol de f_32 |
 
 ## Contribuciones
 
