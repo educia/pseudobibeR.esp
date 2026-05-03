@@ -54,16 +54,18 @@ block_participial_clauses_es <- function(tokens, doc_ids, head_lookup) {
   # -- f_24  Infinitivos como nucleo clausal ---------------------------------
   # Un infinitivo cuenta cuando:
   #   - VerbForm = Inf
-  #   - dep_rel es xcomp, ccomp, advcl, acl, obj (complement clausal)
-  #   - NO es el infinitivo de una perifrasis modal (aux de un VERB finito)
+  #   - pos = VERB (no AUX, para evitar contar modales como 'haber' / 'ir')
+  #
+  # En español el infinitivo aparece en muchas funciones sintácticas:
+  # xcomp, ccomp, advcl, acl, obj, csubj, ccomp, así como 'root' cuando
+  # encabeza una perífrasis con modal AUX ("se debe seguir" → seguir=root,
+  # debe=AUX). Biber incluye los infinitivos de perífrasis modales según
+  # biber_espanol_completo.md sec. F_24. La forma más limpia es contar
+  # todos los VerbForm=Inf etiquetados como VERB.
   f24 <- tokens %>%
     dplyr::filter(
-      .data$pos  %in% c("VERB", "AUX"),
-      .data$.vf  == "Inf",
-      stringr::str_detect(
-        dplyr::coalesce(.data$dep_rel, ""),
-        "^(xcomp|ccomp|advcl|acl|obj)"
-      )
+      .data$pos == "VERB",
+      .data$.vf == "Inf"
     ) %>%
     count_feature("f_24_infinitives")
 
@@ -321,16 +323,23 @@ block_relatives_es <- function(tokens, doc_ids, head_lookup) {
   # No se generan columnas independientes en el output.
 
   # -- f_33  Pied-piping (preposicion + pronombre relativo) ------------------
-  # El pronombre relativo tiene dep_rel = obl* o nmod y su head inmediato
-  # en UD es el verbo de la relativa; la preposicion lo gobierna.
-  # Proxy: token ADP inmediatamente antes del pronombre relativo en la oracion
+  # En español el patrón típico de pied-piping en UDPipe Spanish-GSD es:
+  #   ADP + DET + PRON_rel  (con los que, en el que, por los cuales)
+  #   ADP + PRON_rel        (con quien, en cual)
+  # Aceptar también que el "que" relativo aparezca como SCONJ/mark (UDPipe
+  # spanish-gsd suele etiquetarlo así dentro de relativas con preposición).
+  # Heurística: el pronombre/conjunción relativo está precedido por ADP
+  # 1 o 2 posiciones antes en la misma oración, y el head es un VERB en
+  # cláusula relativa (acl:relcl).
   f33 <- tokens %>%
     dplyr::group_by(.data$doc_id, .data$sentence_id) %>%
     dplyr::arrange(.data$token_id_int, .by_group = TRUE) %>%
     dplyr::filter(
       .data$lemma %in% rel_pronouns_all,
-      .data$pos   %in% c("PRON", "DET"),
-      dplyr::lag(.data$pos, default = "") == "ADP"
+      .data$pos %in% c("PRON", "SCONJ"),
+      (dplyr::lag(.data$pos, n = 1L, default = "") == "ADP") |
+        (dplyr::lag(.data$pos, n = 2L, default = "") == "ADP" &
+         dplyr::lag(.data$pos, n = 1L, default = "") == "DET")
     ) %>%
     dplyr::ungroup() %>%
     count_feature("f_33_pied_piping")
@@ -441,21 +450,40 @@ block_clause_embedding_es <- function(tokens, doc_ids, head_lookup,
     ) %>%
     count_feature("f_22_that_adj_comp")
 
-  # -- f_23  Clausula-wh (interrogativa/relativa indirecta) ------------------
-  wh_lemmas <- c(
-    "quien", "quienes", "que", "cual", "cuales",
-    "donde", "cuando", "como",
-    "cuanto", "cuanta", "cuantos", "cuantas",
-    "por_qu\u00e9", "por_que"
-  )
+  # -- f_23  Clausula-wh (interrogativa indirecta) ---------------------------
+  # Solo formas con tilde / PronType=Int (excluye relativos puros).
+  # SCONJ "que" se excluye (es relativo o complementante, nunca
+  # interrogativa indirecta en espa\u00f1ol). Para PRON exigimos PronType=Int.
+  # Para ADV usamos las formas con tilde inequ\u00edvocamente interrogativas.
+  # biber_espanol_completo.md sec. F_23.
+  wh_adv_tilde <- c("d\u00f3nde", "cu\u00e1ndo", "c\u00f3mo",
+                    "cu\u00e1nto", "cu\u00e1nta",
+                    "cu\u00e1ntos", "cu\u00e1ntas")
+  wh_pron_lemmas <- c("qu\u00e9", "qui\u00e9n", "qui\u00e9nes",
+                      "cu\u00e1l", "cu\u00e1les",
+                      # variantes sin tilde con PronType=Int en feats
+                      "que", "quien", "quienes", "cual", "cuales")
 
-  f23 <- tokens %>%
+  is_int_pron <- tokens %>%
     dplyr::filter(
-      .data$lemma %in% wh_lemmas,
-      .data$pos   %in% c("PRON", "ADV", "DET", "ADJ", "SCONJ"),
+      .data$pos %in% c("PRON", "DET", "ADJ"),
+      .data$lemma %in% wh_pron_lemmas,
+      stringr::str_detect(
+        dplyr::coalesce(.data$feats, ""), "PronType=[^|]*Int"
+      )
+    )
+
+  is_int_adv <- tokens %>%
+    dplyr::filter(
+      .data$pos == "ADV",
+      .data$lemma %in% wh_adv_tilde
+    )
+
+  f23 <- dplyr::bind_rows(is_int_pron, is_int_adv) %>%
+    dplyr::filter(
       stringr::str_detect(
         dplyr::coalesce(.data$dep_rel, ""),
-        "^(obj|obl|nsubj|iobj|mark|advmod|nmod)"
+        "^(obj|obl|nsubj|iobj|advmod|nmod|ccomp)"
       ),
       !is.na(.data$head_token_id_int)
     ) %>%

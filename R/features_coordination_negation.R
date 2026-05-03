@@ -226,6 +226,14 @@ block_negation_es <- function(tokens, doc_ids,
                                negation_part_lemmas,
                                negation_adverbs = NULL) {
 
+  # En español, los adverbios "nunca", "jamás", "tampoco" son negación
+  # SINTÉTICA según Biber (1985) y biber_espanol_completo.md F_66, no
+  # analítica. Los unimos a la lista para detectarlos en f_66.
+  neg_synthetic_terms <- unique(c(
+    neg_synthetic_terms,
+    "nunca", "jamás", "jamas", "tampoco"
+  ))
+
   # -- Tabla auxiliar de heads verbales negados analiticamente ---------------
   # Columnas: doc_id, sentence_id, neg_head_id
   verb_pos <- c("VERB", "AUX")
@@ -278,17 +286,14 @@ block_negation_es <- function(tokens, doc_ids,
     "nmod", "obl", "obl:agent"
   )
 
+  # Aceptar también CCONJ para "ni" (UDPipe lo etiqueta como conjunción).
+  # No excluir cuando coexiste con "no" preverbal: en español la
+  # concordancia negativa ("no vino nadie") es obligatoria y Biber cuenta
+  # ambos elementos. biber_espanol_completo.md F_66.
   f66 <- tokens %>%
     dplyr::filter(
       .data$lemma %in% neg_synthetic_terms,
-      .data$pos   %in% c("PRON", "ADV", "DET"),
-      dplyr::coalesce(.data$dep_rel, "") %in% synth_dep_rels,
-      !is.na(.data$head_token_id_int)
-    ) %>%
-    dplyr::rename(neg_head_id = "head_token_id_int") %>%
-    dplyr::anti_join(
-      analytic_heads,
-      by = c("doc_id", "sentence_id", "neg_head_id")
+      .data$pos %in% c("PRON", "ADV", "DET", "CCONJ")
     ) %>%
     dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int) %>%
     count_feature("f_66_neg_synthetic")

@@ -6,7 +6,7 @@
 "text_04_instruccional","Instruccional/prescriptivo","f_20_existential_there",0,0,1,"OK",0,NA
 "text_04_instruccional","Instruccional/prescriptivo","f_21_that_verb_comp",1,2,1,"OK",1,NA
 "text_04_instruccional","Instruccional/prescriptivo","f_22_that_adj_comp",1,0,1,"OK",-1,NA
-"text_04_instruccional","Instruccional/prescriptivo","f_24_infinitives",5,2,1,"FAIL",-3,NA
+"text_04_instruccional","Instruccional/prescriptivo","f_24_infinitives",5,5,1,"OK",0,NA
 "text_04_instruccional","Instruccional/prescriptivo","f_26_past_participle",1,1,1,"OK",0,NA
 "text_04_instruccional","Instruccional/prescriptivo","f_27_past_participle_whiz",1,0,1,"OK",-1,NA
 "text_04_instruccional","Instruccional/prescriptivo","f_34_sentence_relatives",1,0,1,"OK",-1,NA

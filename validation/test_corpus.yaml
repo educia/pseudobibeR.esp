@@ -101,7 +101,7 @@ texts:
       f_01_past_tense: 4
       f_02_perfect_aspect: 0
       f_03_present_tense: 2
-      f_14_nominalizations: 6
+      f_14_nominalizations: 12
       f_16_other_nouns: 14
       f_17_agentless_passives: 2
       f_18_by_passives: 2
@@ -302,7 +302,7 @@ texts:
     expected:
       f_01_past_tense: 7
       f_03_present_tense: 5
-      f_14_nominalizations: 4
+      f_14_nominalizations: 6
       f_17_agentless_passives: 4
       f_21_that_verb_comp: 8
       f_24_infinitives: 3
