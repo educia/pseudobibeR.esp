@@ -13,9 +13,8 @@ Este paquete **no** realiza el etiquetado gramatical por sí mismo. En su lugar,
 
 El español plantea desafíos específicos respecto al inglés o el francés: el sujeto nulo (*pro-drop*) hace innecesario un pronombre expletivo equivalente al inglés *it*; la negación opera con palabras negativas preverbales o posverbales; y las relativas introducidas por *que* funcionan tanto en posición de sujeto como de objeto. Estas diferencias se han tenido en cuenta en el diseño del extractor:
 
-- **57 rasgos de Biber adaptados** (de los 67 originales): 11 rasgos intraducibles han sido eliminados.
+- **57 rasgos de Biber adaptados** (de los 67 originales): 10 rasgos intraducibles han sido eliminados.
 - **2 fusiones** de rasgos: `f_29+f_31 → f_29_that_subj`; `f_30+f_32 → f_30_that_obj`.
-- **1 extensión** calculada internamente: `f_71_preterit` (pretérito imperfecto), disponible en la salida de `biber_es()` aunque no mostrada en la aplicación Shiny.
 
 **Nota:** Textos con ortografía muy irregular, puntuación no normativa o lenguaje muy especializado pueden producir salidas menos fiables salvo que el modelo UD se haya ajustado a ese dominio.
 
@@ -131,7 +130,7 @@ pseudobibeR.es usa [testthat](https://testthat.r-lib.org/) para los tests unitar
 
 ### Estructura de tests
 
-- `tests/testthat/test-spanish-basic.R`: fixtures sintéticos (data.frames con columnas UD) para los rasgos principales sin necesidad de UDPipe: tiempos verbales (f_01, f_03, f_71), pronombres explícitos (f_06–f_08), pasivas (f_17, f_18), modales (f_52, f_53) y negación (f_66, f_67).
+- `tests/testthat/test-spanish-basic.R`: fixtures sintéticos (data.frames con columnas UD) para los rasgos principales sin necesidad de UDPipe: tiempos verbales (f_01, f_03), pronombres explícitos (f_06–f_08), pasivas (f_17, f_18), modales (f_52, f_53) y negación (f_66, f_67).
 - `tests/testthat/test-spanish-examples.R`: test de integración con UDPipe real, alimentado por `data-raw/spanish_examples.yaml`. Los rasgos con divergencias conocidas del parser se registran como informativos (*relaxed*), no como fallos.
 - `tests/testthat/test-spanish-modals.R`: cubre las perífrasis modales del español: `poder + inf`, `deber + inf`, `tener que + inf`, `ir a + inf` y el futuro sintético.
 
@@ -259,7 +258,7 @@ Al usar `pseudobibeR.es` en tu investigación, cita:
 
 ## Rasgos lingüísticos extraídos
 
-El paquete extrae **57 rasgos de Biber adaptados al español**, organizados en 16 categorías. Once rasgos del catálogo original han sido eliminados por ser intraducibles al español (f_09, f_12, f_15, f_28, f_31, f_32, f_59, f_60, f_61, f_62, f_68); dos pares de rasgos se han fusionado (f_29+f_31; f_30+f_32).
+El paquete extrae **57 rasgos de Biber adaptados al español**, organizados en 16 categorías. Ocho rasgos del catálogo original han sido eliminados por ser intraducibles al español (f_09, f_12, f_15, f_28, f_59, f_60, f_61, f_62); dos pares de rasgos se han fusionado (f_29+f_31; f_30+f_32).
 
 ### Categorías de rasgos
 
@@ -374,7 +373,6 @@ El paquete extrae **57 rasgos de Biber adaptados al español**, organizados en 1
 | f_60_that_deletion | La omisión de *que* complementante es marginal en español escrito |
 | f_61_stranded_preposition | La preposición varada no existe en español (siempre precede al relativo) |
 | f_62_split_infinitive | El infinitivo no se escinde en español |
-| f_68 | No aplicable al español |
 
 ## Contribuciones
 
