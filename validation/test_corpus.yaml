@@ -1,0 +1,325 @@
+# Corpus de validación para pseudobibeR.es
+# Cada texto incluye:
+#   - id: identificador único
+#   - registro: tipo de texto (narrativa, académico, etc.)
+#   - text: el texto completo
+#   - expected: conteos esperados por rasgo (counts brutos, NO normalizados)
+#   - tolerance: tolerancia aceptable por rasgo (default: ±1 para counts, ±0.05 para ratios)
+#   - notes: observaciones sobre rasgos difíciles o decisiones tomadas
+
+texts:
+  - id: text_01_narrativa
+    registro: Narrativa (3ª persona, pasado)
+    text: |
+      Juan llegó a la casa y miró por la ventana. Él había esperado durante horas,
+      pero ella no apareció. Nadie sabía dónde estaba. Alguien le dijo que se había
+      marchado temprano. Caminando por la calle, pensó en todo lo que había ocurrido.
+      Construida en los años cincuenta, la casa le recordaba su infancia. Los vecinos,
+      que lo conocían desde siempre, lo saludaron amablemente. La mujer que vivía al
+      lado le ofreció un café.
+    expected:
+      f_01_past_tense: 7
+      f_02_perfect_aspect: 3
+      f_03_present_tense: 0
+      f_04_place_adverbials: 0
+      f_05_time_adverbials: 2
+      f_06_first_person_pronouns: 0
+      f_07_second_person_pronouns: 0
+      f_08_third_person_pronouns: 7
+      f_10_demonstrative_pronoun: 0
+      f_11_indefinite_pronouns: 3
+      f_13_wh_question: 0
+      f_14_nominalizations: 1
+      f_16_other_nouns: 9
+      f_17_agentless_passives: 0
+      f_18_by_passives: 0
+      f_19_be_main_verb: 1
+      f_20_existential_there: 0
+      f_21_that_verb_comp: 1
+      f_22_that_adj_comp: 0
+      f_23_wh_clause: 1
+      f_24_infinitives: 0
+      f_25_present_participle: 1
+      f_26_past_participle: 1
+      f_27_past_participle_whiz: 0
+      f_29_that_subj: 2
+      f_30_that_obj: 1
+      f_33_pied_piping: 0
+      f_34_sentence_relatives: 1
+      f_35_because: 0
+      f_36_though: 0
+      f_37_if: 0
+      f_38_other_adv_sub: 0
+      f_39_prepositions: 9
+      f_40_adj_attr: 0
+      f_41_adj_pred: 0
+      f_42_adverbs: 1
+      f_45_conjuncts: 0
+      f_46_downtoners: 0
+      f_47_hedges: 0
+      f_48_amplifiers: 0
+      f_49_emphatics: 0
+      f_50_discourse_particles: 0
+      f_51_demonstratives: 0
+      f_52_modal_possibility: 0
+      f_53_modal_necessity: 0
+      f_54_modal_predictive: 0
+      f_55_verb_public: 1
+      f_56_verb_private: 2
+      f_57_verb_suasive: 0
+      f_58_verb_seem: 0
+      f_63_split_auxiliary: 0
+      f_64_phrasal_coordination: 0
+      f_65_clausal_coordination: 1
+      f_66_neg_synthetic: 1
+      f_67_neg_analytic: 1
+    tolerance:
+      f_42_adverbs: 2
+      f_56_verb_private: 2
+    notes: |
+      - f_01: Solo cuenta indefinidos (no imperfectos: sabía, conocían, vivía, recordaba)
+      - f_04: Si devuelve > 0, hay un problema con la lista léxica
+      - f_14: "lado" NO debe contarse (no termina en sufijo nominalizador)
+      - f_26: "marchado" y "ocurrido" están en f_02 (perfect), no doblar
+      - f_42: Debe restar adverbios de f_05 (temporal), f_67 (no) y f_23 (dónde)
+      - f_50: "mujer" NO es partícula discursiva sin contexto vocativo
+      - f_55: "dijo" debe detectarse como verbo público
+
+  - id: text_02_academico
+    registro: Académico/expositivo
+    text: |
+      La producción de conocimiento en las universidades requiere una evaluación
+      rigurosa de los resultados obtenidos en cada investigación. Los métodos
+      utilizados fueron analizados por un comité de expertos. Se publicaron los
+      hallazgos principales en una revista especializada. Es importante que los
+      investigadores consideren la complejidad de estos procesos. Sin embargo, no
+      obstante las dificultades, se lograron avances significativos en el desarrollo
+      de nuevas metodologías. La solución propuesta por el equipo resultó ser la
+      más adecuada. Hay evidencia suficiente para afirmar que el rendimiento mejoró
+      considerablemente.
+    expected:
+      f_01_past_tense: 4
+      f_02_perfect_aspect: 0
+      f_03_present_tense: 2
+      f_14_nominalizations: 6
+      f_16_other_nouns: 14
+      f_17_agentless_passives: 2
+      f_18_by_passives: 2
+      f_20_existential_there: 1
+      f_21_that_verb_comp: 1
+      f_22_that_adj_comp: 1
+      f_24_infinitives: 1
+      f_27_past_participle_whiz: 3
+      f_39_prepositions: 14
+      f_40_adj_attr: 6
+      f_41_adj_pred: 2
+      f_45_conjuncts: 2
+      f_48_amplifiers: 1
+      f_55_verb_public: 1
+      f_56_verb_private: 1
+      f_58_verb_seem: 1
+      f_67_neg_analytic: 0
+    tolerance:
+      f_16_other_nouns: 3
+      f_39_prepositions: 3
+    notes: |
+      - f_45: Detectar locuciones multi-token "sin embargo" y "no obstante"
+      - f_58: Decisión sobre "resultar" como evidencial (Sí, según las decisiones tomadas)
+      - f_67: "no obstante" NO debe contarse como negación (es locución conjuntiva)
+      - f_17: Detectar se-pasiva con verbo en plural
+      - f_27: "obtenidos", "utilizados", "propuesta" como participios postnominales
+
+  - id: text_03_conversacional
+    registro: Conversacional/interactivo
+    text: |
+      ¿Qué piensas tú de todo esto? Yo creo que deberíamos ir a la reunión, pero
+      quizás no sea buena idea. Bueno, la verdad es que no sé qué hacer. ¿Dónde
+      nos vemos mañana? Tú puedes llegar temprano, ¿no? A lo mejor podríamos
+      hablar con ella antes. De verdad que me parece muy importante. Oye, ¿cuándo
+      te dijo eso? Pues yo siempre he pensado que es mejor esperar. O sea, no
+      tiene sentido apurarse. Mira, si llegas tarde, no te preocupes, porque te
+      esperamos de todas formas.
+    expected:
+      f_01_past_tense: 1
+      f_02_perfect_aspect: 1
+      f_03_present_tense: 12
+      f_05_time_adverbials: 3
+      f_06_first_person_pronouns: 4
+      f_07_second_person_pronouns: 5
+      f_08_third_person_pronouns: 1
+      f_10_demonstrative_pronoun: 2
+      f_11_indefinite_pronouns: 1
+      f_13_wh_question: 3
+      f_21_that_verb_comp: 4
+      f_24_infinitives: 6
+      f_35_because: 1
+      f_37_if: 1
+      f_41_adj_pred: 2
+      f_47_hedges: 2
+      f_49_emphatics: 2
+      f_50_discourse_particles: 5
+      f_52_modal_possibility: 2
+      f_53_modal_necessity: 1
+      f_56_verb_private: 4
+      f_58_verb_seem: 1
+      f_67_neg_analytic: 4
+    tolerance:
+      f_56_verb_private: 2
+      f_03_present_tense: 3
+    notes: |
+      - f_50: Sistema clave a testear — debe detectar "bueno", "pues", "o sea", "mira", "oye"
+      - f_47: Detectar "a lo mejor" como hedge multi-token
+      - f_49: Detectar "de verdad" como enfático multi-token
+      - f_52: poder en presente (puedes) y condicional (podríamos)
+
+  - id: text_04_instruccional
+    registro: Instruccional/prescriptivo
+    text: |
+      Para obtener los mejores resultados, se debe seguir el siguiente
+      procedimiento. Primero, hay que preparar todos los materiales necesarios.
+      Si no se dispone de suficiente espacio, se recomienda utilizar un área más
+      amplia. Es necesario que cada participante complete el formulario antes de
+      comenzar. No se permite el uso de dispositivos electrónicos durante la
+      evaluación. Aunque parezca complicado, el proceso resulta bastante sencillo
+      una vez terminado el entrenamiento. Los organizadores sugirieron que se
+      modificara el horario, por lo cual se realizaron los ajustes correspondientes.
+    expected:
+      f_01_past_tense: 2
+      f_03_present_tense: 7
+      f_14_nominalizations: 3
+      f_17_agentless_passives: 6
+      f_20_existential_there: 0
+      f_21_that_verb_comp: 1
+      f_22_that_adj_comp: 1
+      f_24_infinitives: 5
+      f_26_past_participle: 1
+      f_27_past_participle_whiz: 1
+      f_34_sentence_relatives: 1
+      f_36_though: 1
+      f_39_prepositions: 9
+      f_40_adj_attr: 9
+      f_46_downtoners: 1
+      f_53_modal_necessity: 3
+      f_57_verb_suasive: 3
+      f_67_neg_analytic: 2
+    tolerance:
+      f_17_agentless_passives: 2
+      f_53_modal_necessity: 1
+    notes: |
+      - f_20: "hay que" debe detectarse como modal de necesidad (f_53), NO como existencial
+      - f_53: Detectar las 3 formas: se debe + inf, hay que + inf, es necesario que
+      - f_34: "por lo cual" como sentence relative
+
+  - id: text_05_futuro_modales
+    registro: Futuro y modales predictivos
+    text: |
+      El gobierno anunciará mañana las nuevas medidas económicas. Los expertos
+      predicen que la inflación bajará considerablemente el próximo trimestre.
+      Si se implementaran las reformas, los ciudadanos verían resultados en pocos
+      meses. El presidente dijo que habría cambios importantes en la estructura
+      del ministerio. Nosotros vamos a trabajar en una propuesta alternativa que
+      presentaremos la semana que viene. ¿Quién será el próximo director? Nadie
+      lo sabe todavía, pero se espera que la decisión se tome pronto.
+    expected:
+      f_01_past_tense: 1
+      f_03_present_tense: 3
+      f_05_time_adverbials: 3
+      f_06_first_person_pronouns: 1
+      f_08_third_person_pronouns: 1
+      f_11_indefinite_pronouns: 1
+      f_13_wh_question: 1
+      f_14_nominalizations: 3
+      f_17_agentless_passives: 3
+      f_21_that_verb_comp: 3
+      f_29_that_subj: 2
+      f_37_if: 1
+      f_40_adj_attr: 6
+      f_48_amplifiers: 1
+      f_54_modal_predictive: 7
+      f_55_verb_public: 3
+      f_66_neg_synthetic: 1
+    tolerance:
+      f_54_modal_predictive: 2
+    notes: |
+      - f_54: CRÍTICO testear — futuro morfológico (anunciará, bajará, será) + condicional (verían, habría) + ir a + inf (vamos a trabajar)
+      - f_29: f_29 absorbe f_31 (que relativo sujeto)
+
+  - id: text_06_relativos_negacion
+    registro: Demostrativos, relativos y negación
+    text: |
+      Estos resultados demuestran que la hipótesis era correcta. Aquellos
+      investigadores con los que colaboramos publicaron un estudio en el que se
+      analizan los datos de manera exhaustiva. Ese análisis y esta interpretación
+      son complementarios. Eso es exactamente lo que necesitábamos. Ni los
+      críticos ni los escépticos pudieron negar la validez del estudio. No hay
+      ninguna evidencia en contra. Los factores por los cuales se rechazó la
+      propuesta nunca fueron explicados. La conferencia en la que participamos,
+      lo cual fue una gran oportunidad, se celebró en Madrid.
+    expected:
+      f_01_past_tense: 9
+      f_03_present_tense: 4
+      f_06_first_person_pronouns: 0
+      f_10_demonstrative_pronoun: 1
+      f_11_indefinite_pronouns: 1
+      f_14_nominalizations: 4
+      f_17_agentless_passives: 3
+      f_18_by_passives: 0
+      f_20_existential_there: 1
+      f_21_that_verb_comp: 1
+      f_30_that_obj: 1
+      f_33_pied_piping: 4
+      f_34_sentence_relatives: 1
+      f_39_prepositions: 9
+      f_40_adj_attr: 3
+      f_41_adj_pred: 1
+      f_42_adverbs: 1
+      f_49_emphatics: 1
+      f_51_demonstratives: 4
+      f_64_phrasal_coordination: 1
+      f_66_neg_synthetic: 4
+      f_67_neg_analytic: 1
+    tolerance:
+      f_33_pied_piping: 1
+      f_64_phrasal_coordination: 1
+    notes: |
+      - f_33: CRÍTICO — debe detectar 4 variantes de pied-piping
+      - f_51: Detectar 4 demostrativos determinantes
+      - f_66: Detectar concordancia negativa (ni, ninguna, nunca)
+      - f_42 vs f_49: "exactamente" puede contar en ambos (no es problema, son rasgos no excluyentes)
+
+  - id: text_07_verbos_especializados
+    registro: Verbos especializados, hedges y downtoners
+    text: |
+      Los expertos creen que el problema es apenas comprensible para el público
+      general. El ministro declaró que las medidas son necesarias, aunque
+      reconoció que podrían generar cierta resistencia. Algunos analistas
+      sugirieron que se postergara la implementación. Parece que la situación
+      mejora ligeramente. Se ordenó que todos los departamentos presentaran
+      informes detallados. Los ciudadanos pidieron que se explicara la decisión
+      con más claridad. Aproximadamente un tercio de los encuestados dijo que
+      algo debía cambiar. Tal vez deberíamos considerar una especie de consulta
+      pública, más o menos como se hizo la vez anterior.
+    expected:
+      f_01_past_tense: 7
+      f_03_present_tense: 5
+      f_14_nominalizations: 4
+      f_17_agentless_passives: 4
+      f_21_that_verb_comp: 8
+      f_24_infinitives: 3
+      f_27_past_participle_whiz: 1
+      f_36_though: 1
+      f_46_downtoners: 2
+      f_47_hedges: 4
+      f_52_modal_possibility: 1
+      f_53_modal_necessity: 2
+      f_55_verb_public: 3
+      f_56_verb_private: 3
+      f_57_verb_suasive: 3
+      f_58_verb_seem: 1
+    tolerance:
+      f_21_that_verb_comp: 1
+      f_47_hedges: 1
+    notes: |
+      - f_47: 4 hedges incluyendo locuciones multi-token "una especie de", "más o menos"
+      - f_55, f_56, f_57: testear listas de lemas
+      - f_58: solo "parece", NO debe duplicarse con f_56

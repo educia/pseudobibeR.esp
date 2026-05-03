@@ -56,30 +56,38 @@ block_passive_voice_es <- function(tokens, doc_ids, head_lookup,
                     .data$head_token_id_int, .keep_all = TRUE)
 
   # -----------------------------------------------------------------------
-  # (B) Pasiva refleja -- se con dep_rel expl:pass | expl
-  #     y verbo con Voice=Pass o, como fallback, participio pasado
+  # (B) Pasiva refleja / impersonal con "se"
+  #
+  # UDPipe Spanish-GSD NO usa expl:pass para "se" pasivo: lo etiqueta como
+  # PRON con dep_rel "iobj"/"obj"/"obl"/"expl" según el caso, y el lemma
+  # suele ser "él" (no "se"). Tampoco marca Voice=Pass en el verbo. Por
+  # eso detectamos por superficie: token "se" + verbo finito como head.
+  #
+  # Esta heurística captura tanto pasivas reflejas (se publicaron los
+  # hallazgos) como impersonales con se (se debe seguir, se recomienda),
+  # que comparten la función comunicativa de pasiva sin agente. Acepta
+  # algún ruido por reflexivos genuinos (se levantó), pero en registros
+  # académicos/instruccionales el "se" + V es mayoritariamente impersonal.
   # -----------------------------------------------------------------------
   se_passive <- tokens %>%
     dplyr::filter(
-      .data$lemma == "se",
+      tolower(.data$token) == "se",
       .data$pos == "PRON",
-      stringr::str_detect(dplyr::coalesce(.data$dep_rel, ""),
-                          "^expl(:pass)?$"),
       !is.na(.data$head_token_id_int)
     ) %>%
     dplyr::left_join(head_lookup,
                      by = c("doc_id", "sentence_id",
                             "head_token_id_int" = "token_id_int")) %>%
     dplyr::filter(
-      .data$head_pos == "VERB",
-      # Verbo con Voice=Pass en feats, o que sea participio pasado
+      .data$head_pos %in% c("VERB", "AUX"),
+      # Verbo finito (excluye reflexivos en infinitivo/gerundio/participio)
+      dplyr::coalesce(.data$head_morph_verbform, "") == "Fin",
+      # Tercera persona (excluye "te miras", "me miro" reflexivos personales)
       stringr::str_detect(
-        dplyr::coalesce(.data$head_feats, ""), "Voice=Pass"
-      ) |
-        (.data$head_morph_verbform == "Part" &
-           .data$head_morph_tense %in% c("Past", "Pqp"))
+        dplyr::coalesce(.data$head_feats, ""), "Person=3"
+      )
     ) %>%
-    # Excluir cuando ya hay un aux:pass (ya contado en perifistica)
+    # Excluir cuando ya hay un aux:pass (ya contado en perifrástica)
     dplyr::anti_join(
       perifrastic_passive %>%
         dplyr::select("doc_id", "sentence_id", "head_token_id_int"),

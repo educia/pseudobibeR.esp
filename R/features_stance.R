@@ -136,12 +136,22 @@ count_vraiment_amplifier_fr <- function(tokens, doc_ids) {
 #' @keywords internal
 supplement_pronouns_morphological_fr <- function(tokens, doc_ids) {
   
-  # Extract pronouns using morphological Person feature as fallback
-  # Accept tokens that are tagged as PRON with Person feature, even if not in dictionary
+  # Extract pronouns using morphological Person feature as fallback.
+  # Accept tokens that are tagged as PRON with Person feature, even if not
+  # in dictionary. Para español: excluir "se" (Reflex=Yes y dep_rel
+  # reflexivo/impersonal) ya que UDPipe Spanish-GSD lo lematiza como "él"
+  # con Person=3, pero no es pronombre referencial de 3ª persona en el
+  # sentido de Biber (es marca de pasiva refleja, impersonal o reflexivo).
+  reflexive_deps <- c("expl:pv", "expl:impers", "expl",
+                      "iobj", "obj")  # iobj/obj cubre "se" en UDPipe es-gsd
+
   pronoun_morph <- tokens %>%
     dplyr::filter(
       .data$pos == "PRON",
-      !is.na(.data$morph_person)
+      !is.na(.data$morph_person),
+      # Excluir "se" reflexivo/impersonal (Reflex=Yes en feats)
+      !(tolower(.data$token) == "se" &
+        stringr::str_detect(dplyr::coalesce(.data$feats, ""), "Reflex=Yes"))
     )
   
   # First person: Person=1

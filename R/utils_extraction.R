@@ -70,16 +70,20 @@ dictionary_to_lemmas <- function(dict_lookup, feature) {
   if (!feature %in% names(dict_lookup)) {
     return(character(0))
   }
-  
+
   patterns <- dict_lookup[[feature]]
-  
-  # For multi-word patterns (e.g. "haber_de", "tener_que"), extract the head
-  # word (first token) as the lemma for syntax-based matching. Single-word
-  # patterns pass through unchanged.
-  lemmas <- patterns %>%
-    stringr::str_extract("^[^_]+") %>%
+
+  # Solo entradas SINGLE-WORD pasan a la rama de matching por lemma.
+  # Las locuciones multi-token (p.ej. "a_menudo", "de_vez_en_cuando",
+  # "sin_embargo", "tal_vez") se manejan en la rama quanteda (tokens_lookup),
+  # que las captura como compounds. Extraer el primer token de las
+  # locuciones (p.ej. "a", "de", "al", "sin", "tal") introduciría
+  # preposiciones y palabras comunes en la lista de lemmas, causando
+  # sobreconteo masivo en f_04, f_05, f_11, f_46, f_47.
+  single_word <- !stringr::str_detect(patterns, "_")
+  lemmas <- patterns[single_word] %>%
     stringr::str_to_lower() %>%
     unique()
-  
+
   lemmas
 }

@@ -159,15 +159,16 @@ f_07_second_person_pronouns:
   - contigo
 
 f_08_third_person_pronouns:
-  - el
+  # OJO: "el", "la", "los", "las" sin tilde son artículos (DET), no
+  # pronombres — se excluyen para evitar matching por superficie en la
+  # rama quanteda (que no chequea POS). El bloque morfológico (POS=PRON)
+  # captura las formas átonas. "lo" se mantiene porque el pronombre
+  # objeto es mucho más frecuente que el artículo neutro.
   - él
   - ella
   - ellos
   - ellas
   - lo
-  - la
-  - los
-  - las
   - le
   - les
   - ello

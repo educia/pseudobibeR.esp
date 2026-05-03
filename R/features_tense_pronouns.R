@@ -258,13 +258,18 @@ block_personal_pronouns_es <- function(
   # dep_rel que senalan uso reflexivo/impersonal -- excluidos en f_06-f_08
   reflexive_deps <- c("expl:pv", "expl:impers", "expl")
 
-  # Helper: filtrar pronombres de una persona por lista de lemmas
+  # Helper: filtrar pronombres de una persona por lista de lemmas.
+  # En UDPipe Spanish-GSD, "se" se lematiza como "él" con Reflex=Yes y
+  # dep_rel = "iobj"/"obj" (no expl:pass). Excluimos esos casos para que
+  # el "se" pasivo/impersonal/reflexivo NO cuente como pronombre referencial.
   count_person_pronouns <- function(lemma_list) {
     tokens %>%
       dplyr::filter(
         .data$pos == "PRON",
         .data$lemma %in% lemma_list,
-        !dplyr::coalesce(.data$dep_rel, "") %in% reflexive_deps
+        !dplyr::coalesce(.data$dep_rel, "") %in% reflexive_deps,
+        !(tolower(.data$token) == "se" &
+          stringr::str_detect(dplyr::coalesce(.data$feats, ""), "Reflex=Yes"))
       ) %>%
       dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int)
   }
