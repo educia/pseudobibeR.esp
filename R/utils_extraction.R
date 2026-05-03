@@ -66,24 +66,35 @@ normalize_terms <- function(values) {
 #' @param feature Feature name
 #' @return Character vector of lemmas
 #' @keywords internal
-dictionary_to_lemmas <- function(dict_lookup, feature) {
+dictionary_to_lemmas <- function(dict_lookup, feature, head_word = FALSE) {
   if (!feature %in% names(dict_lookup)) {
     return(character(0))
   }
 
   patterns <- dict_lookup[[feature]]
 
-  # Solo entradas SINGLE-WORD pasan a la rama de matching por lemma.
-  # Las locuciones multi-token (p.ej. "a_menudo", "de_vez_en_cuando",
-  # "sin_embargo", "tal_vez") se manejan en la rama quanteda (tokens_lookup),
-  # que las captura como compounds. Extraer el primer token de las
-  # locuciones (p.ej. "a", "de", "al", "sin", "tal") introduciría
-  # preposiciones y palabras comunes en la lista de lemmas, causando
-  # sobreconteo masivo en f_04, f_05, f_11, f_46, f_47.
-  single_word <- !stringr::str_detect(patterns, "_")
-  lemmas <- patterns[single_word] %>%
-    stringr::str_to_lower() %>%
-    unique()
+  if (head_word) {
+    # Modo "head_word": extrae el primer token de cada locución
+    # multi-palabra. Útil para perífrasis modales (haber_de, tener_que,
+    # hay_que → haber, tener, hay) donde el primer token es el verbo
+    # cabeza que se busca en el árbol sintáctico.
+    lemmas <- patterns %>%
+      stringr::str_extract("^[^_]+") %>%
+      stringr::str_to_lower() %>%
+      unique()
+  } else {
+    # Modo por defecto: solo entradas SINGLE-WORD pasan a la rama de
+    # matching por lemma. Las locuciones multi-token (a_menudo,
+    # de_vez_en_cuando, sin_embargo, tal_vez) se manejan en la rama
+    # quanteda (tokens_lookup), que las captura como compounds.
+    # Extraer el primer token de las locuciones (a, de, al, sin, tal)
+    # introduce preposiciones y palabras comunes, causando sobreconteo
+    # masivo en f_04, f_05, f_11, f_46, f_47.
+    single_word <- !stringr::str_detect(patterns, "_")
+    lemmas <- patterns[single_word] %>%
+      stringr::str_to_lower() %>%
+      unique()
+  }
 
   lemmas
 }

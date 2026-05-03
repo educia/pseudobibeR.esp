@@ -19,6 +19,6 @@
 "text_03_conversacional","Conversacional/interactivo","f_50_discourse_particles",5,6,1,"OK",1,NA
 "text_03_conversacional","Conversacional/interactivo","f_52_modal_possibility",2,2,1,"OK",0,NA
 "text_03_conversacional","Conversacional/interactivo","f_53_modal_necessity",1,1,1,"OK",0,NA
-"text_03_conversacional","Conversacional/interactivo","f_56_verb_private",4,8,2,"FAIL",4,NA
+"text_03_conversacional","Conversacional/interactivo","f_56_verb_private",6,8,2,"OK",2,NA
 "text_03_conversacional","Conversacional/interactivo","f_58_verb_seem",1,1,1,"OK",0,NA
 "text_03_conversacional","Conversacional/interactivo","f_67_neg_analytic",4,3,1,"OK",-1,NA

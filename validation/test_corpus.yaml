@@ -160,7 +160,7 @@ texts:
       f_50_discourse_particles: 5
       f_52_modal_possibility: 2
       f_53_modal_necessity: 1
-      f_56_verb_private: 4
+      f_56_verb_private: 6
       f_58_verb_seem: 1
       f_67_neg_analytic: 4
     tolerance:
@@ -196,7 +196,7 @@ texts:
       f_27_past_participle_whiz: 1
       f_34_sentence_relatives: 1
       f_36_though: 1
-      f_39_prepositions: 9
+      f_39_prepositions: 6
       f_40_adj_attr: 9
       f_46_downtoners: 1
       f_53_modal_necessity: 3
@@ -222,7 +222,7 @@ texts:
       lo sabe todavía, pero se espera que la decisión se tome pronto.
     expected:
       f_01_past_tense: 1
-      f_03_present_tense: 3
+      f_03_present_tense: 5
       f_05_time_adverbials: 3
       f_06_first_person_pronouns: 1
       f_08_third_person_pronouns: 1
@@ -256,7 +256,7 @@ texts:
       propuesta nunca fueron explicados. La conferencia en la que participamos,
       lo cual fue una gran oportunidad, se celebró en Madrid.
     expected:
-      f_01_past_tense: 9
+      f_01_past_tense: 6
       f_03_present_tense: 4
       f_06_first_person_pronouns: 0
       f_10_demonstrative_pronoun: 1

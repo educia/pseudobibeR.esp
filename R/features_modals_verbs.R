@@ -110,12 +110,13 @@ count_modal_periphrasis <- function(tokens, lemmas) {
 block_adj_prep_adv_es <- function(tokens, doc_ids, dict_lookup,
                                    word_lists_lookup, negation_adverbs) {
 
-  # f_39  Preposiciones
+  # f_39  Preposiciones — conteo total de tokens ADP (Biber 1985 las cuenta
+  # todas como medida de densidad nominal/informativa). UDPipe spanish-gsd
+  # asigna dep_rel="mark" a algunas preposiciones que introducen cláusulas
+  # no finitas (Para obtener, antes de comenzar), por lo que filtrar por
+  # dep_rel="case" causaba subconteo. Ver biber_espanol_completo.md F_39.
   f39 <- tokens %>%
-    dplyr::filter(
-      .data$pos == "ADP",
-      dplyr::coalesce(.data$dep_rel, "") %in% c("case", "fixed")
-    ) %>%
+    dplyr::filter(.data$pos == "ADP") %>%
     count_feature("f_39_prepositions")
 
   # f_40  Adjetivo atributivo
@@ -201,20 +202,28 @@ block_adj_prep_adv_es <- function(tokens, doc_ids, dict_lookup,
     dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int) %>%
     count_feature("f_41_adj_pred")
 
-  # f_42  Adverbios generales (excluye stance, hedges, negacion)
-  stance_lemmas <- unique(c(
+  # f_42  Adverbios generales (excluye los ya capturados en otros rasgos:
+  # f_04 lugar, f_05 tiempo, f_23 wh-, f_45 conjuncts, f_46 downtoners,
+  # f_47 hedges, f_48 amplifiers, f_49 emphatics, f_50 discourse, f_67 'no')
+  excluded_adv_lemmas <- unique(c(
+    dictionary_to_lemmas(dict_lookup, "f_04_place_adverbials"),
+    dictionary_to_lemmas(dict_lookup, "f_05_time_adverbials"),
+    dictionary_to_lemmas(dict_lookup, "f_45_conjuncts"),
     dictionary_to_lemmas(dict_lookup, "f_46_downtoners"),
     dictionary_to_lemmas(dict_lookup, "f_47_hedges"),
     dictionary_to_lemmas(dict_lookup, "f_48_amplifiers"),
     dictionary_to_lemmas(dict_lookup, "f_49_emphatics"),
     dictionary_to_lemmas(dict_lookup, "f_50_discourse_particles"),
+    # Wh-adverbios interrogativos indirectos (f_23)
+    "dónde", "cuándo", "cómo", "cuánto", "cuánta", "cuántos", "cuántas",
+    "donde", "cuando", "como",
     negation_adverbs
   ))
 
   f42 <- tokens %>%
     dplyr::filter(
       .data$pos == "ADV",
-      !.data$lemma %in% stance_lemmas
+      !.data$lemma %in% excluded_adv_lemmas
     ) %>%
     count_feature("f_42_adverbs")
 
@@ -248,7 +257,11 @@ block_adj_prep_adv_es <- function(tokens, doc_ids, dict_lookup,
 block_modals_es <- function(tokens, doc_ids, dict_lookup) {
 
   # f_52  Posibilidad
-  poss_lemmas <- dictionary_to_lemmas(dict_lookup, "f_52_modal_possibility")
+  # head_word=TRUE para modales: extrae el verbo cabeza de las perífrasis
+  # (haber_de → haber, tener_que → tener, hay_que → hay). El verbo cabeza
+  # se busca en el árbol sintáctico con el infinitivo como dependiente.
+  poss_lemmas <- dictionary_to_lemmas(dict_lookup, "f_52_modal_possibility",
+                                      head_word = TRUE)
   f52 <- count_modal_periphrasis(tokens, poss_lemmas) %>%
     dplyr::rename(f_52_modal_possibility = "n")
 
@@ -256,7 +269,8 @@ block_modals_es <- function(tokens, doc_ids, dict_lookup) {
   #   deber + INF (sin "de" = necesidad deontica)
   #   deber_de + INF (probabilidad epistemica; incluido por convencion)
   #   tener_que, haber_de, haber_que vienen compuestos del tokenizer
-  nec_lemmas <- dictionary_to_lemmas(dict_lookup, "f_53_modal_necessity")
+  nec_lemmas <- dictionary_to_lemmas(dict_lookup, "f_53_modal_necessity",
+                                     head_word = TRUE)
   f53 <- count_modal_periphrasis(tokens, nec_lemmas) %>%
     dplyr::rename(f_53_modal_necessity = "n")
 
@@ -364,8 +378,14 @@ block_specialized_verbs_es <- function(tokens, doc_ids, dict_lookup) {
 
   f55 <- count_verb_class(
     dictionary_to_lemmas(dict_lookup, "f_55_verb_public"),  "f_55_verb_public")
-  f56 <- count_verb_class(
-    dictionary_to_lemmas(dict_lookup, "f_56_verb_private"), "f_56_verb_private")
+  # Excluir verbos de f_58 (parecer/resultar) para evitar doble conteo:
+  # parecer es evidencial epistémico (f_58), no verbo de proceso mental.
+  # biber_espanol_completo.md F_58.
+  private_lemmas <- setdiff(
+    dictionary_to_lemmas(dict_lookup, "f_56_verb_private"),
+    dictionary_to_lemmas(dict_lookup, "f_58_verb_seem")
+  )
+  f56 <- count_verb_class(private_lemmas, "f_56_verb_private")
   f57 <- count_verb_class(
     dictionary_to_lemmas(dict_lookup, "f_57_verb_suasive"), "f_57_verb_suasive")
   f58 <- count_verb_class(

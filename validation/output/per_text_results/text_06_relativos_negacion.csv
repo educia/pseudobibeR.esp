@@ -1,5 +1,5 @@
 "text_id","registro","feature","expected","observed","tolerance","status","delta","notes"
-"text_06_relativos_negacion","Demostrativos, relativos y negación","f_01_past_tense",9,6,1,"FAIL",-3,NA
+"text_06_relativos_negacion","Demostrativos, relativos y negación","f_01_past_tense",6,6,1,"OK",0,NA
 "text_06_relativos_negacion","Demostrativos, relativos y negación","f_03_present_tense",4,6,1,"TOLERANCE",2,NA
 "text_06_relativos_negacion","Demostrativos, relativos y negación","f_06_first_person_pronouns",0,0,1,"OK",0,NA
 "text_06_relativos_negacion","Demostrativos, relativos y negación","f_10_demonstrative_pronoun",1,1,1,"OK",0,NA

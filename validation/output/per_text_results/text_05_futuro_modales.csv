@@ -1,6 +1,6 @@
 "text_id","registro","feature","expected","observed","tolerance","status","delta","notes"
 "text_05_futuro_modales","Futuro y modales predictivos","f_01_past_tense",1,1,1,"OK",0,NA
-"text_05_futuro_modales","Futuro y modales predictivos","f_03_present_tense",3,6,1,"FAIL",3,NA
+"text_05_futuro_modales","Futuro y modales predictivos","f_03_present_tense",5,6,1,"OK",1,NA
 "text_05_futuro_modales","Futuro y modales predictivos","f_05_time_adverbials",3,3,1,"OK",0,NA
 "text_05_futuro_modales","Futuro y modales predictivos","f_06_first_person_pronouns",1,1,1,"OK",0,NA
 "text_05_futuro_modales","Futuro y modales predictivos","f_08_third_person_pronouns",1,1,1,"OK",0,NA

@@ -34,7 +34,7 @@
 "text_01_narrativa","Narrativa (3ª persona, pasado)","f_39_prepositions",9,8,1,"OK",-1,NA
 "text_01_narrativa","Narrativa (3ª persona, pasado)","f_40_adj_attr",0,0,1,"OK",0,NA
 "text_01_narrativa","Narrativa (3ª persona, pasado)","f_41_adj_pred",0,0,1,"OK",0,NA
-"text_01_narrativa","Narrativa (3ª persona, pasado)","f_42_adverbs",1,5,2,"FAIL",4,NA
+"text_01_narrativa","Narrativa (3ª persona, pasado)","f_42_adverbs",1,2,2,"OK",1,NA
 "text_01_narrativa","Narrativa (3ª persona, pasado)","f_45_conjuncts",0,0,1,"OK",0,NA
 "text_01_narrativa","Narrativa (3ª persona, pasado)","f_46_downtoners",0,0,1,"OK",0,NA
 "text_01_narrativa","Narrativa (3ª persona, pasado)","f_47_hedges",0,0,1,"OK",0,NA
@@ -66,7 +66,7 @@
 "text_02_academico","Académico/expositivo","f_22_that_adj_comp",1,0,1,"OK",-1,NA
 "text_02_academico","Académico/expositivo","f_24_infinitives",1,1,1,"OK",0,NA
 "text_02_academico","Académico/expositivo","f_27_past_participle_whiz",3,3,1,"OK",0,NA
-"text_02_academico","Académico/expositivo","f_39_prepositions",14,11,3,"OK",-3,NA
+"text_02_academico","Académico/expositivo","f_39_prepositions",14,13,3,"OK",-1,NA
 "text_02_academico","Académico/expositivo","f_40_adj_attr",6,6,1,"OK",0,NA
 "text_02_academico","Académico/expositivo","f_41_adj_pred",2,2,1,"OK",0,NA
 "text_02_academico","Académico/expositivo","f_45_conjuncts",2,2,1,"OK",0,NA
@@ -95,7 +95,7 @@
 "text_03_conversacional","Conversacional/interactivo","f_50_discourse_particles",5,6,1,"OK",1,NA
 "text_03_conversacional","Conversacional/interactivo","f_52_modal_possibility",2,2,1,"OK",0,NA
 "text_03_conversacional","Conversacional/interactivo","f_53_modal_necessity",1,1,1,"OK",0,NA
-"text_03_conversacional","Conversacional/interactivo","f_56_verb_private",4,8,2,"FAIL",4,NA
+"text_03_conversacional","Conversacional/interactivo","f_56_verb_private",6,8,2,"OK",2,NA
 "text_03_conversacional","Conversacional/interactivo","f_58_verb_seem",1,1,1,"OK",0,NA
 "text_03_conversacional","Conversacional/interactivo","f_67_neg_analytic",4,3,1,"OK",-1,NA
 "text_04_instruccional","Instruccional/prescriptivo","f_01_past_tense",2,2,1,"OK",0,NA
@@ -110,14 +110,14 @@
 "text_04_instruccional","Instruccional/prescriptivo","f_27_past_participle_whiz",1,0,1,"OK",-1,NA
 "text_04_instruccional","Instruccional/prescriptivo","f_34_sentence_relatives",1,0,1,"OK",-1,NA
 "text_04_instruccional","Instruccional/prescriptivo","f_36_though",1,1,1,"OK",0,NA
-"text_04_instruccional","Instruccional/prescriptivo","f_39_prepositions",9,5,1,"FAIL",-4,NA
+"text_04_instruccional","Instruccional/prescriptivo","f_39_prepositions",6,6,1,"OK",0,NA
 "text_04_instruccional","Instruccional/prescriptivo","f_40_adj_attr",9,7,1,"TOLERANCE",-2,NA
 "text_04_instruccional","Instruccional/prescriptivo","f_46_downtoners",1,0,1,"OK",-1,NA
-"text_04_instruccional","Instruccional/prescriptivo","f_53_modal_necessity",3,1,1,"TOLERANCE",-2,NA
+"text_04_instruccional","Instruccional/prescriptivo","f_53_modal_necessity",3,2,1,"OK",-1,NA
 "text_04_instruccional","Instruccional/prescriptivo","f_57_verb_suasive",3,2,1,"OK",-1,NA
 "text_04_instruccional","Instruccional/prescriptivo","f_67_neg_analytic",2,2,1,"OK",0,NA
 "text_05_futuro_modales","Futuro y modales predictivos","f_01_past_tense",1,1,1,"OK",0,NA
-"text_05_futuro_modales","Futuro y modales predictivos","f_03_present_tense",3,6,1,"FAIL",3,NA
+"text_05_futuro_modales","Futuro y modales predictivos","f_03_present_tense",5,6,1,"OK",1,NA
 "text_05_futuro_modales","Futuro y modales predictivos","f_05_time_adverbials",3,3,1,"OK",0,NA
 "text_05_futuro_modales","Futuro y modales predictivos","f_06_first_person_pronouns",1,1,1,"OK",0,NA
 "text_05_futuro_modales","Futuro y modales predictivos","f_08_third_person_pronouns",1,1,1,"OK",0,NA
@@ -133,7 +133,7 @@
 "text_05_futuro_modales","Futuro y modales predictivos","f_54_modal_predictive",7,5,2,"OK",-2,NA
 "text_05_futuro_modales","Futuro y modales predictivos","f_55_verb_public",3,2,1,"OK",-1,NA
 "text_05_futuro_modales","Futuro y modales predictivos","f_66_neg_synthetic",1,1,1,"OK",0,NA
-"text_06_relativos_negacion","Demostrativos, relativos y negación","f_01_past_tense",9,6,1,"FAIL",-3,NA
+"text_06_relativos_negacion","Demostrativos, relativos y negación","f_01_past_tense",6,6,1,"OK",0,NA
 "text_06_relativos_negacion","Demostrativos, relativos y negación","f_03_present_tense",4,6,1,"TOLERANCE",2,NA
 "text_06_relativos_negacion","Demostrativos, relativos y negación","f_06_first_person_pronouns",0,0,1,"OK",0,NA
 "text_06_relativos_negacion","Demostrativos, relativos y negación","f_10_demonstrative_pronoun",1,1,1,"OK",0,NA

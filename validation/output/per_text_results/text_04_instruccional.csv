@@ -11,9 +11,9 @@
 "text_04_instruccional","Instruccional/prescriptivo","f_27_past_participle_whiz",1,0,1,"OK",-1,NA
 "text_04_instruccional","Instruccional/prescriptivo","f_34_sentence_relatives",1,0,1,"OK",-1,NA
 "text_04_instruccional","Instruccional/prescriptivo","f_36_though",1,1,1,"OK",0,NA
-"text_04_instruccional","Instruccional/prescriptivo","f_39_prepositions",9,5,1,"FAIL",-4,NA
+"text_04_instruccional","Instruccional/prescriptivo","f_39_prepositions",6,6,1,"OK",0,NA
 "text_04_instruccional","Instruccional/prescriptivo","f_40_adj_attr",9,7,1,"TOLERANCE",-2,NA
 "text_04_instruccional","Instruccional/prescriptivo","f_46_downtoners",1,0,1,"OK",-1,NA
-"text_04_instruccional","Instruccional/prescriptivo","f_53_modal_necessity",3,1,1,"TOLERANCE",-2,NA
+"text_04_instruccional","Instruccional/prescriptivo","f_53_modal_necessity",3,2,1,"OK",-1,NA
 "text_04_instruccional","Instruccional/prescriptivo","f_57_verb_suasive",3,2,1,"OK",-1,NA
 "text_04_instruccional","Instruccional/prescriptivo","f_67_neg_analytic",2,2,1,"OK",0,NA
