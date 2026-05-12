@@ -171,3 +171,12 @@
 "text_07_verbos_especializados","Verbos especializados, hedges y downtoners","f_56_verb_private",3,4,1,"OK",1,NA
 "text_07_verbos_especializados","Verbos especializados, hedges y downtoners","f_57_verb_suasive",3,2,1,"OK",-1,NA
 "text_07_verbos_especializados","Verbos especializados, hedges y downtoners","f_58_verb_seem",1,1,1,"OK",0,NA
+"text_08_casos_limite","Casos límite multi-token y ambigüedades","f_20_existential_there",1,1,1,"OK",0,NA
+"text_08_casos_limite","Casos límite multi-token y ambigüedades","f_53_modal_necessity",3,3,1,"OK",0,NA
+"text_08_casos_limite","Casos límite multi-token y ambigüedades","f_54_modal_predictive",4,4,1,"OK",0,NA
+"text_08_casos_limite","Casos límite multi-token y ambigüedades","f_50_discourse_particles",2,2,1,"OK",0,NA
+"text_08_casos_limite","Casos límite multi-token y ambigüedades","f_45_conjuncts",5,5,1,"OK",0,NA
+"text_08_casos_limite","Casos límite multi-token y ambigüedades","f_47_hedges",2,2,1,"OK",0,NA
+"text_08_casos_limite","Casos límite multi-token y ambigüedades","f_37_if",2,2,1,"OK",0,NA
+"text_08_casos_limite","Casos límite multi-token y ambigüedades","f_19_be_main_verb",0,0,1,"OK",0,NA
+"text_08_casos_limite","Casos límite multi-token y ambigüedades","f_67_neg_analytic",3,3,1,"OK",0,NA

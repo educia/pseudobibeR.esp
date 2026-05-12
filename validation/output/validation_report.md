@@ -1,14 +1,14 @@
 # Reporte de validación: pseudobibeR.es
 
-Generado: 2026-05-03 08:37:14
+Generado: 2026-05-12 18:37:39
 Modelo UDPipe: spanish-gsd-ud-2.5-191206.udpipe
-Textos evaluados: 7
+Textos evaluados: 8
 
 ## Resumen global
 
-- **Total comparaciones**: 172
-- **OK**: 157 (91.3%)
-- **TOLERANCE**: 15 (8.7%)
+- **Total comparaciones**: 181
+- **OK**: 166 (91.7%)
+- **TOLERANCE**: 15 (8.3%)
 - **FAIL**: 0 (0.0%)
 - **MISSING**: 0 (0.0%)
 
@@ -29,6 +29,7 @@ Textos evaluados: 7
 | text_05_futuro_modales | Futuro y modales predictivos | 17 | 15 | 2 | 0 | 0 | 100% |
 | text_06_relativos_negacion | Demostrativos, relativos y negación | 22 | 18 | 4 | 0 | 0 | 100% |
 | text_07_verbos_especializados | Verbos especializados, hedges y downtoners | 16 | 13 | 3 | 0 | 0 | 100% |
+| text_08_casos_limite | Casos límite multi-token y ambigüedades | 9 | 9 | 0 | 0 | 0 | 100% |
 
 ## Rasgos con problemas (al menos 1 fallo)
 
@@ -96,6 +97,10 @@ Todos los rasgos correctos.
 | `f_14_nominalizations` | 6 | 8 | +2 |
 | `f_21_that_verb_comp` | 8 | 6 | -2 |
 | `f_46_downtoners` | 2 | 4 | +2 |
+
+### text_08_casos_limite — Casos límite multi-token y ambigüedades
+
+Todos los rasgos correctos.
 
 ## Problemas sistémicos (fallan en >=3 textos)
 

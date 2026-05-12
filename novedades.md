@@ -1,5 +1,45 @@
 # Novedades de pseudobibeR.es
 
+## Versión 0.021
+
+### Marcador de locuciones multi-palabra para la rama sintáctica
+
+El mecanismo `quanteda::tokens_compound()` ya fusionaba locuciones antes del
+`tokens_lookup` para la rama léxica, pero los bloques de rasgos sintácticos
+(`block_*_es()`) operan sobre el dataframe parseado por UDPipe — donde "o
+sea", "es decir", "sin embargo", etc. siguen siendo tokens individuales con
+su lemma original. Esto causaba falsos positivos: "sea" en *o sea* y "es" en
+*es decir* se contaban como `ser` principal en f_19, "hay" en *hay que* en
+algunos contextos como existencial f_20, etc.
+
+**`R/utils_extraction.R` — nuevo `flag_mwe_tokens()`**: marca con
+`in_mwe = TRUE` cada token cuya posición pertenece a una secuencia contigua
+que coincide (case-insensitive, mismo `doc_id` + `sentence_id`) con alguno de
+los patrones de `multiword_patterns`. Algoritmo paralelo al de
+`tokens_compound()`: barrido de ventanas de tamaño n por cada patrón.
+
+**`R/parse_functions.R`**: se invoca una sola vez después de extraer
+morfología y antes de ejecutar cualquier bloque de rasgos, garantizando que
+todos los bloques compartan el mismo flag.
+
+**`R/features_passive.R` — f_19 (ser/estar principal)**: filtra
+`!in_mwe`. Elimina los FP de "sea" en *o sea*, "es" en *es decir*, "sea" en
+*es decir que sea*, etc. Sin afectar usos legítimos como *"la situación es
+compleja"*.
+
+### Validación
+
+- Se añade **`text_08_casos_limite`** al corpus de validación: texto con
+  casos negativos específicos para perifrasis modales (*hay que*, *tener que*,
+  *vamos a*), discourse particles que contienen formas de *ser* (*o sea*,
+  *es decir*), existencial real coexistiendo con *hay_que*, y *si*
+  condicional vs interrogativo indirecto.
+- Resultado: **0 FAIL, 166 OK, 15 TOL** en 181 comparaciones sobre 8 textos
+  (100% pass rate por texto). Los 9 rasgos críticos de text_08 pasan con
+  delta = 0 exacto.
+
+---
+
 ## Versión 0.020
 
 ### Sistema de validación

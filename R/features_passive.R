@@ -158,7 +158,10 @@ block_passive_voice_es <- function(tokens, doc_ids, head_lookup,
     dplyr::filter(
       .data$lemma %in% c("ser", "estar"),
       # dep_rel NO debe ser aux de ningun tipo
-      !stringr::str_detect(dplyr::coalesce(.data$dep_rel, ""), "^aux")
+      !stringr::str_detect(dplyr::coalesce(.data$dep_rel, ""), "^aux"),
+      # Excluir tokens absorbidos por una locución multi-palabra
+      # (p. ej. "sea" en "o sea", "es" en "es decir").
+      !dplyr::coalesce(.data$in_mwe, FALSE)
     ) %>%
     dplyr::anti_join(aux_pass_ids,
                      by = c("doc_id", "sentence_id", "token_id_int")) %>%

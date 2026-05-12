@@ -91,6 +91,17 @@ parse_biber_features <- function(tokens, measure, normalize,
 
   doc_ids <- tokens %>% dplyr::distinct(.data$doc_id)
 
+  # --- Marcar tokens dentro de locuciones multi-palabra ----------------------
+  # Paralelo al tokens_compound() de la rama quanteda: marca con in_mwe los
+  # tokens que pertenecen a una secuencia multi-palabra (sin_embargo, o sea,
+  # es decir, a lo mejor, etc.). Los bloques sintácticos que arriesgan falsos
+  # positivos sobre componentes individuales (p. ej. f_19 contando "sea" en
+  # "o sea") filtran !in_mwe para excluirlos.
+  tokens <- flag_mwe_tokens(
+    tokens,
+    get_word_list(word_lists_lookup, "multiword_patterns")
+  )
+
   # --- Shared word-list lookups ------------------------------------------------
   proverb_pronouns      <- normalize_terms(get_word_list(word_lists_lookup, "proverb_object_pronouns"))
   neg_synthetic_terms   <- normalize_terms(get_word_list(word_lists_lookup, "neg_synthetic_determiners"))

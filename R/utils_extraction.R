@@ -60,6 +60,62 @@ normalize_terms <- function(values) {
     stringr::str_replace_all("\u2019", "'")
 }
 
+#' Flag tokens that participate in a multi-word expression
+#'
+#' Marca con `in_mwe = TRUE` cada token que pertenece a una secuencia
+#' contigua que coincide (case-insensitive) con uno de los patrones
+#' multi-token. Mecanismo paralelo a `quanteda::tokens_compound()`: opera
+#' sobre el dataframe parseado por UDPipe para que los bloques de rasgos
+#' sint\u00e1cticos puedan excluir tokens que ya est\u00e1n "absorbidos" por una
+#' locuci\u00f3n multi-palabra (p. ej. "sea" en "o sea", "es" en "es decir").
+#'
+#' @param tokens Data frame parseado (debe tener doc_id, sentence_id, token).
+#' @param multiword_patterns Vector char con patrones tipo `o_sea`, `sin_embargo`.
+#' @return `tokens` con columna `in_mwe` (logical).
+#' @keywords internal
+flag_mwe_tokens <- function(tokens, multiword_patterns) {
+  if (!"in_mwe" %in% names(tokens)) {
+    tokens$in_mwe <- FALSE
+  }
+  if (length(multiword_patterns) == 0 || nrow(tokens) == 0) return(tokens)
+
+  patterns <- multiword_patterns %>%
+    stringr::str_to_lower() %>%
+    stringr::str_replace_all("_", " ") %>%
+    stringr::str_squish()
+  patterns <- patterns[stringr::str_detect(patterns, " ")]
+  if (length(patterns) == 0) return(tokens)
+
+  pattern_words <- stringr::str_split(patterns, " ")
+
+  tok_lc   <- stringr::str_to_lower(tokens$token)
+  doc_sent <- paste(tokens$doc_id, tokens$sentence_id, sep = "\x1f")
+  N <- nrow(tokens)
+
+  for (k in seq_along(patterns)) {
+    words <- pattern_words[[k]]
+    n <- length(words)
+    if (n > N) next
+
+    starts <- seq_len(N - n + 1L)
+    match  <- tok_lc[starts] == words[1L]
+    if (n > 1L) {
+      for (j in 2:n) {
+        match <- match &
+          tok_lc[starts + (j - 1L)] == words[j] &
+          doc_sent[starts] == doc_sent[starts + (j - 1L)]
+      }
+    }
+
+    hits <- starts[which(match)]
+    if (length(hits) == 0) next
+    for (s in hits) {
+      tokens$in_mwe[s:(s + n - 1L)] <- TRUE
+    }
+  }
+  tokens
+}
+
 #' Extract lemmas from a dictionary entry
 #'
 #' @param dict_lookup The dict object

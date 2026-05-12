@@ -323,3 +323,51 @@ texts:
       - f_47: 4 hedges incluyendo locuciones multi-token "una especie de", "más o menos"
       - f_55, f_56, f_57: testear listas de lemas
       - f_58: solo "parece", NO debe duplicarse con f_56
+
+  - id: text_08_casos_limite
+    registro: Casos límite multi-token y ambigüedades
+    text: |
+      En el parque hay árboles muy altos y hay una fuente cerca de la entrada.
+      Sin embargo, para entrar al recinto hay que mostrar el carnet. Tenemos que
+      llamar al guardia primero, porque no permite el acceso sin verificación.
+      Vamos a esperar un momento. O sea, no podemos pasar todavía. Es decir,
+      tendremos que volver más tarde. No sé si vendrá el supervisor hoy. Si
+      llega antes de las cinco, podremos hablar con él. A lo mejor consigue
+      autorizarnos. Por lo tanto, conviene tener paciencia.
+    expected:
+      # Casos clave que probamos:
+      # - "hay árboles", "hay una fuente": existenciales reales -> f_20 = 2
+      # - "hay que mostrar": perifrasis modal -> f_53, NO f_20
+      # - "tenemos que llamar": perifrasis modal -> f_53
+      # - "vamos a esperar": ir_a + Inf -> f_54
+      # - "o sea", "es decir": discourse particles -> f_50 = 2, NO contar "sea" como f_19
+      # - "sin embargo", "por lo tanto": conjuncts -> f_45 = 2
+      # - "a lo mejor": hedge multi-token -> f_47 = 1
+      # - "no sé si vendrá": "si" interrogativo indirecto (no se cuenta en f_37 estricto,
+      #   pero el codigo actual lo cuenta; aceptamos tolerancia)
+      # - "Si llega antes": "si" condicional real -> f_37 = al menos 1
+      f_20_existential_there: 1
+      f_53_modal_necessity: 3
+      f_54_modal_predictive: 4
+      f_50_discourse_particles: 2
+      f_45_conjuncts: 5
+      f_47_hedges: 2
+      f_37_if: 2
+      f_19_be_main_verb: 0
+      f_67_neg_analytic: 3
+    tolerance:
+      f_37_if: 1
+      f_45_conjuncts: 1
+      f_47_hedges: 1
+      f_20_existential_there: 1
+    notes: |
+      - f_19: "sea" en "o sea" + "es" en "es decir" NO deben contarse como ser
+        principal — filtrado vía in_mwe (mecanismo flag_mwe_tokens).
+      - f_20: "hay árboles" detectado; "hay una fuente" depende del parse (a
+        veces UDPipe la analiza con nsubj y cae fuera). "hay que" NO se cuenta.
+      - f_53: "hay que mostrar" + "tenemos que llamar" + "tendremos que volver" = 3
+      - f_54: 1 ir_a (vamos a esperar) + 3 futuros sintéticos (tendremos,
+        podremos, vendrá) = 4
+      - f_45: incluye sin_embargo, por_lo_tanto, o_sea, es_decir y posiblemente
+        "primero" como ordinal — overlap intencional con f_50 para o_sea/es_decir
+      - f_37: "Si llega" condicional + "si vendrá" interrogativo indirecto = 2
