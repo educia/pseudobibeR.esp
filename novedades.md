@@ -1,5 +1,42 @@
 # Novedades de pseudobibeR.es
 
+## Versión 0.022
+
+### App Shiny — columna "Palabras" ahora muestra locuciones multi-token
+
+La función `extract_evidence()` en `app.R` solo mostraba tokens con lema
+individual (filtraba entradas con `_`). Locuciones como *sin embargo*,
+*a lo mejor*, *o sea*, *de verdad*, *hay que*, etc. nunca aparecían en
+la columna Palabras aunque el rasgo tuviera Valor > 0.
+
+**Nuevo helper `detect_mwe_evidence()`**: escanea la secuencia de tokens
+buscando coincidencias con todas las entradas multi-token del diccionario
+(`dict[["f_45"]]$sin_embargo`, etc.). Por cada coincidencia reconstituye
+la frase original ("Sin embargo", "A lo mejor") y la agrupa por rasgo.
+
+**Nuevo helper `combine_ev()`**: fusiona la evidencia de lema individual
+con la evidencia MWE por feature, eliminando duplicados y respetando el
+límite de 8 resultados visibles.
+
+**Rasgos actualizados**:
+- f_04/f_05 adverbiales, f_35/f_36/f_38 subordinadores: añaden evidencia MWE
+- f_45/f_46/f_47/f_48/f_49/f_50: ahora muestran locuciones completas
+- f_53 modal necesidad: colecta por lema cabeza (deber/haber/tener) para
+  capturar formas flexionadas "hay", "debemos", "tiene que"; excluye
+  condicional y futuro que van a f_54
+- f_19 ser/estar principal: aplica `!in_mwe` (excluye "sea" en "o sea",
+  "es" en "es decir"); excluye dep_rel=aux y dep_rel=aux:pass
+- f_20 haber existencial: filtra `pos == "VERB"` (UDPipe marca el haber
+  existencial como VERB root; el auxiliar en tiempos compuestos como AUX)
+- f_17 pasiva agentless: añade "se" pronominales además de aux:pass
+- f_39 preposiciones: muestra todas las ADP (alineado con el contador)
+- f_42 adverbios: excluye lemmas de f_04/f_05/f_45/negación/wh para
+  evitar duplicados con las categorías especializadas
+- f_56 verbos privados: excluye lemas de f_58 (parecer/resultar)
+- f_54 modal predictivo: añade Mood=Cnd (condicional) al criterio futuro
+
+---
+
 ## Versión 0.021
 
 ### Marcador de locuciones multi-palabra para la rama sintáctica

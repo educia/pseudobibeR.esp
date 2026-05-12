@@ -320,6 +320,48 @@ ui <- fluidPage(
   )
 )
 
+# ─── Detección de locuciones multi-token para evidencia ──────────────────────
+# Escanea la secuencia de tokens y devuelve, por feature, los textos de las
+# locuciones multi-palabra encontradas (p.ej. "sin embargo", "a lo mejor").
+detect_mwe_evidence <- function(toks, dict) {
+  result <- list()
+  if (nrow(toks) == 0) return(result)
+
+  tok_lc   <- tolower(toks$token)
+  doc_sent <- paste(toks$doc_id, toks$sentence_id, sep = "\x1f")
+  N        <- nrow(toks)
+
+  for (feat in names(dict)) {
+    entries <- dict[[feat]]
+    # Solo entradas multi-token (contienen _)
+    multi   <- entries[grepl("_", entries)]
+    if (length(multi) == 0) next
+
+    found <- character(0)
+    for (entry in multi) {
+      words <- strsplit(entry, "_", fixed = TRUE)[[1]]
+      n <- length(words)
+      if (n < 2 || n > N) next
+
+      starts <- seq_len(N - n + 1L)
+      match  <- tok_lc[starts] == words[1L]
+      for (j in 2:n)
+        match <- match &
+          tok_lc[starts + j - 1L] == words[j] &
+          doc_sent[starts] == doc_sent[starts + j - 1L]
+
+      hits <- starts[which(match)]
+      if (length(hits) == 0) next
+      for (s in hits)
+        found <- c(found, paste(toks$token[s:(s + n - 1L)], collapse = " "))
+    }
+
+    if (length(found) > 0)
+      result[[feat]] <- unique(found)
+  }
+  result
+}
+
 # ─── Extracción de evidencia (palabras marcadas) ─────────────────────────────
 # Devuelve un named character vector: feature_code → "palabra1, palabra2, …"
 extract_evidence <- function(raw_tokens) {
@@ -332,21 +374,11 @@ extract_evidence <- function(raw_tokens) {
   toks$lemma_lc <- tolower(toks$lemma)
   toks$token_lc <- tolower(toks$token)
 
+  # Marcar tokens dentro de MWE (excluir de rasgos que necesitan verbo libre)
+  toks <- flag_mwe_tokens(toks, word_lists$multiword_patterns)
+
   # Extrae un atributo morfosintáctico del campo feats de UDPipe
   ef <- function(feats_vec, attr) {
-    pattern <- paste0("(?:^|\\|)", attr, "=([^|]+)")
-    m <- regmatches(
-      dplyr::coalesce(feats_vec, ""),
-      regexpr(pattern, dplyr::coalesce(feats_vec, ""), perl = TRUE)
-    )
-    ifelse(lengths(regmatches(feats_vec, gregexpr(pattern, dplyr::coalesce(feats_vec, ""), perl = TRUE))) > 0,
-           sub(paste0(".*", attr, "=([^|]+).*"), "\\1",
-               regmatches(dplyr::coalesce(feats_vec, ""),
-                          regexpr(pattern, dplyr::coalesce(feats_vec, ""), perl = TRUE))),
-           NA_character_)
-  }
-  # Versión segura usando stringr si disponible, o fallback
-  extract_feat_safe <- function(feats_vec, attr) {
     pat <- paste0("(?:^|[|])", attr, "=([^|]+)")
     sapply(dplyr::coalesce(feats_vec, ""), function(f) {
       m <- regmatches(f, regexpr(pat, f, perl = TRUE))
@@ -354,7 +386,6 @@ extract_evidence <- function(raw_tokens) {
       sub(paste0(".*", attr, "="), "", m)
     }, USE.NAMES = FALSE)
   }
-  ef <- extract_feat_safe
 
   # Recoge tokens únicos que cumplen una máscara lógica
   collect <- function(mask, col = "token", max_n = 8) {
@@ -367,6 +398,19 @@ extract_evidence <- function(raw_tokens) {
       paste(words, collapse = ", ")
   }
 
+  # Combina evidencia de tokens simples con locuciones multi-token detectadas
+  combine_ev <- function(single_str, feat, mwe_ev, max_n = 8) {
+    parts <- character(0)
+    if (nchar(single_str) > 0) parts <- c(parts, single_str)
+    if (feat %in% names(mwe_ev)) {
+      mwe_phrases <- unique(mwe_ev[[feat]])
+      if (length(mwe_phrases) > max_n)
+        mwe_phrases <- c(mwe_phrases[seq_len(max_n)], "…")
+      parts <- unique(c(parts, mwe_phrases))
+    }
+    paste(parts, collapse = ", ")
+  }
+
   # Lemas del diccionario (solo entradas de una palabra)
   dict_lemmas <- function(key) {
     if (!key %in% names(dict)) return(character(0))
@@ -374,58 +418,57 @@ extract_evidence <- function(raw_tokens) {
     unique(tolower(single))
   }
 
+  # Pre-calcular evidencia de locuciones multi-token para todos los rasgos
+  mwe_ev <- detect_mwe_evidence(toks, dict)
+
   ev <- list()
 
   # ── A. Tiempo y aspecto ──────────────────────────────────────────────────
-  # f_01: pretérito indefinido (Tense=Past, Mood=Ind, VerbForm=Fin)
   ev[["f_01_past_tense"]] <- collect(
     toks$pos %in% c("VERB", "AUX") &
     dplyr::coalesce(ef(toks$feats, "Tense"),    "") == "Past" &
     dplyr::coalesce(ef(toks$feats, "Mood"),     "") == "Ind"  &
     dplyr::coalesce(ef(toks$feats, "VerbForm"), "") == "Fin"
   )
-  # f_02: aspecto perfecto (haber como AUX de participio)
   ev[["f_02_perfect_aspect"]] <- collect(
-    toks$lemma_lc %in% c("haber") &
+    toks$lemma_lc == "haber" &
     toks$pos %in% c("AUX", "VERB") &
     grepl("^aux", dplyr::coalesce(toks$dep_rel, ""))
   )
-  # f_03: presente de indicativo (Tense=Pres, Mood=Ind, VerbForm=Fin)
   ev[["f_03_present_tense"]] <- collect(
     toks$pos %in% c("VERB", "AUX") &
     dplyr::coalesce(ef(toks$feats, "Tense"),    "") == "Pres" &
     dplyr::coalesce(ef(toks$feats, "Mood"),     "") == "Ind"  &
     dplyr::coalesce(ef(toks$feats, "VerbForm"), "") == "Fin"
   )
-  # f_71 (extensión española): pretérito imperfecto (Tense=Imp, Mood=Ind)
-  ev[["f_71_preterit"]] <- collect(
-    toks$pos %in% c("VERB", "AUX") &
-    dplyr::coalesce(ef(toks$feats, "Tense"),    "") == "Imp" &
-    dplyr::coalesce(ef(toks$feats, "Mood"),     "") == "Ind" &
-    dplyr::coalesce(ef(toks$feats, "VerbForm"), "") == "Fin"
-  )
 
   # ── B. Adverbiales ───────────────────────────────────────────────────────
   for (feat in c("f_04_place_adverbials", "f_05_time_adverbials")) {
-    lems <- dict_lemmas(feat)
-    ev[[feat]] <- collect(toks$lemma_lc %in% lems)
+    single <- collect(toks$lemma_lc %in% dict_lemmas(feat))
+    ev[[feat]] <- combine_ev(single, feat, mwe_ev)
   }
 
   # ── C. Pronombres ────────────────────────────────────────────────────────
-  reflexive_deps <- c("expl:pv", "expl:impers", "expl")
-  non_refl <- !dplyr::coalesce(toks$dep_rel, "") %in% reflexive_deps
+  reflex_mask <- tolower(toks$token) == "se" &
+    grepl("Reflex=Yes", dplyr::coalesce(toks$feats, ""))
+  non_refl <- !dplyr::coalesce(toks$dep_rel, "") %in%
+                c("expl:pv", "expl:impers", "expl") &
+              !reflex_mask
 
-  pron_06 <- tolower(c("yo", "nosotros", "nosotras", "me", "nos", "mí", "conmigo"))
-  pron_07 <- tolower(c("tú", "vos", "vosotros", "vosotras", "usted", "ustedes",
-                        "te", "ti", "contigo", "os"))
-  pron_08 <- tolower(c("él", "ella", "ello", "ellos", "ellas",
-                        "le", "lo", "la", "les", "los", "las", "consigo"))
+  pron_06 <- c("yo", "nosotros", "nosotras", "me", "nos",
+               "mí", "conmigo", "mí")
+  pron_07 <- c("tú", "vos", "vosotros", "vosotras", "usted", "ustedes",
+               "te", "ti", "contigo", "os")
+  pron_08 <- c("él", "ella", "ello", "ellos", "ellas",
+               "le", "lo", "la", "les", "los", "las", "consigo")
+
   ev[["f_06_first_person_pronouns"]]  <- collect(toks$lemma_lc %in% pron_06 & toks$pos == "PRON" & non_refl)
   ev[["f_07_second_person_pronouns"]] <- collect(toks$lemma_lc %in% pron_07 & toks$pos == "PRON" & non_refl)
-  ev[["f_08_third_person_pronouns"]]  <- collect(toks$lemma_lc %in% pron_08 & toks$pos == "PRON" & non_refl)
+  ev[["f_08_third_person_pronouns"]]  <- collect(toks$lemma_lc %in% pron_08 & toks$pos == "PRON" & non_refl &
+                                                  !toks$lemma_lc %in% c("el", "la", "los", "las"))
 
-  dem_lemmas <- dict_lemmas("f_51_demonstratives")
-  ev[["f_10_demonstrative_pronoun"]] <- collect(toks$lemma_lc %in% dem_lemmas & toks$pos == "PRON")
+  dem_lemmas_v <- dict_lemmas("f_51_demonstratives")
+  ev[["f_10_demonstrative_pronoun"]] <- collect(toks$lemma_lc %in% dem_lemmas_v & toks$pos == "PRON")
 
   indef_lems <- dict_lemmas("f_11_indefinite_pronoun")
   ev[["f_11_indefinite_pronouns"]] <- collect(toks$lemma_lc %in% indef_lems & toks$pos %in% c("PRON", "DET"))
@@ -434,37 +477,55 @@ extract_evidence <- function(raw_tokens) {
   wh_q <- c("qué", "quién", "quiénes", "cuál", "cuáles",
              "cuánto", "cuánta", "cuántos", "cuántas",
              "cuándo", "dónde", "cómo")
-  ev[["f_13_wh_question"]] <- collect(toks$lemma_lc %in% tolower(wh_q) &
-                                       toks$pos %in% c("PRON", "ADV", "DET", "ADJ"))
+  ev[["f_13_wh_question"]] <- collect(
+    toks$lemma_lc %in% tolower(wh_q) &
+    toks$pos %in% c("PRON", "ADV", "DET", "ADJ") &
+    grepl("PronType=.*Int", dplyr::coalesce(toks$feats, ""))
+  )
 
   # ── E. Formas nominales ──────────────────────────────────────────────────
   nom_suffixes <- word_lists$nominalization_suffixes
+  nom_stop     <- if (!is.null(word_lists$nominalization_stoplist))
+                    word_lists$nominalization_stoplist else character(0)
   if (length(nom_suffixes) > 0) {
     nom_regex <- paste0("(", paste(nom_suffixes, collapse = "|"), ")$")
-    ev[["f_14_nominalizations"]] <- collect(toks$pos == "NOUN" & grepl(nom_regex, toks$lemma_lc))
+    ev[["f_14_nominalizations"]] <- collect(
+      toks$pos == "NOUN" &
+      grepl(nom_regex, toks$lemma_lc) &
+      !toks$lemma_lc %in% nom_stop
+    )
   } else {
     ev[["f_14_nominalizations"]] <- ""
   }
   ev[["f_16_other_nouns"]] <- collect(toks$pos %in% c("NOUN", "PROPN"), max_n = 6)
 
   # ── F. Pasivas ───────────────────────────────────────────────────────────
+  # f_17: se-pasiva (UDPipe español: lemma=él/se, dep_rel=iobj, Person=3, VerbForm=Fin)
+  # + pasiva perifrástica (aux:pass)
   ev[["f_17_agentless_passives"]] <- collect(
+    (tolower(toks$token) == "se" & toks$pos == "PRON") |
     grepl("^aux:pass", dplyr::coalesce(toks$dep_rel, ""))
   )
-  # f_18: buscar "por" en función obl:agent tras participio pasivo
   ev[["f_18_by_passives"]] <- collect(
     toks$lemma_lc == "por" &
-    dplyr::coalesce(toks$dep_rel, "") %in% c("case", "obl:agent")
+    dplyr::coalesce(toks$dep_rel, "") %in% c("case", "obl:agent", "obl")
   )
 
   # ── G. Formas estativas ───────────────────────────────────────────────────
+  # f_19: excluir tokens absorbidos por MWE (sea en "o sea", es en "es decir")
   ev[["f_19_be_main_verb"]] <- collect(
     toks$lemma_lc %in% c("ser", "estar") &
-    toks$pos %in% c("VERB", "AUX")
+    toks$pos %in% c("VERB", "AUX") &
+    !dplyr::coalesce(toks$dep_rel, "") %in% c("aux", "aux:pass") &
+    !dplyr::coalesce(toks$in_mwe, FALSE)
   )
   ev[["f_20_existential_there"]] <- collect(
     toks$lemma_lc == "haber" &
-    toks$token_lc %in% c("hay", "había", "habrá", "habría", "hubo", "haya")
+    toks$token_lc %in% c("hay", "había", "habrá", "habría", "hubo", "haya",
+                          "habia", "habra", "habria", "hubiera", "hubiese") &
+    # En UDPipe español, el haber existencial se marca como VERB (root);
+    # el haber auxiliar en tiempos compuestos y copulativo se marca como AUX.
+    toks$pos == "VERB"
   )
 
   # ── H. Subordinación ─────────────────────────────────────────────────────
@@ -472,22 +533,25 @@ extract_evidence <- function(raw_tokens) {
     toks$lemma_lc == "que" & toks$pos == "SCONJ" &
     dplyr::coalesce(toks$dep_rel, "") == "mark"
   )
-  ev[["f_22_that_adj_comp"]]  <- ev[["f_21_that_verb_comp"]]  # misma forma superficial
+  ev[["f_22_that_adj_comp"]] <- ev[["f_21_that_verb_comp"]]
   ev[["f_23_wh_clause"]] <- collect(
-    toks$lemma_lc %in% tolower(c("qué", "quién", "quiénes", "cuál", "cuáles",
-                                   "cuándo", "dónde", "cómo", "cuánto")) &
+    toks$lemma_lc %in% tolower(c("qué", "quién", "quiénes",
+                                  "cuál", "cuáles", "cuándo",
+                                  "dónde", "cómo", "cuánto")) &
     grepl("^(obj|obl|nsubj|iobj|mark|advmod|nmod)", dplyr::coalesce(toks$dep_rel, ""))
   )
+  # f_24: todos los VerbForm=Inf con pos VERB (alineado con bloque sintáctico)
   ev[["f_24_infinitives"]] <- collect(
     dplyr::coalesce(ef(toks$feats, "VerbForm"), "") == "Inf" &
-    grepl("^(xcomp|ccomp|advcl|acl|obj)", dplyr::coalesce(toks$dep_rel, ""))
+    toks$pos == "VERB"
   )
   ev[["f_25_present_participle"]] <- collect(
     dplyr::coalesce(ef(toks$feats, "VerbForm"), "") == "Ger" &
-    grepl("^(advcl|ccomp)", dplyr::coalesce(toks$dep_rel, ""))
+    toks$pos %in% c("VERB", "AUX")
   )
   ev[["f_26_past_participle"]] <- collect(
     dplyr::coalesce(ef(toks$feats, "VerbForm"), "") == "Part" &
+    toks$pos %in% c("VERB", "ADJ") &
     grepl("^(advcl|ccomp|acl)", dplyr::coalesce(toks$dep_rel, ""))
   )
   ev[["f_27_past_participle_whiz"]] <- collect(
@@ -495,85 +559,136 @@ extract_evidence <- function(raw_tokens) {
     dplyr::coalesce(toks$dep_rel, "") == "acl" &
     toks$pos %in% c("VERB", "ADJ")
   )
-  # f_29: "que" relativo (SCONJ/mark + acl:relcl head) O pronombres QU- sujeto
   ev[["f_29_that_subj"]] <- collect(
-    (toks$lemma_lc == "que" & toks$pos == "SCONJ" &
-     dplyr::coalesce(toks$dep_rel, "") == "mark") |
+    (toks$lemma_lc == "que" & toks$pos %in% c("SCONJ", "PRON") &
+     grepl("^(mark|nsubj)", dplyr::coalesce(toks$dep_rel, ""))) |
     (toks$lemma_lc %in% c("quien", "quienes", "cual", "cuales") &
      toks$pos == "PRON" &
      grepl("^nsubj", dplyr::coalesce(toks$dep_rel, "")))
   )
-  # f_30: pronombres QU- en posición objeto/oblicuo
   ev[["f_30_that_obj"]] <- collect(
     toks$lemma_lc %in% c("quien", "quienes", "cual", "cuales") &
     toks$pos == "PRON" &
     grepl("^(obj|iobj|obl|nmod)", dplyr::coalesce(toks$dep_rel, ""))
   )
-  ev[["f_33_pied_piping"]] <- collect(
-    toks$lemma_lc %in% c("que", "quien", "quienes", "cual", "cuales") &
-    toks$pos %in% c("PRON", "DET")
-  )
+  ev[["f_33_pied_piping"]] <- {
+    prev1_pos <- c("", toks$pos[-nrow(toks)])
+    prev2_pos <- c("", "", toks$pos[seq_len(max(1, nrow(toks) - 2))])
+    collect(
+      toks$lemma_lc %in% c("que", "quien", "quienes", "cual", "cuales") &
+      toks$pos %in% c("PRON", "DET", "SCONJ") &
+      (prev1_pos == "ADP" | (prev1_pos == "DET" & prev2_pos == "ADP"))
+    )
+  }
   ev[["f_34_sentence_relatives"]] <- collect(
-    toks$lemma_lc %in% c("lo", "eso", "esto", "ello") & toks$pos == "PRON"
+    toks$lemma_lc %in% c("lo", "eso", "esto", "ello", "cual") &
+    toks$pos == "PRON" &
+    grepl("^(nsubj|obj|obl)", dplyr::coalesce(toks$dep_rel, ""))
   )
 
   causal_lems <- dict_lemmas("f_35_because"); if (!length(causal_lems)) causal_lems <- "porque"
   conc_lems   <- dict_lemmas("f_36_though");  if (!length(conc_lems))   conc_lems   <- "aunque"
   cond_lems   <- dict_lemmas("f_37_if");      if (!length(cond_lems))   cond_lems   <- "si"
 
-  ev[["f_35_because"]] <- collect(toks$lemma_lc %in% causal_lems & toks$pos %in% c("SCONJ", "CCONJ", "ADV"))
-  ev[["f_36_though"]]  <- collect(toks$lemma_lc %in% conc_lems   & toks$pos %in% c("SCONJ", "CCONJ", "ADV"))
-  ev[["f_37_if"]]      <- collect(toks$lemma_lc %in% cond_lems   & toks$pos %in% c("SCONJ", "CCONJ", "ADV"))
-  ev[["f_38_other_adv_sub"]] <- collect(
-    toks$pos %in% c("SCONJ", "ADP", "ADV") &
-    dplyr::coalesce(toks$dep_rel, "") == "mark" &
-    !toks$lemma_lc %in% c("que", causal_lems, conc_lems, cond_lems)
+  ev[["f_35_because"]] <- combine_ev(
+    collect(toks$lemma_lc %in% causal_lems & toks$pos %in% c("SCONJ", "CCONJ", "ADV")),
+    "f_35_because", mwe_ev
+  )
+  ev[["f_36_though"]] <- combine_ev(
+    collect(toks$lemma_lc %in% conc_lems & toks$pos %in% c("SCONJ", "CCONJ", "ADV")),
+    "f_36_though", mwe_ev
+  )
+  ev[["f_37_if"]] <- collect(
+    toks$lemma_lc %in% cond_lems &
+    toks$pos %in% c("SCONJ", "ADV") &
+    grepl("^mark", dplyr::coalesce(toks$dep_rel, ""))
+  )
+  ev[["f_38_other_adv_sub"]] <- combine_ev(
+    collect(
+      toks$pos %in% c("SCONJ", "ADP", "ADV") &
+      dplyr::coalesce(toks$dep_rel, "") == "mark" &
+      !toks$lemma_lc %in% c("que", causal_lems, conc_lems, cond_lems)
+    ),
+    "f_38_other_adv_sub", mwe_ev
   )
 
-  # ── I. Prep., adj. y adv. ─────────────────────────────────────────────────
-  ev[["f_39_prepositions"]] <- collect(toks$pos == "ADP" & dplyr::coalesce(toks$dep_rel, "") %in% c("case", "fixed"))
+  # ── I. Prep., adj. y adv. ────────────────────────────────────────────────
+  # f_39: todas las ADP (alineado con bloque sintáctico que conta todas)
+  ev[["f_39_prepositions"]] <- collect(toks$pos == "ADP", max_n = 6)
   ev[["f_40_adj_attr"]]     <- collect(toks$pos == "ADJ" & dplyr::coalesce(toks$dep_rel, "") == "amod")
   ev[["f_41_adj_pred"]]     <- collect(
-    toks$pos == "ADJ" & (
-      dplyr::coalesce(toks$dep_rel, "") %in% c("xcomp", "acomp") |
-      dplyr::coalesce(toks$dep_rel, "") == "root"   # ADJ como raíz en oración copulativa
-    )
+    toks$pos == "ADJ" &
+    dplyr::coalesce(toks$dep_rel, "") %in% c("xcomp", "acomp", "root")
   )
-  ev[["f_42_adverbs"]]      <- collect(toks$pos == "ADV", max_n = 6)
+  # f_42: excluir adverbios que pertenecen a otras categorías
+  adv_excl_lems <- unique(c(
+    dict_lemmas("f_04_place_adverbials"),
+    dict_lemmas("f_05_time_adverbials"),
+    dict_lemmas("f_45_conjuncts"),
+    dict_lemmas("f_46_downtoners"),
+    dict_lemmas("f_47_hedges"),
+    dict_lemmas("f_48_amplifiers"),
+    dict_lemmas("f_49_emphatics"),
+    c("no", "ni", "tampoco", "nunca", "jamás"),
+    c("dónde", "cuándo", "cómo",
+      "cuánto", "cuánta", "cuántos", "cuántas")
+  ))
+  ev[["f_42_adverbs"]] <- collect(
+    toks$pos == "ADV" & !toks$lemma_lc %in% adv_excl_lems,
+    max_n = 6
+  )
 
   # ── J. Especificidad léxica ───────────────────────────────────────────────
   ev[["f_43_type_token"]]       <- "(métrica: TTR)"
   ev[["f_44_mean_word_length"]] <- "(métrica: longitud media)"
 
-  # ── K. Clases léxicas ────────────────────────────────────────────────────
+  # ── K. Clases léxicas — single-word + MWE evidence ───────────────────────
   for (feat in c("f_45_conjuncts", "f_46_downtoners", "f_47_hedges",
                  "f_48_amplifiers", "f_49_emphatics", "f_50_discourse_particles")) {
-    lems <- dict_lemmas(feat)
-    ev[[feat]] <- collect(toks$lemma_lc %in% lems)
+    single <- collect(toks$lemma_lc %in% dict_lemmas(feat))
+    ev[[feat]] <- combine_ev(single, feat, mwe_ev)
   }
-  ev[["f_51_demonstratives"]] <- collect(toks$lemma_lc %in% dem_lemmas & toks$pos == "DET")
+  ev[["f_51_demonstratives"]] <- collect(toks$lemma_lc %in% dem_lemmas_v & toks$pos == "DET")
 
   # ── L. Modales ────────────────────────────────────────────────────────────
-  mod_pos <- dict_lemmas("f_52_modal_possibility")
-  mod_nec <- dict_lemmas("f_53_modal_necessity")
-  ev[["f_52_modal_possibility"]] <- collect(toks$lemma_lc %in% mod_pos & toks$pos %in% c("VERB", "AUX"))
-  ev[["f_53_modal_necessity"]]   <- collect(toks$lemma_lc %in% mod_nec & toks$pos %in% c("VERB", "AUX"))
-  ev[["f_54_modal_predictive"]]  <- collect(
-    (dplyr::coalesce(ef(toks$feats, "Tense"), "") == "Fut" &
+  mod_pos_lems <- dict_lemmas("f_52_modal_possibility")
+  ev[["f_52_modal_possibility"]] <- collect(
+    toks$lemma_lc %in% mod_pos_lems & toks$pos %in% c("VERB", "AUX")
+  )
+  # f_53: los lemas multi-token (haber_que, tener_que) se detectan por el
+  # verbo cabeza (lema "haber"/"tener") ya que la forma flexionada "hay"
+  # tiene lemma="haber". Se muestran las formas reales del texto.
+  nec_head_lems <- c("deber", "haber", "tener")
+  ev[["f_53_modal_necessity"]] <- collect(
+    toks$lemma_lc %in% nec_head_lems &
+    toks$pos %in% c("VERB", "AUX") &
+    # Excluir haber futuro/condicional (→ f_54) y haber de aspecto perfecto (→ f_02)
+    !dplyr::coalesce(ef(toks$feats, "Tense"),    "") %in% c("Fut") &
+    !dplyr::coalesce(ef(toks$feats, "Mood"),     "") %in% c("Cnd")
+  )
+  ev[["f_54_modal_predictive"]] <- collect(
+    (dplyr::coalesce(ef(toks$feats, "Tense"),    "") == "Fut" &
      dplyr::coalesce(ef(toks$feats, "VerbForm"), "") == "Fin") |
-    (toks$lemma_lc == "ir" & grepl("^aux", dplyr::coalesce(toks$dep_rel, "")))
+    (dplyr::coalesce(ef(toks$feats, "Mood"),     "") == "Cnd" &
+     dplyr::coalesce(ef(toks$feats, "VerbForm"), "") == "Fin") |
+    (toks$lemma_lc == "ir" & grepl("^aux", dplyr::coalesce(toks$dep_rel, "")) &
+     dplyr::coalesce(ef(toks$feats, "Tense"), "") %in% c("Pres", "Imp"))
   )
 
   # ── M. Verbos especializados ──────────────────────────────────────────────
+  seem_lems <- dict_lemmas("f_58_verb_seem")
   for (feat in c("f_55_verb_public", "f_56_verb_private",
                  "f_57_verb_suasive", "f_58_verb_seem")) {
     lems <- dict_lemmas(feat)
+    # f_56: excluir lemas de f_58 para coherencia con bloque sintáctico
+    if (feat == "f_56_verb_private")
+      lems <- setdiff(lems, seem_lems)
     ev[[feat]] <- collect(toks$lemma_lc %in% lems & toks$pos %in% c("VERB", "AUX"))
   }
 
   # ── N. Estructuras reducidas ──────────────────────────────────────────────
   ev[["f_63_split_auxiliary"]] <- collect(
-    toks$pos %in% c("AUX") &
+    toks$pos == "AUX" &
     grepl("^aux", dplyr::coalesce(toks$dep_rel, ""))
   )
 
@@ -584,12 +699,16 @@ extract_evidence <- function(raw_tokens) {
   ev[["f_65_clausal_coordination"]] <- ev[["f_64_phrasal_coordination"]]
 
   # ── P. Negación ───────────────────────────────────────────────────────────
-  neg_syn  <- c("nadie", "nada", "ninguno", "ninguna", "nunca", "jamás", "tampoco")
-  neg_part <- tolower(c("no", "ni", "tampoco"))
-  ev[["f_66_neg_synthetic"]] <- collect(toks$lemma_lc %in% neg_syn & toks$pos %in% c("PRON", "ADV", "DET"))
-  ev[["f_67_neg_analytic"]]  <- collect(
+  neg_syn  <- c("nadie", "nada", "ninguno", "ninguna", "ningun",
+                "nunca", "jamás", "jamas", "tampoco")
+  neg_part <- c("no", "ni", "tampoco")
+  ev[["f_66_neg_synthetic"]] <- collect(
+    toks$lemma_lc %in% neg_syn &
+    toks$pos %in% c("PRON", "ADV", "DET", "CCONJ")
+  )
+  ev[["f_67_neg_analytic"]] <- collect(
     toks$lemma_lc %in% neg_part &
-    dplyr::coalesce(toks$dep_rel, "") == "advmod"
+    dplyr::coalesce(toks$dep_rel, "") %in% c("advmod", "cc")
   )
 
   ev
