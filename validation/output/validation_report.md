@@ -1,6 +1,6 @@
 # Reporte de validación: pseudobibeR.es
 
-Generado: 2026-05-12 18:37:39
+Generado: 2026-05-18 19:22:56
 Modelo UDPipe: spanish-gsd-ud-2.5-191206.udpipe
 Textos evaluados: 8
 

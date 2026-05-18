@@ -2,12 +2,22 @@
 
 #' Normalize feature counts to per-1000-word rates
 #'
+#' f_43_type_token (un ratio) y f_44_mean_word_length (longitud media en
+#' caracteres) son metricas derivadas, NO conteos: multiplicarlas por
+#' 1000/tot_counts las corrompe (p.ej. longitud media 9 -> 714). Se excluyen
+#' de la normalizacion. n_tokens / n_lex_tokens tampoco se normalizan.
+#'
 #' @param counts A data frame with feature counts and a tot_counts column
 #' @return A data frame with normalized counts (tot_counts column removed)
 #' @keywords internal
 normalize_counts <- function(counts) {
+  no_norm <- c("f_43_type_token", "f_44_mean_word_length",
+               "n_tokens", "n_lex_tokens", "tot_counts")
   counts %>%
-    dplyr::mutate(dplyr::across(dplyr::where(is.numeric), ~ 1000 * . / tot_counts)) %>%
+    dplyr::mutate(dplyr::across(
+      dplyr::where(is.numeric) & !dplyr::any_of(no_norm),
+      ~ 1000 * . / tot_counts
+    )) %>%
     dplyr::select(-"tot_counts")
 }
 

@@ -553,11 +553,18 @@ parse_biber_features <- function(tokens, measure, normalize,
     "f_63_split_auxiliary",
     "f_64_phrasal_coordination", "f_65_clausal_coordination",
     "f_66_neg_synthetic", "f_67_neg_analytic",
-    "f_69_mente_adverbs", "f_69_mente_adverbs_rate",
-    "f_70_long_words", "f_70_long_words_rate",
-    "f_71_preterit",
     "n_tokens", "n_lex_tokens"
   )
+  # pseudobibeR.es es una adaptacion 1:1 de los 67 rasgos de Biber (57 tras
+  # eliminar intraducibles + fusiones). Las extensiones internas f_69 (-mente),
+  # f_70 (palabras largas) y f_71 (preterito imperfecto) se calculan en bloques
+  # auxiliares (f_43/f_44 dependen del mismo bloque) pero NO forman parte del
+  # catalogo de Biber: se eliminan del output. Ademas f_70_*_rate ya viene
+  # normalizada y, de filtrarse, normalize_counts la doblaria.
+  ext_cols <- grep("^f_(69|70|71)(_|$)", colnames(biber_counts), value = TRUE)
+  if (length(ext_cols) > 0) {
+    biber_counts <- dplyr::select(biber_counts, -dplyr::all_of(ext_cols))
+  }
   present_ordered <- canonical_order[canonical_order %in% colnames(biber_counts)]
   remaining       <- setdiff(colnames(biber_counts), present_ordered)
   biber_counts <- biber_counts %>%

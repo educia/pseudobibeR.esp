@@ -1,5 +1,55 @@
 # Novedades de pseudobibeR.es
 
+## Versión 0.023
+
+### Contrato de salida: estrictamente 57 rasgos de Biber
+
+**Bug**: `biber_es()` exponía 62 columnas `f_*` (65 totales) en lugar de 57.
+`canonical_order` en `parse_functions.R` listaba explícitamente las
+extensiones internas `f_69_mente_adverbs(_rate)`, `f_70_long_words(_rate)`
+y `f_71_preterit`, que no forman parte del catálogo 1:1 de Biber.
+
+**Fix**: se eliminan esas 5 entradas de `canonical_order` y se añade un
+filtro defensivo `grep("^f_(69|70|71)(_|$)")` antes de ordenar columnas
+(necesario porque `dplyr::any_of(remaining)` las recuperaría si solo se
+quitaran de la lista). `f_43_type_token` y `f_44_mean_word_length` se
+conservan: son rasgos legítimos de Biber aunque el mismo bloque auxiliar
+los calcule junto a las extensiones.
+
+### Doble normalización de métricas derivadas
+
+**Bug**: con `normalize = TRUE`, `f_44_mean_word_length` pasaba de 9.3 a
+714 (y `f_70_long_words_rate` a ~76 000). `normalize_counts()` multiplica
+*toda* columna numérica por `1000/tot_counts`; pero f_43 (ratio) y f_44
+(longitud media) son métricas derivadas, no conteos.
+
+**Fix**: `normalize_counts()` excluye `f_43_type_token`,
+`f_44_mean_word_length`, `n_tokens`, `n_lex_tokens` de la normalización.
+Verificado: ambas métricas idénticas con `normalize` TRUE/FALSE.
+
+### Test de regresión
+
+Nuevo `tests/testthat/test-spanish-output-contract.R`: afirma exactamente
+57 rasgos, cero extensiones f_69/f_70/f_71, f_43/f_44 estables ante
+normalización y rango sano (longitud media 3–15, ninguna tasa > 1000).
+
+### Nota operativa — `Word list 'demonstrative_matchlist' not found`
+
+No es un bug del repo: `data/word_lists.rda` del repo contiene
+`demonstrative_matchlist` (27 entradas). El warning aparece cuando hay un
+**paquete instalado obsoleto** (`Version: 0.0.0.9000`) que enmascara la
+versión `load_all()`, o un snapshot del repo anterior al 2026-04-20.
+Solución para quien solo descargó la carpeta:
+
+```r
+remove.packages("pseudobibeR.es")   # quitar instalación vieja
+# reconstruir datos desde el repo:
+source("data-raw/build_french_dictionaries.R")
+devtools::load_all(".")
+```
+
+---
+
 ## Versión 0.022
 
 ### App Shiny — columna "Palabras" ahora muestra locuciones multi-token
