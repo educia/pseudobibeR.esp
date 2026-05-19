@@ -2,8 +2,8 @@
 "text_02_academico","Académico/expositivo","f_01_past_tense",4,5,1,"OK",1,NA
 "text_02_academico","Académico/expositivo","f_02_perfect_aspect",0,0,1,"OK",0,NA
 "text_02_academico","Académico/expositivo","f_03_present_tense",2,4,1,"TOLERANCE",2,NA
-"text_02_academico","Académico/expositivo","f_14_nominalizations",12,12,1,"OK",0,NA
-"text_02_academico","Académico/expositivo","f_16_other_nouns",14,11,3,"OK",-3,NA
+"text_02_academico","Académico/expositivo","f_14_nominalizations",12,11,1,"OK",-1,NA
+"text_02_academico","Académico/expositivo","f_16_other_nouns",14,12,3,"OK",-2,NA
 "text_02_academico","Académico/expositivo","f_17_agentless_passives",2,2,1,"OK",0,NA
 "text_02_academico","Académico/expositivo","f_18_by_passives",2,1,1,"OK",-1,NA
 "text_02_academico","Académico/expositivo","f_20_existential_there",1,1,1,"OK",0,NA

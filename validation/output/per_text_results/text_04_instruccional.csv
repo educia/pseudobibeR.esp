@@ -1,7 +1,7 @@
 "text_id","registro","feature","expected","observed","tolerance","status","delta","notes"
 "text_04_instruccional","Instruccional/prescriptivo","f_01_past_tense",2,2,1,"OK",0,NA
 "text_04_instruccional","Instruccional/prescriptivo","f_03_present_tense",7,8,1,"OK",1,NA
-"text_04_instruccional","Instruccional/prescriptivo","f_14_nominalizations",3,4,1,"OK",1,NA
+"text_04_instruccional","Instruccional/prescriptivo","f_14_nominalizations",3,3,1,"OK",0,NA
 "text_04_instruccional","Instruccional/prescriptivo","f_17_agentless_passives",6,5,2,"OK",-1,NA
 "text_04_instruccional","Instruccional/prescriptivo","f_20_existential_there",0,0,1,"OK",0,NA
 "text_04_instruccional","Instruccional/prescriptivo","f_21_that_verb_comp",1,2,1,"OK",1,NA

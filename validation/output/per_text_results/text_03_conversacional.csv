@@ -9,7 +9,7 @@
 "text_03_conversacional","Conversacional/interactivo","f_10_demonstrative_pronoun",2,2,1,"OK",0,NA
 "text_03_conversacional","Conversacional/interactivo","f_11_indefinite_pronouns",1,2,1,"OK",1,NA
 "text_03_conversacional","Conversacional/interactivo","f_13_wh_question",3,3,1,"OK",0,NA
-"text_03_conversacional","Conversacional/interactivo","f_21_that_verb_comp",4,3,1,"OK",-1,NA
+"text_03_conversacional","Conversacional/interactivo","f_21_that_verb_comp",4,2,1,"TOLERANCE",-2,NA
 "text_03_conversacional","Conversacional/interactivo","f_24_infinitives",6,6,1,"OK",0,NA
 "text_03_conversacional","Conversacional/interactivo","f_35_because",1,1,1,"OK",0,NA
 "text_03_conversacional","Conversacional/interactivo","f_37_if",1,1,1,"OK",0,NA
