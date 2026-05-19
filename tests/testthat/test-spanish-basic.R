@@ -28,18 +28,9 @@ test_that("f_01_past_tense cuenta pretérito indefinido (Tense=Past)", {
   )
   res <- run_es(tks)
   expect_equal(res$f_01_past_tense, 1)
-  expect_equal(res$f_71_preterit,  0)
-})
-
-test_that("f_71_preterit cuenta pretérito imperfecto (Tense=Imp)", {
-  tks <- make_es_tokens(
-    ~doc_id, ~sentence_id, ~token_id, ~token,    ~lemma,    ~upos,  ~xpos,  ~dep_rel, ~head_token_id, ~feats,
-    "d1",    1L,           1L,        "caminaba","caminar", "VERB", "VERB", "root",   NA_integer_,    "Mood=Ind|Number=Sing|Person=3|Tense=Imp|VerbForm=Fin",
-    "d1",    1L,           2L,        ".",       ".",       "PUNCT","PUNCT","punct",  1L,             NA_character_
-  )
-  res <- run_es(tks)
-  expect_equal(res$f_71_preterit,  1)
-  expect_equal(res$f_01_past_tense, 0)
+  # f_71_preterit ELIMINADO (Q1=A, auditoría): pseudobibeR.es expone solo
+  # los 57 rasgos de Biber; el pretérito imperfecto ya no es columna.
+  expect_false("f_71_preterit" %in% colnames(res))
 })
 
 test_that("f_03_present_tense cuenta presente de indicativo", {
@@ -181,7 +172,7 @@ test_that("biber_es devuelve una fila por documento sin errores", {
   expect_equal(nrow(res), 2)
   expect_true("doc_id" %in% colnames(res))
   expect_true("f_01_past_tense" %in% colnames(res))
-  expect_true("f_71_preterit"  %in% colnames(res))
+  expect_false("f_71_preterit"  %in% colnames(res))  # extensión eliminada (Q1=A)
   expect_true("f_03_present_tense" %in% colnames(res))
 })
 
