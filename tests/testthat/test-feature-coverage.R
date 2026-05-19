@@ -29,7 +29,7 @@ fc_cases <- list(
   list("f_26_past_participle",     "Terminada la reunión, todos se fueron.",        1, "Ha terminado la reunión temprano.",           0),
   list("f_27_past_participle_whiz","Los métodos utilizados fueron buenos.",         1, "Terminada la sesión, salieron.",              0),
   list("f_29_that_subj",           "El hombre que vino ayer era alto.",             1, "Dijo que vino tarde.",                        0),
-  list("f_30_that_obj",            "La casa que compré es muy grande.",             1, "Es importante que vengas.",                   0),
+  list("f_30_that_obj",            "El libro que María escribió es famoso.",        1, "Es importante que vengas.",                   0),
   list("f_33_pied_piping",         "La casa en la que vivo. La persona con quien hablé. El motivo por el cual vino. Los temas de los cuales hablamos.",2,"El libro que leí ayer.",0),
   list("f_34_sentence_relatives",  "Llegó tarde, lo cual molestó a todos.",         1, "Lo que quieras está bien.",                   0),
   list("f_35_because",             "No vino porque estaba enfermo.",                1, "Aunque llovía, salió igual.",                 0),

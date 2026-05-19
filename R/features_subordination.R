@@ -205,6 +205,26 @@ block_relatives_es <- function(tokens, doc_ids, head_lookup) {
       ant_pos = .data$pos
     )
 
+  # Discriminador sujeto/objeto de la relativa con "que" (Spanish-GSD anota
+  # el relativo como SCONJ/mark, sin distinción de caso). Regla operacional
+  # de biber_espanol_completo.md §f_29: "the relative is the subject when,
+  # within the acl:relcl clause, no other nsubj is present" → su inversa
+  # define f_30: si el verbo de la relativa TIENE un nsubj externo explícito
+  # (otro es el sujeto), el relativo "que" llena el hueco de OBJETO.
+  # Nota: el refinamiento por persona morfológica se descartó porque
+  # Spanish-GSD mis-etiqueta el pretérito 1ª sg ("compré") como
+  # Person=3|Tense=Fut; en pro-drop puro el hueco no es distinguible y
+  # queda en f_29 (limitación documentada §2.5/§6/§f_29).
+  relcl_obj_ids <- tokens %>%
+    dplyr::filter(
+      stringr::str_detect(dplyr::coalesce(.data$dep_rel, ""), "^nsubj"),
+      .data$lemma != "que",
+      !is.na(.data$head_token_id_int)
+    ) %>%
+    dplyr::distinct(.data$doc_id, .data$sentence_id,
+                    acl_head_id = .data$head_token_id_int) %>%
+    dplyr::mutate(is_obj_relcl = TRUE)
+
   # -- f_29  Relativa de sujeto (que + quien/cual fusionados) ----------------
   # FUSION f_29 + f_31 segun biber_espanol_completo.md:
   # En espanol "que" cubre tanto "that" (f_29) como "who/which" (f_31) en
@@ -247,7 +267,14 @@ block_relatives_es <- function(tokens, doc_ids, head_lookup) {
     ) %>%
     dplyr::filter(!is.na(.data$antecedent_id)) %>%
     dplyr::inner_join(antecedents,
-                      by = c("doc_id", "sentence_id", "antecedent_id"))
+                      by = c("doc_id", "sentence_id", "antecedent_id")) %>%
+    # Solo SUJETO: descartar relativas cuyo verbo es objeto-tipo
+    dplyr::left_join(
+      relcl_obj_ids,
+      by = c("doc_id", "sentence_id",
+             "head_token_id_int" = "acl_head_id")
+    ) %>%
+    dplyr::filter(!dplyr::coalesce(.data$is_obj_relcl, FALSE))
 
   wh_pronouns <- c("quien", "quienes", "cual", "cuales")
 
@@ -301,9 +328,14 @@ block_relatives_es <- function(tokens, doc_ids, head_lookup) {
     dplyr::filter(!is.na(.data$antecedent_id)) %>%
     dplyr::inner_join(antecedents,
                       by = c("doc_id", "sentence_id", "antecedent_id")) %>%
-    # Solo contamos como f_30 si ya fue contado en f_29 (evitar doble conteo):
-    # En pro-drop el gap no es distinguible; dejamos f_30 para wh-pronombres
-    dplyr::filter(FALSE)  # desactivado: toda "que" relativa va a f_29
+    # Solo OBJETO: relativas cuyo verbo tiene nsubj externo o es 1ª/2ª persona
+    # (sujeto pro-dropped → el relativo "que" llena el hueco de objeto).
+    # biber_espanol_completo.md §f_30.
+    dplyr::inner_join(
+      relcl_obj_ids,
+      by = c("doc_id", "sentence_id",
+             "head_token_id_int" = "acl_head_id")
+    )
 
   f30_wh <- rel_tokens %>%
     dplyr::filter(
