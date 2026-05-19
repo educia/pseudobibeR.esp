@@ -401,7 +401,67 @@ block_relatives_es <- function(tokens, doc_ids, head_lookup) {
     ) %>%
     dplyr::filter(
       .data$ant_lemma %in% sentence_rel_antecedents
+    )
+
+  # Rama heurística posicional (biber_espanol_completo.md §f_34): "coma +
+  # lo que / lo cual en posición inicial de cláusula" es señal fuerte de
+  # relativa oracional. Spanish-GSD adjunta el verbo de la relativa con
+  # dep_rel=parataxis/advcl/conj (no acl) y "cual"/"que" cuelga de ese
+  # verbo, cuyo head es a su vez un VERB (antecedente clausal, no nominal).
+  # El requisito de coma previa excluye las relativas libres ("Lo que
+  # quieras está bien", sin coma, inicial).
+  verb_heads_lkp <- tokens %>%
+    dplyr::transmute(
+      .data$doc_id, .data$sentence_id,
+      vh_id  = .data$token_id_int,
+      vh_pos = .data$pos
+    )
+  f34_locual <- tokens %>%
+    dplyr::arrange(.data$doc_id, .data$sentence_id, .data$token_id_int) %>%
+    dplyr::group_by(.data$doc_id, .data$sentence_id) %>%
+    dplyr::mutate(
+      prev_pos   = dplyr::lag(.data$pos),
+      prev_tok   = dplyr::lag(.data$token),
+      next_tok   = dplyr::lead(stringr::str_to_lower(.data$token))
     ) %>%
+    dplyr::ungroup() %>%
+    dplyr::filter(
+      # "lo" clítico se lematiza como "él" en Spanish-GSD → usar superficie
+      stringr::str_to_lower(.data$token) == "lo",
+      dplyr::coalesce(.data$prev_pos, "") == "PUNCT" |
+        dplyr::coalesce(.data$prev_tok, "") == ",",
+      dplyr::coalesce(.data$next_tok, "") %in% c("cual", "que"),
+      !is.na(.data$head_token_id_int)
+    ) %>%
+    # el "lo" cuelga del relativo (cual/que); ese relativo cuelga del verbo
+    # de la relativa; ese verbo cuelga de otro VERB (cláusula antecedente)
+    dplyr::left_join(
+      tokens %>% dplyr::transmute(
+        .data$doc_id, .data$sentence_id,
+        rel_id = .data$token_id_int,
+        rel_head = .data$head_token_id_int
+      ),
+      by = c("doc_id", "sentence_id", "head_token_id_int" = "rel_id")
+    ) %>%
+    dplyr::left_join(
+      tokens %>% dplyr::transmute(
+        .data$doc_id, .data$sentence_id,
+        rv_id = .data$token_id_int,
+        rv_head = .data$head_token_id_int
+      ),
+      by = c("doc_id", "sentence_id", "rel_head" = "rv_id")
+    ) %>%
+    dplyr::left_join(
+      verb_heads_lkp,
+      by = c("doc_id", "sentence_id", "rv_head" = "vh_id")
+    ) %>%
+    dplyr::filter(dplyr::coalesce(.data$vh_pos, "") == "VERB")
+
+  f34 <- dplyr::bind_rows(
+    f34        %>% dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int),
+    f34_locual %>% dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int)
+  ) %>%
+    dplyr::distinct() %>%
     count_feature("f_34_sentence_relatives")
 
   # f_31 y f_32 han sido absorbidos en f_29 y f_30 respectivamente
