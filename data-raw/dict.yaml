@@ -624,9 +624,9 @@ f_51_demonstratives:
   - aquella
   - aquellos
   - aquellas
-  - esto
-  - eso
-  - aquello
+  # Neutros esto/eso/aquello NO van en f_51: biber_espanol_completo.md §f_51
+  # los marca como exclusivamente pronominales (nunca determinantes). Se
+  # cuentan solo en f_10. Estaban aquí y la rama quanteda los sumaba a f_51.
 
 # ─────────────────────────────────────────────────────────────────────────────
 # MODALES (f_52, f_53)
