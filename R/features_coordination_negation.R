@@ -149,7 +149,9 @@ block_split_coordination_es <- function(tokens, doc_ids, token_lookup,
     dplyr::summarise(f_64_phrasal_coordination = dplyr::n(), .groups = "drop")
 
   # f_65  Coordinacion clausal
-  f65 <- cc_tokens %>%
+  #  (a) rama dependency: "y/e" con conj cuyo conjunto es VERB/AUX finito
+  #      y la clausula tiene sujeto explicito (coordinacion intra-oracion)
+  f65_dep <- cc_tokens %>%
     dplyr::filter(
       dplyr::coalesce(.data$conj_dep_rel, "") == "conj",
       dplyr::coalesce(.data$conj_pos,     "") %in% c("VERB", "AUX"),
@@ -157,6 +159,24 @@ block_split_coordination_es <- function(tokens, doc_ids, token_lookup,
       is.na(.data$conj_verbform) |
         !.data$conj_verbform %in% c("Inf", "Ger", "Part")
     ) %>%
+    dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int)
+
+  #  (b) rama posicional (biber_espanol_completo.md §f_65): "y/e" en
+  #      posición inicial de cláusula, precedida por puntuación final de
+  #      oración O al inicio absoluto del documento. En Spanish-GSD una
+  #      oración que empieza con "Y" la etiqueta CCONJ/cc cuyo head es el
+  #      root de su propia oración (no hay relación conj entre oraciones).
+  #      Excluye pero/mas (espejo de Biber). token_id_int==1 = inicial.
+  f65_initial <- tokens %>%
+    dplyr::filter(
+      stringr::str_to_lower(.data$token) %in% c("y", "e"),
+      .data$pos == "CCONJ",
+      .data$token_id_int == 1L
+    ) %>%
+    dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int)
+
+  f65 <- dplyr::bind_rows(f65_dep, f65_initial) %>%
+    dplyr::distinct() %>%
     dplyr::group_by(.data$doc_id) %>%
     dplyr::summarise(f_65_clausal_coordination = dplyr::n(), .groups = "drop")
 
