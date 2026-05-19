@@ -448,6 +448,16 @@ block_clause_embedding_es <- function(tokens, doc_ids, head_lookup,
   #   - token lemma = "que", pos = SCONJ
   #   - dep_rel = mark
   #   - head del mark tiene pos = VERB o AUX
+  # Tabla dep_rel del head: distingue complemento (ccomp/xcomp/…) de
+  # relativa (acl:relcl). biber_espanol_completo.md §f_21 (EXCLUDE): "que"
+  # como pronombre relativo en acl:relcl va a f_29/f_30, NO a f_21.
+  head_deprel <- tokens %>%
+    dplyr::transmute(
+      .data$doc_id, .data$sentence_id,
+      head_token_id_int = .data$token_id_int,
+      head_dep_rel = .data$dep_rel
+    )
+
   f21 <- tokens %>%
     dplyr::filter(
       .data$lemma == "que",
@@ -459,8 +469,13 @@ block_clause_embedding_es <- function(tokens, doc_ids, head_lookup,
       head_lookup,
       by = c("doc_id", "sentence_id", "head_token_id_int" = "token_id_int")
     ) %>%
+    dplyr::left_join(
+      head_deprel,
+      by = c("doc_id", "sentence_id", "head_token_id_int")
+    ) %>%
     dplyr::filter(
-      dplyr::coalesce(.data$head_pos, "") %in% c("VERB", "AUX")
+      dplyr::coalesce(.data$head_pos, "") %in% c("VERB", "AUX"),
+      !stringr::str_detect(dplyr::coalesce(.data$head_dep_rel, ""), "^acl")
     ) %>%
     count_feature("f_21_that_verb_comp")
 
