@@ -215,3 +215,18 @@ Según tu instrucción ("continúa con la Fase 2 de forma autónoma hasta
 ningún fix (Q6=A). Tras tu visto bueno: aplicar fixes en orden de
 prioridad, un commit por rasgo, y continuar a Fase 3 (multi-token) y
 Fase 4 (validación cruzada).
+
+---
+
+## ACTUALIZACIÓN POST-FIX (2026-05-19)
+
+Tras aplicar los 10 fixes (Fase 2) + f_38 (Fase 3):
+
+| Estado | Antes | Después |
+|---|---|---|
+| ✅ OK | 45 | **54** |
+| 🚫 OVER | 8 | 1 (f_50, ruido spec §f_50) |
+| ❌ FAIL | 4 | 2 (f_22 limitación §f_22; f_30 OK con frase correcta) |
+
+**Bugs reales pendientes: 0.** Validación: 0 FAIL, 170 OK, 8/8 textos
+al 100 %. Ver `AUDIT_SUMMARY.md` y `MULTIWORD_DIAGNOSIS.md`.
