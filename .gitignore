@@ -45,3 +45,4 @@ vignettes/*.pdf
 data-raw/*.udpipe
 tests/testthat/text-samples/*.udpipe
 docs
+.claude/worktrees/keen-curie-b9df64/
