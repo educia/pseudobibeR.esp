@@ -407,14 +407,12 @@ nominalization_suffixes:
   # Sufijos de accion / resultado
   - aje       # -aje   -> aprendizaje, porcentaje, lenguaje
   - ajes
-  - ado       # -ado   -> resultado, estado, tratado (nominaliz. de part.)
-  - ados
-  - ada       # -ada   -> llegada, entrada, jugada
-  - adas
-  - ido       # -ido   -> sonido, pedido, partido
-  - idos
-  - ida       # -ida   -> salida, caida, herida
-  - idas
+  # Sufijos participiales -ado/-ada/-ido/-ida ELIMINADOS:
+  # biber_espanol_completo.md §f_14 marca explícitamente que "lado" NO debe
+  # matchear y la lista canónica del documento es -ción/-sión/-miento/-mento
+  # /-idad/-ez/-ura. -ado/-ido producían falsos positivos masivos
+  # (lado, grado, partido, sentido, estado…). Se prioriza precisión sobre
+  # recall (se pierde resultado/llegada, ruido aceptable §f_14).
   # Sufijos de cualidad
   - ez        # -ez    -> sencillez, estrechez, vejez
   - eza       # -eza   -> naturaleza, riqueza, pobreza
