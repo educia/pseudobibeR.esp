@@ -586,6 +586,17 @@ block_clause_embedding_es <- function(tokens, doc_ids, head_lookup,
       .data$lemma %in% wh_adv_tilde
     )
 
+  # dep_rel del verbo que encabeza la cláusula-wh: si es "root" la cláusula
+  # es principal → pregunta DIRECTA (va a f_13, NO a f_23). La interrogativa
+  # indirecta tiene el verbo subordinado (ccomp/xcomp/advcl/acl…).
+  # biber_espanol_completo.md §f_23 (EXCLUDE): "Direct questions → f_13".
+  wh_head_deprel <- tokens %>%
+    dplyr::transmute(
+      .data$doc_id, .data$sentence_id,
+      head_token_id_int = .data$token_id_int,
+      wh_head_dep = .data$dep_rel
+    )
+
   f23 <- dplyr::bind_rows(is_int_pron, is_int_adv) %>%
     dplyr::filter(
       stringr::str_detect(
@@ -598,8 +609,13 @@ block_clause_embedding_es <- function(tokens, doc_ids, head_lookup,
       head_lookup,
       by = c("doc_id", "sentence_id", "head_token_id_int" = "token_id_int")
     ) %>%
+    dplyr::left_join(
+      wh_head_deprel,
+      by = c("doc_id", "sentence_id", "head_token_id_int")
+    ) %>%
     dplyr::filter(
-      dplyr::coalesce(.data$head_pos, "") %in% c("VERB", "AUX", "ADJ")
+      dplyr::coalesce(.data$head_pos, "") %in% c("VERB", "AUX", "ADJ"),
+      dplyr::coalesce(.data$wh_head_dep, "") != "root"
     ) %>%
     dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int) %>%
     count_feature("f_23_wh_clause")
