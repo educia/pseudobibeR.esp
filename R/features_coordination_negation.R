@@ -29,51 +29,15 @@
 #   by = c(...) lo que produce error en dplyr. Corregido con rename previo.
 
 # -----------------------------------------------------------------------------
-# 1.  block_contractions_es   f_59
+# Rasgos f_59 (contracciones), f_61 (preposición varada) y f_62 (infinitivo
+# escindido) ELIMINADOS por intraducibles (biber_espanol_completo.md §F_59,
+# §F_61, §F_62). Antes existían stubs block_contractions_es /
+# block_stranded_split_es que devolvían doc_ids sin columnas; retirados en
+# la auditoría Fase 1 (Sección C2) por código vestigial.
 # -----------------------------------------------------------------------------
 
-#' Contraction features (Spanish)
-#'
-#' f_59 (contracciones) ELIMINADO: intraducible.
-#' El espanol no tiene contracciones morfologicas equivalentes al ingles
-#' (I'm, don't, etc.). "del" y "al" son obligatorias en espanol estandar
-#' y no discriminan registro informal. biber_espanol_completo.md sec. F_59.
-#'
-#' @param tokens Annotated token data frame
-#' @param doc_ids One-column data frame with column `doc_id`
-#' @return doc_ids unchanged (sin columnas adicionales)
-#' @keywords internal
-block_contractions_es <- function(tokens, doc_ids) {
-  # f_59 eliminado -- devuelve doc_ids sin columnas adicionales.
-  doc_ids
-}
-
 # -----------------------------------------------------------------------------
-# 2.  block_stranded_split_es   f_61-f_62
-# -----------------------------------------------------------------------------
-
-#' Stranded preposition and split infinitive features (Spanish)
-#'
-#' f_61 (preposicion varada) ELIMINADO: intraducible.
-#' Las preposiciones varadas son categoricamente agramaticales en espanol.
-#' Lo que en ingles se distribuye entre f_33 (formal) y f_61 (informal)
-#' cae en espanol enteramente en f_33. biber_espanol_completo.md sec. F_61.
-#'
-#' f_62 (infinitivo escindido) ELIMINADO: intraducible.
-#' La construccion requiere un marcador preverbal (*to*) que el espanol
-#' no tiene. biber_espanol_completo.md sec. F_62.
-#'
-#' @param tokens Annotated token data frame
-#' @param doc_ids One-column data frame with column `doc_id`
-#' @return doc_ids unchanged (sin columnas adicionales)
-#' @keywords internal
-block_stranded_split_es <- function(tokens, doc_ids) {
-  # f_61 y f_62 eliminados -- devuelve doc_ids sin columnas adicionales.
-  doc_ids
-}
-
-# -----------------------------------------------------------------------------
-# 3.  block_split_coordination_es   f_63-f_65
+# 1.  block_split_coordination_es   f_63-f_65
 # -----------------------------------------------------------------------------
 
 #' Split auxiliary and coordination features (Spanish)
