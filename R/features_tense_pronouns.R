@@ -182,10 +182,15 @@ block_tense_es <- function(
     count_feature("f_05_time_adverbials")
 
   # -- f_11  Pronombres indefinidos ------------------------------------------
+  # biber_espanol_completo.md §f_11 (EXCLUDE crítico): un/una/unos/unas son
+  # artículos (DET, PronType=Art), no pronombres. UDPipe los lematiza como
+  # "uno"; el filtro PronType!=Art descarta el artículo y conserva el uso
+  # pronominal (uno PRON PronType=Ind).
   f11 <- tokens %>%
     dplyr::filter(
       .data$lemma %in% indefinite_pronouns,
-      .data$pos   %in% c("PRON", "DET")
+      .data$pos   %in% c("PRON", "DET"),
+      !stringr::str_detect(dplyr::coalesce(.data$feats, ""), "PronType=Art")
     ) %>%
     count_feature("f_11_indefinite_pronoun")
 
