@@ -538,6 +538,33 @@ block_clause_embedding_es <- function(tokens, doc_ids, head_lookup,
   # en Biber). biber_espanol_completo.md F_37.
   conditional_lemmas <- c("si", "a_menos_que", "salvo_que")
 
+  # biber_espanol_completo.md §f_37 (EXCLUDE crítico): "si" como
+  # complementante interrogativo indirecto NO cuenta. El discriminador es el
+  # verbo regente: si el abuelo de "si" (head del verbo subordinado que
+  # "si" marca) es verbo de comunicación/cognición → interrogativa indirecta
+  # ("preguntó si vendría", "no sé si vino"), se excluye.
+  interrog_governors <- c(
+    "preguntar", "saber", "ignorar", "dudar", "desconocer", "averiguar",
+    "comprobar", "ver", "decidir", "recordar", "contar", "decir",
+    "explicar", "entender", "comprender", "olvidar", "consultar",
+    "investigar", "examinar", "determinar", "aclarar", "cuestionar"
+  )
+  # Tabla verbo-subordinado → su head (abuelo). Claves sin colisión:
+  # mid_id  = id del verbo que "si" marca (head de "si")
+  # gp_id   = head de ese verbo (abuelo de "si")
+  mid_to_gp <- tokens %>%
+    dplyr::transmute(
+      .data$doc_id, .data$sentence_id,
+      mid_id = .data$token_id_int,
+      gp_id  = .data$head_token_id_int
+    )
+  gp_lemma_tbl <- tokens %>%
+    dplyr::transmute(
+      .data$doc_id, .data$sentence_id,
+      gp_id    = .data$token_id_int,
+      gp_lemma = .data$lemma
+    )
+
   f37 <- tokens %>%
     dplyr::filter(
       .data$lemma %in% conditional_lemmas,
@@ -545,6 +572,14 @@ block_clause_embedding_es <- function(tokens, doc_ids, head_lookup,
       stringr::str_detect(
         dplyr::coalesce(.data$dep_rel, ""), "^mark"
       )
+    ) %>%
+    dplyr::mutate(mid_id = .data$head_token_id_int) %>%
+    dplyr::left_join(mid_to_gp,
+                     by = c("doc_id", "sentence_id", "mid_id")) %>%
+    dplyr::left_join(gp_lemma_tbl,
+                     by = c("doc_id", "sentence_id", "gp_id")) %>%
+    dplyr::filter(
+      !dplyr::coalesce(.data$gp_lemma, "") %in% interrog_governors
     ) %>%
     dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int) %>%
     count_feature("f_37_if")
