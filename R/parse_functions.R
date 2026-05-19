@@ -418,13 +418,25 @@ parse_biber_features <- function(tokens, measure, normalize,
     "f_57_verb_suasive",
     "f_58_verb_seem"
   )
+  # biber_espanol_completo.md §f_52 (EXCLUDE): "poder" nominal (tiene poder)
+  # NO cuenta — distinto POS. La rama quanteda (.x) matchea por superficie
+  # sin POS y cuenta el sustantivo; la rama de código (.y, block_modals_es
+  # → count_modal_periphrasis) ya exige pos ∈ {VERB,AUX} + infinitivo
+  # dependiente. Para f_52 se toma solo la rama de código.
+  code_only_features <- c("f_52_modal_possibility")
   for (feature in combine_features) {
     x_col <- paste0(feature, ".x")
     y_col <- paste0(feature, ".y")
     if (all(c(x_col, y_col) %in% colnames(biber_counts))) {
       x_vals <- dplyr::coalesce(biber_counts[[x_col]], 0L)
       y_vals <- dplyr::coalesce(biber_counts[[y_col]], 0L)
-      biber_counts[[feature]] <- if (feature %in% pmax_features) pmax(x_vals, y_vals) else x_vals + y_vals
+      biber_counts[[feature]] <- if (feature %in% code_only_features) {
+        y_vals
+      } else if (feature %in% pmax_features) {
+        pmax(x_vals, y_vals)
+      } else {
+        x_vals + y_vals
+      }
       biber_counts <- dplyr::select(biber_counts, -dplyr::any_of(c(x_col, y_col)))
     }
   }
