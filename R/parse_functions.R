@@ -537,21 +537,35 @@ parse_biber_features <- function(tokens, measure, normalize,
   #   f_62 (split_infinitive).
   # f_68_nominalization eliminado: duplicado de f_14.
   # Ver biber_espanol_completo.md y AUDIT_REPORT.md para justificacion.
+  # Inventario superficial COMPLETO de 67 rasgos para paridad con
+  # pseudobibeR.fr. Los 10 rasgos intraducibles al español (f_09, f_12,
+  # f_15, f_28, f_59, f_60, f_61, f_62) y los 2 fusionados (f_31, f_32)
+  # se exponen como columnas constantes-cero: facilitan comparación
+  # lado-a-lado con FR y drop-in en scripts existentes. El conteo real
+  # de los 55 rasgos detectados + las 2 fusiones (f_29 absorbe f_31,
+  # f_30 absorbe f_32) cumple el contrato 1:1 con Biber 1988.
+  # Ver biber_espanol_completo.md §1 y novedades v0.024.
   canonical_order <- c(
     "doc_id",
     "f_01_past_tense", "f_02_perfect_aspect", "f_03_present_tense",
     "f_04_place_adverbials", "f_05_time_adverbials",
     "f_06_first_person_pronouns", "f_07_second_person_pronouns",
     "f_08_third_person_pronouns",
+    "f_09_pronoun_it",
     "f_10_demonstrative_pronoun", "f_11_indefinite_pronouns",
+    "f_12_proverb_do",
     "f_13_wh_question",
-    "f_14_nominalizations", "f_16_other_nouns",
+    "f_14_nominalizations",
+    "f_15_gerunds",
+    "f_16_other_nouns",
     "f_17_agentless_passives", "f_18_by_passives",
     "f_19_be_main_verb", "f_20_existential_there",
     "f_21_that_verb_comp", "f_22_that_adj_comp", "f_23_wh_clause",
     "f_24_infinitives", "f_25_present_participle", "f_26_past_participle",
     "f_27_past_participle_whiz",
+    "f_28_present_participle_whiz",
     "f_29_that_subj", "f_30_that_obj",
+    "f_31_wh_subj", "f_32_wh_obj",
     "f_33_pied_piping", "f_34_sentence_relatives",
     "f_35_because", "f_36_though", "f_37_if", "f_38_other_adv_sub",
     "f_39_prepositions", "f_40_adj_attr", "f_41_adj_pred", "f_42_adverbs",
@@ -560,20 +574,32 @@ parse_biber_features <- function(tokens, measure, normalize,
     "f_49_emphatics", "f_50_discourse_particles", "f_51_demonstratives",
     "f_52_modal_possibility", "f_53_modal_necessity", "f_54_modal_predictive",
     "f_55_verb_public", "f_56_verb_private", "f_57_verb_suasive", "f_58_verb_seem",
+    "f_59_contractions", "f_60_that_deletion",
+    "f_61_stranded_preposition", "f_62_split_infinitive",
     "f_63_split_auxiliary",
     "f_64_phrasal_coordination", "f_65_clausal_coordination",
     "f_66_neg_synthetic", "f_67_neg_analytic",
     "n_tokens", "n_lex_tokens"
   )
-  # pseudobibeR.es es una adaptacion 1:1 de los 67 rasgos de Biber (57 tras
-  # eliminar intraducibles + fusiones). Las extensiones internas f_69 (-mente),
-  # f_70 (palabras largas) y f_71 (preterito imperfecto) se calculan en bloques
-  # auxiliares (f_43/f_44 dependen del mismo bloque) pero NO forman parte del
-  # catalogo de Biber: se eliminan del output. Ademas f_70_*_rate ya viene
-  # normalizada y, de filtrarse, normalize_counts la doblaria.
+  # Extensiones internas f_69 (-mente), f_70 (palabras largas) y f_71
+  # (preterito imperfecto): no forman parte del catalogo Biber, se eliminan.
+  # f_70_*_rate ya viene normalizada y, de filtrarse, normalize_counts la
+  # doblaria.
   ext_cols <- grep("^f_(69|70|71)(_|$)", colnames(biber_counts), value = TRUE)
   if (length(ext_cols) > 0) {
     biber_counts <- dplyr::select(biber_counts, -dplyr::all_of(ext_cols))
+  }
+  # Inyectar columnas constantes-cero para los 10 rasgos no-detectables en
+  # espanol (paridad superficial con FR).
+  surface_only_zero <- c(
+    "f_09_pronoun_it", "f_12_proverb_do", "f_15_gerunds",
+    "f_28_present_participle_whiz",
+    "f_31_wh_subj", "f_32_wh_obj",
+    "f_59_contractions", "f_60_that_deletion",
+    "f_61_stranded_preposition", "f_62_split_infinitive"
+  )
+  for (col in surface_only_zero) {
+    if (!col %in% colnames(biber_counts)) biber_counts[[col]] <- 0
   }
   present_ordered <- canonical_order[canonical_order %in% colnames(biber_counts)]
   remaining       <- setdiff(colnames(biber_counts), present_ordered)

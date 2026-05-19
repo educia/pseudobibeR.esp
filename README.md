@@ -13,7 +13,8 @@ Este paquete **no** realiza el etiquetado gramatical por sí mismo. En su lugar,
 
 El español plantea desafíos específicos respecto al inglés o el francés: el sujeto nulo (*pro-drop*) hace innecesario un pronombre expletivo equivalente al inglés *it*; la negación opera con palabras negativas preverbales o posverbales; y las relativas introducidas por *que* funcionan tanto en posición de sujeto como de objeto. Estas diferencias se han tenido en cuenta en el diseño del extractor:
 
-- **57 rasgos de Biber adaptados** (de los 67 originales): 8 eliminados por intraducibles al español + 2 absorbidos en fusiones.
+- **67 columnas de rasgo expuestas** para paridad superficial con `pseudobibeR.fr`. La salida contiene los 55 rasgos detectables en español + 2 fusiones (f_29 absorbe f_31, f_30 absorbe f_32) + 10 columnas constantes-cero para los rasgos intraducibles al español (`f_09_pronoun_it`, `f_12_proverb_do`, `f_15_gerunds`, `f_28_present_participle_whiz`, `f_31_wh_subj`, `f_32_wh_obj`, `f_59_contractions`, `f_60_that_deletion`, `f_61_stranded_preposition`, `f_62_split_infinitive`).
+- **Contrato lingüístico 1:1 con Biber 1988**: solo 57 rasgos tienen detección real (los 55 únicos + las 2 fusiones), alineados con `biber_espanol_completo.md §1`. Las 10 columnas-cero son **cicatrices de paridad superficial**, no rasgos efectivamente detectados.
 - **2 fusiones**: `f_29+f_31 → f_29_that_subj`; `f_30+f_32 → f_30_that_obj`.
 
 **Nota:** Textos con ortografía muy irregular, puntuación no normativa o lenguaje muy especializado pueden producir salidas menos fiables salvo que el modelo UD se haya ajustado a ese dominio.
@@ -89,7 +90,7 @@ print(features)
 
 ## Características principales
 
-- **57 rasgos de Biber adaptados al español**, organizados en 16 categorías (A–P)
+- **67 columnas de rasgo expuestas** (paridad superficial con `pseudobibeR.fr`); 57 con detección real y 10 columnas-cero para rasgos intraducibles, organizados en 16 categorías (A–P)
 - **Normalización automática** a conteos por 1 000 tokens (opcional)
 - **Varias medidas de type-token ratio** (MATTR, TTR, CTTR, MSTTR)
 - **Integración con UDPipe** (y potencialmente spaCy en el futuro)
@@ -258,7 +259,7 @@ Al usar `pseudobibeR.es` en tu investigación, cita:
 
 ## Rasgos lingüísticos extraídos
 
-El paquete extrae **57 rasgos de Biber adaptados al español**, organizados en 16 categorías. De los 67 originales, 8 han sido eliminados por ser intraducibles al español (f_09, f_12, f_15, f_28, f_59, f_60, f_61, f_62) y 2 han sido absorbidos por fusión (f_31 → f_29; f_32 → f_30), resultando en 67 − 8 − 2 = 57 rasgos.
+El paquete expone **67 columnas de rasgo** alineadas con `pseudobibeR.fr`, de las cuales **57 tienen detección lingüística real** y 10 son cicatrices de paridad superficial con valor `0` constante. De los 67 rasgos originales de Biber 1988, **8 son intraducibles al español** (f_09, f_12, f_15, f_28, f_59, f_60, f_61, f_62) y **2 han sido absorbidos por fusión** (f_31 → f_29; f_32 → f_30): 67 − 8 − 2 = 57 rasgos con detección efectiva. Las 10 columnas intraducibles/fusionadas se mantienen en la salida con valor `0` para facilitar la comparación lado-a-lado con `pseudobibeR.fr` y el drop-in en scripts que esperan los 67 nombres de Biber.
 
 ### Categorías de rasgos
 

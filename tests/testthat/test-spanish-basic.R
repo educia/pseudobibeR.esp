@@ -141,11 +141,12 @@ test_that("f_67 cuenta negación analítica (no + verbo)", {
 })
 
 # ─── Contracciones ────────────────────────────────────────────────────────
-# f_59_contractions fue ELIMINADO (intraducible): en UD las contracciones del/al
-# se tokenzan en dos tokens (de+el, a+el); no existe contracción ortográfica
-# equivalente al inglés. La columna no aparece en el output de biber_es().
+# f_59_contractions es intraducible en español (en UD las contracciones del/al
+# se tokenzan en dos tokens; no existe contracción ortográfica equivalente al
+# inglés). Desde v0.024 la columna SÍ aparece en el output con valor 0
+# permanente para paridad superficial con pseudobibeR.fr.
 
-test_that("f_59_contractions ausente del output (feature eliminado)", {
+test_that("f_59_contractions presente y siempre 0 (paridad FR)", {
   tks <- make_es_tokens(
     ~doc_id, ~sentence_id, ~token_id, ~token, ~lemma, ~upos,  ~xpos,  ~dep_rel, ~head_token_id, ~feats,
     "d1",    1L,           1L,        "voy",  "ir",   "VERB", "VERB", "root",   NA_integer_,    "Mood=Ind|Number=Sing|Person=1|Tense=Pres|VerbForm=Fin",
@@ -154,7 +155,8 @@ test_that("f_59_contractions ausente del output (feature eliminado)", {
     "d1",    1L,           4L,        ".",    ".",    "PUNCT","PUNCT","punct",  1L,             NA_character_
   )
   res <- run_es(tks)
-  expect_false("f_59_contractions" %in% colnames(res))
+  expect_true("f_59_contractions" %in% colnames(res))
+  expect_equal(as.numeric(res$f_59_contractions[1]), 0)
 })
 
 # ─── Estructura de salida ─────────────────────────────────────────────────

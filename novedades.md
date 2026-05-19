@@ -1,5 +1,48 @@
 # Novedades de pseudobibeR.es
 
+## Versión 0.024
+
+### Paridad superficial 67-columnas con `pseudobibeR.fr`
+
+`biber_es()` ahora expone **los 67 nombres de rasgo de Biber 1988**, igual
+que `pseudobibeR.fr`. Las 10 columnas correspondientes a rasgos
+intraducibles al español o fusionados se rellenan con valor `0` constante:
+
+| Columna | Razón |
+|---|---|
+| `f_09_pronoun_it` | pro-drop, sin expletivo |
+| `f_12_proverb_do` | sin pro-verbo gramaticalizado |
+| `f_15_gerunds` | gerundio español sin función nominal |
+| `f_28_present_participle_whiz` | sin participio presente postnominal |
+| `f_31_wh_subj` | fusionado en f_29 (que cubre that+wh) |
+| `f_32_wh_obj` | fusionado en f_30 |
+| `f_59_contractions` | sin contracciones morfológicas estándar |
+| `f_60_that_deletion` | `que` complementante obligatorio |
+| `f_61_stranded_preposition` | categóricamente agramatical |
+| `f_62_split_infinitive` | sin marcador preverbal `to` |
+
+**Motivación**: facilitar comparación lado-a-lado con `pseudobibeR.fr` y
+drop-in en scripts existentes que esperan los 67 nombres de Biber. El
+contrato lingüístico se mantiene: solo 57 rasgos tienen detección real
+(`biber_espanol_completo.md §1`); las 10 columnas-cero son **cicatrices
+de paridad superficial**, no rasgos detectados.
+
+**Cambios:**
+- `R/parse_functions.R`: `canonical_order` ampliado a 67 entradas en orden
+  numérico estricto; bloque nuevo que inyecta columnas `surface_only_zero`
+  si no fueron computadas por ningún `block_*_es`.
+- `tests/testthat/test-spanish-output-contract.R`: assert `length(feat_cols)
+  == 67L` (antes `57L`); verifica que las 10 columnas intraducibles
+  existen y son `0`.
+- `tests/testthat/test-spanish-basic.R`: test `f_59_contractions` migrado
+  de "ausente del output" a "presente y siempre 0".
+- `README.md` §descripción general, §características, §rasgos extraídos:
+  documentan el contrato superficial 67 / detección real 57.
+- Suite completa: **296 PASS / 0 FAIL / 3 SKIP**. Validación 8 textos:
+  **170 OK / 11 TOL / 0 FAIL / 181 total**.
+
+---
+
 ## Versión 0.023
 
 ### Contrato de salida: estrictamente 57 rasgos de Biber
