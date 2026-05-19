@@ -381,6 +381,24 @@ El paquete extrae **57 rasgos de Biber adaptados al español**, organizados en 1
 | f_29_that_subj + f_31_wh_subj | → **f_29_that_subj** | En español, *que* relativo cubre tanto sujeto como objeto; la distinción that/wh no aplica |
 | f_30_that_obj + f_32_wh_obj | → **f_30_that_obj** | *Quien/cual* en posición oblicua absorbe el rol de f_32 |
 
+## Known limitations
+
+Estas tres limitaciones son **por diseño**, no bugs. Si observas conteos inesperados en estos rasgos, es el comportamiento esperado documentado tras la auditoría:
+
+- **f_22_that_adj_comp**: UDPipe `spanish-gsd` no etiqueta el head de *que* como `ADJ` en construcciones copulativas (*es importante que…*); el rasgo subdetecta complementos de adjetivo. Limitación del parser, reconocida en `biber_espanol_completo.md §f_22`.
+- **f_50_discourse_particles**: la versión base no aplica filtro posicional, por lo que algunos mono-tokens (*bueno*, *claro*) pueden contarse fuera de posición inicial de cláusula. Ruido aceptable autorizado explícitamente por `biber_espanol_completo.md §f_50`.
+- **f_29/f_30 (relativas con *que*) en pro-drop puro**: cuando el sujeto está elidido y no hay `nsubj` explícito, el hueco sujeto/objeto no es distinguible y la relativa se cuenta en f_29. Documentado en `biber_espanol_completo.md §2.5/§6/§f_29`.
+
+## Roadmap
+
+```
+Post-audit: bilingual architecture (Option C)
+- Bring block_*_fr from original pseudobibeR.fr repo
+- Decide: single package with dispatcher vs. two packages
+- Re-wire testthat discovery for tests/testthat/fr/
+- Update DESCRIPTION to reflect bilingual scope
+```
+
 ## Contribuciones
 
 ¡Las contribuciones son bienvenidas! Puedes abrir *issues* o *pull requests* en [GitHub](https://github.com/browndw/pseudobibeR.es).
