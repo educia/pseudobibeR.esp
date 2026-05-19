@@ -714,14 +714,26 @@ block_clause_embedding_es <- function(tokens, doc_ids, head_lookup,
     causal_lemmas, concessive_lemmas, conditional_lemmas
   ))
 
+  # biber_espanol_completo.md §f_38 incluye "mientras" (y mientras_que) como
+  # subordinador adverbial. Spanish-GSD lo etiqueta de forma inconsistente
+  # como SCONJ o CCONJ (en "mientras que" → mientras=CCONJ/mark, que=SCONJ/
+  # fixed). Se añade rama CCONJ restringida a una allowlist de lemas
+  # subordinantes para no capturar coordinantes (y/o/pero/ni).
+  adv_sub_cconj <- c("mientras", "conforme", "según", "segun")
+
   f38 <- tokens %>%
     dplyr::filter(
-      .data$pos %in% c("SCONJ", "ADP", "ADV"),
-      stringr::str_detect(
-        dplyr::coalesce(.data$dep_rel, ""), "^mark"
+      (
+        .data$pos %in% c("SCONJ", "ADP", "ADV") &
+          stringr::str_detect(dplyr::coalesce(.data$dep_rel, ""), "^mark")
+      ) | (
+        .data$pos == "CCONJ" &
+          stringr::str_detect(dplyr::coalesce(.data$dep_rel, ""), "^mark") &
+          stringr::str_to_lower(.data$lemma) %in% adv_sub_cconj
       ),
       !.data$lemma %in% counted_sub
     ) %>%
+    dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int) %>%
     count_feature("f_38_other_adv_sub")
 
   # f_60 (that-deletion) ELIMINADO: intraducible.
