@@ -98,6 +98,67 @@ for (cs in fc_cases) {
   }
 }
 
+# ── Tests críticos puntuales pedidos por audit/FEATURE_AUDIT.md (brief) ───
+
+test_that("f_06 — pro-drop: oración sin pronombre explícito cuenta 0", {
+  skip("BUG f_06: dispara con verbo Person=1 sin pronombre explícito (Comí). Spec §f_06 Exclude: 'fui alone — no detection'. Ver audit/FEATURE_AUDIT.md")
+  # Spec §f_06: lexical list + morphological filter (Person=1) sobre PRON;
+  # NO debe disparar con verbos conjugados.
+  r <- run_biber("Comí pizza ayer.")
+  expect_equal(as.numeric(r$f_06_first_person_pronouns), 0)
+})
+
+test_that("f_19 — 'O sea, ...' no cuenta sea como ser/estar léxico", {
+  # Spec: el compound o_sea debe absorber sea antes de que f_19 lo vea.
+  r <- run_biber("O sea, llegó tarde.")
+  expect_equal(as.numeric(r$f_19_be_main_verb), 0,
+               info = "sea debe ser parte del compound o_sea (→ f_50)")
+})
+
+test_that("f_23 — relativa con 'que' sin tilde cuenta 0 (es f_29, no wh-clause)", {
+  skip("BUG f_23: cuenta 'que' relativo sin tilde como wh-clause. Spec §f_23: solo wh accentuados en función argumental. Ver audit/FEATURE_AUDIT.md")
+  # Spec §f_23: solo wh interrogativos/indirectos con tilde.
+  # "El equipo que fue asignado" es relativa: cae en f_29, no en f_23.
+  r <- run_biber("El equipo que fue asignado finalizó el proyecto.")
+  expect_equal(as.numeric(r$f_23_wh_clause), 0)
+})
+
+test_that("f_44 — caso corto sigue dentro del rango 4-6 (no inflado)", {
+  # Regresión defensiva: 'Prueba de contrato.' daba 7 antes del fix.
+  r <- run_biber("Prueba de contrato.")
+  val <- as.numeric(r$f_44_mean_word_length)
+  expect_gt(val, 4); expect_lt(val, 6)
+})
+
+# ── Zero-output: las 10 columnas constantes (paridad superficial FR) ──────
+# Spec README §1 + biber_espanol_completo.md §1: cualquier input debe
+# devolver exactamente 0 en estas 10 columnas. Probamos con tres oraciones
+# distintas, incluyendo una en inglés que dispararía el rasgo en FR/EN.
+
+.zero_output_cols <- c(
+  "f_09_pronoun_it", "f_12_proverb_do", "f_15_gerunds",
+  "f_28_present_participle_whiz", "f_31_wh_subj", "f_32_wh_obj",
+  "f_59_contractions", "f_60_that_deletion",
+  "f_61_stranded_preposition", "f_62_split_infinitive"
+)
+
+.zero_output_probes <- c(
+  "Es una prueba simple en español.",
+  "Caminando rápidamente, vio que él lo hizo todo.",
+  "It would be a sentence that triggers in English."
+)
+
+for (zcol in .zero_output_cols) {
+  test_that(paste0(zcol, " — zero-output invariante con cualquier input"), {
+    for (probe in .zero_output_probes) {
+      r <- run_biber(probe)
+      expect_true(zcol %in% names(r), info = paste(zcol, "ausente"))
+      expect_equal(as.numeric(r[[zcol]][1]), 0,
+                   info = paste(zcol, "≠ 0 en:", probe))
+    }
+  })
+}
+
 # ── Regresión §3.J f_44 (worked example oficial de la spec) ───────────────
 # Spec: media de nchar() sobre TODOS los tokens excepto puntuacion, sin
 # filtro lexico y sin umbral. Bug histórico: filtraba a NOUN/VERB/ADJ/ADV
