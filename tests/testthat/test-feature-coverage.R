@@ -97,3 +97,24 @@ for (cs in fc_cases) {
     })
   }
 }
+
+# ── Regresión §3.J f_44 (worked example oficial de la spec) ───────────────
+# Spec: media de nchar() sobre TODOS los tokens excepto puntuacion, sin
+# filtro lexico y sin umbral. Bug histórico: filtraba a NOUN/VERB/ADJ/ADV
+# y devolvia ~8.75 en el worked example (debia ser 5.22). Ver
+# audit/CONTRACT_CHECK.md §3 + §5.1.
+
+test_that("f_44 uses all non-PUNCT tokens per spec §3.J", {
+  r <- run_biber("El informe fue redactado por el equipo de investigación.")
+  expect_equal(round(as.numeric(r$f_44_mean_word_length), 2), 5.22,
+               info = "Spec: 47 chars / 9 tokens no-PUNCT = 5.22")
+})
+
+test_that("f_44 is invariant under normalize=TRUE (ratio, not count)", {
+  texto <- "El informe fue redactado por el equipo de investigación."
+  r_raw  <- run_biber(texto, normalize = FALSE)
+  r_norm <- run_biber(texto, normalize = TRUE)
+  expect_equal(as.numeric(r_raw$f_44_mean_word_length),
+               as.numeric(r_norm$f_44_mean_word_length),
+               info = "f_44 no debe re-escalarse por normalize=TRUE")
+})

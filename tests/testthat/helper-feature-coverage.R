@@ -31,12 +31,14 @@
   }
 })
 
-# Parsea un texto y devuelve la fila de rasgos (normalize = FALSE → conteos brutos)
-run_biber <- function(text) {
+# Parsea un texto y devuelve la fila de rasgos. Por defecto normalize = FALSE
+# (conteos brutos). Tests de regresión sobre métricas derivadas (f_43/f_44)
+# pueden pasar normalize = TRUE para verificar invariancia.
+run_biber <- function(text, normalize = FALSE) {
   skip_if_not_installed("udpipe")
   ud <- .fc_ud()
   parsed <- as.data.frame(udpipe::udpipe_annotate(ud, x = text))
-  suppressMessages(biber_es(parsed, measure = "none", normalize = FALSE))
+  suppressMessages(biber_es(parsed, measure = "none", normalize = normalize))
 }
 
 # nolint end

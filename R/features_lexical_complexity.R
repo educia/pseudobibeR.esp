@@ -131,14 +131,14 @@ block_lexical_complexity_es <- function(
     dplyr::select("doc_id", "f_43_type_token")
 
   # -- f_44  Longitud media de palabra --------------------------------------
-  # Sobre tokens lexicos; se mide en nchar() de la forma superficial.
-  # Se excluyen tokens de un solo caracter (articulos, preposiciones
-  # monosilabicas que quedaron en UPOS lexico por error de parseo).
-  word_len_tbl <- lex_toks %>%
+  # Spec biber_espanol_completo.md §3.J: media de nchar() sobre TODOS los
+  # tokens excepto puntuacion, sin filtro por categoria lexica y sin umbral
+  # de longitud minima. nchar(type = "chars") es explicito para evitar
+  # conteo en bytes con acentos UTF-8 en locales no-UTF-8.
+  word_len_tbl <- toks %>%
     dplyr::mutate(
-      tok_len = nchar(as.character(.data$token))
+      tok_len = nchar(as.character(.data$token), type = "chars")
     ) %>%
-    dplyr::filter(.data$tok_len >= 2) %>%
     dplyr::group_by(.data$doc_id) %>%
     dplyr::summarise(
       f_44_mean_word_length = round(mean(.data$tok_len, na.rm = TRUE), 3),
