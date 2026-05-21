@@ -129,11 +129,18 @@ test_that("f_19 — 'O sea, ...' no cuenta sea como ser/estar léxico", {
 })
 
 test_that("f_23 — relativa con 'que' sin tilde cuenta 0 (es f_29, no wh-clause)", {
-  skip("BUG f_23: cuenta 'que' relativo sin tilde como wh-clause. Spec §f_23: solo wh accentuados en función argumental. Ver audit/FEATURE_AUDIT.md")
-  # Spec §f_23: solo wh interrogativos/indirectos con tilde.
-  # "El equipo que fue asignado" es relativa: cae en f_29, no en f_23.
+  # Spec §f_23 Exclude: "Relative uses of the same words without accents".
+  # UDPipe spanish-gsd marca "que" relativo como PronType=Int,Rel ambivalente.
+  # Fix: tilde en forma superficial + exclusión de heads acl/acl:relcl.
   r <- run_biber("El equipo que fue asignado finalizó el proyecto.")
   expect_equal(as.numeric(r$f_23_wh_clause), 0)
+})
+
+test_that("f_23 — interrogativa indirecta legítima sigue contando", {
+  # Regresión-guard: el fix no debe romper detección de wh con tilde
+  # en función argumental (ccomp/xcomp).
+  r <- run_biber("No sé qué quieres ni dónde vives.")
+  expect_gte(as.numeric(r$f_23_wh_clause), 1)
 })
 
 test_that("f_44 — caso corto sigue dentro del rango 4-6 (no inflado)", {

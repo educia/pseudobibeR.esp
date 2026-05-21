@@ -558,17 +558,21 @@ block_clause_embedding_es <- function(tokens, doc_ids, head_lookup,
     count_feature("f_22_that_adj_comp")
 
   # -- f_23  Clausula-wh (interrogativa indirecta) ---------------------------
-  # Solo formas con tilde / PronType=Int (excluye relativos puros).
-  # SCONJ "que" se excluye (es relativo o complementante, nunca
-  # interrogativa indirecta en espa\u00f1ol). Para PRON exigimos PronType=Int.
-  # Para ADV usamos las formas con tilde inequ\u00edvocamente interrogativas.
-  # biber_espanol_completo.md sec. F_23.
+  # Spec \u00a7f_23 Include: solo wh ACENTUADOS en posici\u00f3n subordinada/argumental.
+  # Spec \u00a7f_23 Exclude: "Relative uses of the same words without accents".
+  #
+  # UDPipe spanish-gsd marca "que" relativo como PronType=Int,Rel
+  # (ambivalente) y a veces normaliza la tilde en el lema. Por tanto:
+  # (a) Exigir tilde en la FORMA SUPERFICIAL del token (no solo en el lema).
+  # (b) Excluir heads cuya dep_rel sea acl/acl:relcl (claramente relativas).
   wh_adv_tilde <- c("d\u00f3nde", "cu\u00e1ndo", "c\u00f3mo",
                     "cu\u00e1nto", "cu\u00e1nta",
                     "cu\u00e1ntos", "cu\u00e1ntas")
-  wh_pron_lemmas <- c("qu\u00e9", "qui\u00e9n", "qui\u00e9nes",
-                      "cu\u00e1l", "cu\u00e1les",
-                      # variantes sin tilde con PronType=Int en feats
+  wh_pron_tilde <- c("qu\u00e9", "qui\u00e9n", "qui\u00e9nes",
+                     "cu\u00e1l", "cu\u00e1les")
+  # Lemas sin tilde que aceptamos SOLO si el token superficial trae tilde
+  # (compensa la inconsistencia de lematizaci\u00f3n de UDPipe spanish-gsd).
+  wh_pron_lemmas <- c(wh_pron_tilde,
                       "que", "quien", "quienes", "cual", "cuales")
 
   is_int_pron <- tokens %>%
@@ -577,7 +581,10 @@ block_clause_embedding_es <- function(tokens, doc_ids, head_lookup,
       .data$lemma %in% wh_pron_lemmas,
       stringr::str_detect(
         dplyr::coalesce(.data$feats, ""), "PronType=[^|]*Int"
-      )
+      ),
+      # Tilde en la forma superficial \u2014 descarta "que/quien/cual" relativos
+      tolower(.data$token) %in% wh_pron_tilde |
+        .data$lemma %in% wh_pron_tilde
     )
 
   is_int_adv <- tokens %>%
@@ -615,7 +622,10 @@ block_clause_embedding_es <- function(tokens, doc_ids, head_lookup,
     ) %>%
     dplyr::filter(
       dplyr::coalesce(.data$head_pos, "") %in% c("VERB", "AUX", "ADJ"),
-      dplyr::coalesce(.data$wh_head_dep, "") != "root"
+      dplyr::coalesce(.data$wh_head_dep, "") != "root",
+      # Spec §f_23 Exclude: relativas. UDPipe marca el head como acl/acl:relcl
+      # cuando el wh introduce una relativa (caso "El equipo que fue asignado").
+      !dplyr::coalesce(.data$wh_head_dep, "") %in% c("acl", "acl:relcl")
     ) %>%
     dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int) %>%
     count_feature("f_23_wh_clause")
