@@ -136,6 +136,22 @@ test_that("f_23 — relativa con 'que' sin tilde cuenta 0 (es f_29, no wh-clause
   expect_equal(as.numeric(r$f_23_wh_clause), 0)
 })
 
+test_that("f_24 — misparse root|Inf sin AUX hijo NO cuenta", {
+  # Spec §f_24: contar VerbForm=Inf en función de complemento + perífrasis.
+  # UDPipe spanish-gsd mis-etiqueta "Quiero" como root|VerbForm=Inf cuando
+  # es Fin. Fix: requerir AUX finito hijo para root|Inf.
+  # Esperado: terminar (xcomp) + descansar (advcl) = 2.
+  r <- run_biber("Quiero terminar el trabajo para poder descansar.")
+  expect_equal(as.numeric(r$f_24_infinitives), 2)
+})
+
+test_that("f_24 — perífrasis modal con AUX (root|Inf legítimo) sí cuenta", {
+  # Regresión-guard: 'Se debe seguir' → 'seguir' es root|Inf pero tiene
+  # 'debe' (AUX|Fin) hijo → cuenta como infinitivo legítimo.
+  r <- run_biber("Se debe seguir el procedimiento.")
+  expect_gte(as.numeric(r$f_24_infinitives), 1)
+})
+
 test_that("f_23 — interrogativa indirecta legítima sigue contando", {
   # Regresión-guard: el fix no debe romper detección de wh con tilde
   # en función argumental (ccomp/xcomp).

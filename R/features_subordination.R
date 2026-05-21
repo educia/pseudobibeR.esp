@@ -52,20 +52,48 @@ block_participial_clauses_es <- function(tokens, doc_ids, head_lookup) {
     )
 
   # -- f_24  Infinitivos como nucleo clausal ---------------------------------
-  # Un infinitivo cuenta cuando:
-  #   - VerbForm = Inf
-  #   - pos = VERB (no AUX, para evitar contar modales como 'haber' / 'ir')
+  # Spec §f_24 Include: VerbForm=Inf en función de complemento (xcomp/ccomp/
+  # obj) + perífrasis verbales (ir a, empezar a, dejar de, volver a,
+  # acabar de). Exclude: substantivized infinitives e imperative.
   #
-  # En español el infinitivo aparece en muchas funciones sintácticas:
-  # xcomp, ccomp, advcl, acl, obj, csubj, ccomp, así como 'root' cuando
-  # encabeza una perífrasis con modal AUX ("se debe seguir" → seguir=root,
-  # debe=AUX). Biber incluye los infinitivos de perífrasis modales según
-  # biber_espanol_completo.md sec. F_24. La forma más limpia es contar
-  # todos los VerbForm=Inf etiquetados como VERB.
+  # En la práctica el infinitivo aparece también como root cuando hay un
+  # AUX modal finito ('Se debe seguir' → seguir=root, debe=AUX). Esos sí
+  # cuentan.
+  #
+  # Problema observado: UDPipe spanish-gsd mis-etiqueta verbos finitos como
+  # VerbForm=Inf (ej. "Quiero terminar... para poder descansar." marca
+  # *Quiero* root|VerbForm=Inf cuando es Mood=Ind|VerbForm=Fin). El filtro
+  # debe distinguir el infinitivo root LEGÍTIMO (perífrasis con AUX hijo)
+  # del MISPARSE (root Inf sin AUX hijo).
+  #
+  # Implementación: VerbForm=Inf + pos=VERB, con regla específica para
+  # dep_rel=root → solo si tiene un AUX hijo finito (perífrasis modal).
+  aux_fin_children <- tokens %>%
+    dplyr::filter(
+      .data$pos == "AUX",
+      stringr::str_detect(
+        dplyr::coalesce(.data$feats, ""), "VerbForm=Fin"
+      ),
+      !is.na(.data$head_token_id_int)
+    ) %>%
+    dplyr::distinct(.data$doc_id, .data$sentence_id,
+                    head_token_id_int = .data$head_token_id_int) %>%
+    dplyr::mutate(has_aux_fin_child = TRUE)
+
   f24 <- tokens %>%
     dplyr::filter(
       .data$pos == "VERB",
       .data$.vf == "Inf"
+    ) %>%
+    dplyr::left_join(
+      aux_fin_children,
+      by = c("doc_id", "sentence_id",
+             "token_id_int" = "head_token_id_int")
+    ) %>%
+    dplyr::filter(
+      # root → solo si hay AUX finito hijo (perífrasis); excluye misparse
+      dplyr::coalesce(.data$dep_rel, "") != "root" |
+        dplyr::coalesce(.data$has_aux_fin_child, FALSE)
     ) %>%
     count_feature("f_24_infinitives")
 

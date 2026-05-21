@@ -52,8 +52,7 @@ test_that("UDPipe spanish examples align with expected feature counts", {
   # cli::cli_inform(). Marcador grep-eable: "BUG f_". Cuando un fix de Fase 3
   # cierre el bug, borrar la entrada de este vector y verificar verde.
   bug_skipped <- c(
-    "f_47_hedges",      # BUG f_47: quizás no se detecta. Ver §f_47 + FEATURE_AUDIT.md
-    "f_24_infinitives"  # BUG f_24: cuenta *poder* en perífrasis modal (es f_52, no f_24). Ver §f_24
+    "f_47_hedges"       # BUG f_47: quizás no se detecta. Ver §f_47 + FEATURE_AUDIT.md
   )
 
   # Descargar modelo al cache de tests si no existe
@@ -113,8 +112,7 @@ test_that("UDPipe spanish examples align with expected feature counts", {
   bug_seen <- intersect(bug_skipped, sample_examples$feature)
   if (length(bug_seen) > 0 && requireNamespace("cli", quietly = TRUE)) {
     bug_labels <- c(
-      f_47_hedges     = "BUG f_47: quizás no se detecta",
-      f_24_infinitives = "BUG f_24: cuenta *poder* en perífrasis modal (es f_52)"
+      f_47_hedges = "BUG f_47: quizás no se detecta"
     )
     for (bf in bug_seen) {
       cli::cli_inform(paste0("SKIP ", bug_labels[[bf]], " (pendiente Fase 2)"))
