@@ -13,10 +13,11 @@
 # NOTAS:
 #  - f_01 (pretérito indefinido): verbos con Tense=Past, Mood=Ind, VerbForm=Fin
 #    Ej.: llegó, presentaron, fue (indefinido).
-#  - f_71 (pretérito imperfecto, extensión española): Tense=Imp
-#    Ej.: caminaba, estudiábamos (imperfecto).
-#  - f_09, f_12, f_15, f_28, f_31, f_32, f_59, f_60, f_61, f_62: ELIMINADOS
-#    (intraducibles); no aparecen en el output de biber_es().
+#  - f_09, f_12, f_15, f_28, f_31, f_32, f_59, f_60, f_61, f_62: rasgos
+#    zero-output (cicatrices de paridad superficial con pseudobibeR.fr);
+#    no se evalúan aquí porque siempre devuelven 0.
+#  - f_69_mente_adverbs y f_71_preterit ELIMINADOS del corpus (no son rasgos
+#    del catálogo Biber 67; eran extensiones internas retiradas del output).
 #  - f_43 (TTR) y f_44 (longitud media) dependen del texto completo;
 #    no se incluyen aquí.
 #  - Algunos rasgos (f_22, f_23, f_26, f_39) muestran divergencias conocidas
@@ -33,15 +34,6 @@
 
 - feature: f_01_past_tense
   example: "Los estudiantes presentaron el informe y aprobaron el examen."
-  count: 2.0
-
-# f_71 = pretérito imperfecto (extensión española; Tense=Imp, Mood=Ind)
-- feature: f_71_preterit
-  example: "El niño caminaba despacio por el parque."
-  count: 1.0
-
-- feature: f_71_preterit
-  example: "Nosotros estudiábamos cuando ella llegaba."
   count: 2.0
 
 - feature: f_02_perfect_aspect
@@ -250,8 +242,10 @@
   count: 2.0
 
 - feature: f_42_adverbs
+  # Residual = total ADV − f_05 − f_48 (siempre va en f_05, muy va en f_48);
+  # quedan rápidamente + puntualmente. Antes contaba 3 por incluir siempre.
   example: "Habla muy rápidamente y siempre llega puntualmente."
-  count: 3.0
+  count: 2.0
 
 # ─────────────────────────────────────────────────────────────────────────────
 # MARCADORES DE POSICIÓN (STANCE)
@@ -401,12 +395,3 @@
 - feature: f_14_nominalizations
   example: "La investigación requiere planificación y dedicación."
   count: 3.0
-
-# f_69: adverbios en -mente (extensión española equivalente a -ly adverbs)
-- feature: f_69_mente_adverbs
-  example: "El proceso fue completamente rediseñado y actualmente funciona correctamente."
-  count: 3.0
-
-- feature: f_69_mente_adverbs
-  example: "Finalmente, el modelo convergió rápidamente."
-  count: 2.0
