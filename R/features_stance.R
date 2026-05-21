@@ -135,7 +135,7 @@ count_vraiment_amplifier_fr <- function(tokens, doc_ids) {
 #' @return Data frame with supplementary counts for f_06, f_07, f_08
 #' @keywords internal
 supplement_pronouns_morphological_fr <- function(tokens, doc_ids) {
-  
+
   # Extract pronouns using morphological Person feature as fallback.
   # Accept tokens that are tagged as PRON with Person feature, even if not
   # in dictionary. Para español: excluir "se" (Reflex=Yes y dep_rel
@@ -145,13 +145,36 @@ supplement_pronouns_morphological_fr <- function(tokens, doc_ids) {
   reflexive_deps <- c("expl:pv", "expl:impers", "expl",
                       "iobj", "obj")  # iobj/obj cubre "se" en UDPipe es-gsd
 
+  # Lista de formas/lemmas de pronombres conocidos.
+  # El supplement morfológico debe RESCATAR pronombres reales con lemma
+  # corrupto por UDPipe, NO aceptar cualquier token mal-etiquetado como PRON
+  # (ej. UDPipe spanish-gsd etiqueta "Comí" como PRON|Person=1|PronType=Prs,
+  # lema "Comí"; la spec §f_06 Exclude prohíbe contar inflexión verbal).
+  # Por eso restringimos por FORMA superficial o LEMA en la lista conocida.
+  known_pronoun_forms <- c(
+    # 1a persona
+    "yo", "nosotros", "nosotras", "me", "nos",
+    "mí", "mi", "conmigo",
+    # 2a persona
+    "tú", "tu", "vos", "vosotros", "vosotras",
+    "usted", "ustedes", "te", "ti", "contigo", "os",
+    # 3a persona
+    "él", "ella", "ello", "ellos", "ellas",
+    "le", "lo", "la", "les", "los", "las", "consigo"
+  )
+
   pronoun_morph <- tokens %>%
     dplyr::filter(
       .data$pos == "PRON",
       !is.na(.data$morph_person),
       # Excluir "se" reflexivo/impersonal (Reflex=Yes en feats)
       !(tolower(.data$token) == "se" &
-        stringr::str_detect(dplyr::coalesce(.data$feats, ""), "Reflex=Yes"))
+        stringr::str_detect(dplyr::coalesce(.data$feats, ""), "Reflex=Yes")),
+      # Restricción crítica spec §f_06–f_08 Exclude: el supplement morfológico
+      # acepta solo tokens cuya forma o lema esté en la lista de pronombres
+      # conocidos. Bloquea misparses tipo "Comí"→PRON|Person=1.
+      tolower(.data$token) %in% known_pronoun_forms |
+        tolower(.data$lemma) %in% known_pronoun_forms
     )
   
   # First person: Person=1

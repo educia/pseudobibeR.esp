@@ -101,11 +101,24 @@ for (cs in fc_cases) {
 # ── Tests críticos puntuales pedidos por audit/FEATURE_AUDIT.md (brief) ───
 
 test_that("f_06 — pro-drop: oración sin pronombre explícito cuenta 0", {
-  skip("BUG f_06: dispara con verbo Person=1 sin pronombre explícito (Comí). Spec §f_06 Exclude: 'fui alone — no detection'. Ver audit/FEATURE_AUDIT.md")
   # Spec §f_06: lexical list + morphological filter (Person=1) sobre PRON;
-  # NO debe disparar con verbos conjugados.
+  # NO debe disparar con verbos conjugados. UDPipe spanish-gsd a veces
+  # mis-etiqueta verbos como PRON|Person=1 (caso "Comí"); el supplement
+  # morfológico debe filtrar también por forma/lema en lista conocida.
   r <- run_biber("Comí pizza ayer.")
   expect_equal(as.numeric(r$f_06_first_person_pronouns), 0)
+})
+
+test_that("f_07 — verbal Person=2 alone must not count (regression-guard)", {
+  r <- run_biber("Llegaste temprano ayer.")
+  expect_equal(as.numeric(r$f_07_second_person_pronouns), 0,
+               info = "Verbal Person=2 inflection alone must not count per spec §f_07")
+})
+
+test_that("f_08 — verbal Person=3 alone must not count (regression-guard)", {
+  r <- run_biber("Comió pizza con sus amigos.")
+  expect_equal(as.numeric(r$f_08_third_person_pronouns), 0,
+               info = "Verbal Person=3 inflection alone must not count per spec §f_08")
 })
 
 test_that("f_19 — 'O sea, ...' no cuenta sea como ser/estar léxico", {
