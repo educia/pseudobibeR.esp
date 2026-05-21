@@ -102,6 +102,22 @@ biber_es <- function(tokens,
     )
   }
 
+  # En locale "C", quanteda::tokens borra la marca Encoding="UTF-8" de los
+  # strings y los acentos quedan como bytes crudos ("quiz\u00e1s" -> "quiz<c3><a1>s"
+  # con Encoding="unknown"), lo que rompe el match contra el diccionario
+  # de rasgos lexicos (caso documentado: f_47 quizas no se detectaba).
+  # Forzamos LC_CTYPE a UTF-8 durante la llamada y restauramos al salir.
+  old_ctype <- Sys.getlocale("LC_CTYPE")
+  if (!grepl("UTF-?8", old_ctype, ignore.case = TRUE)) {
+    utf8_candidates <- c("en_US.UTF-8", "C.UTF-8", "es_ES.UTF-8")
+    for (lc in utf8_candidates) {
+      ok <- tryCatch(suppressWarnings(Sys.setlocale("LC_CTYPE", lc)),
+                     error = function(e) "")
+      if (nzchar(ok) && ok != "C") break
+    }
+    on.exit(Sys.setlocale("LC_CTYPE", old_ctype), add = TRUE)
+  }
+
   if (is.null(tokens)) {
     stop(
       "'tokens' no puede ser NULL. Pasa el resultado de udpipe_annotate().",

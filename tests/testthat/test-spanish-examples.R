@@ -47,13 +47,11 @@ test_that("UDPipe spanish examples align with expected feature counts", {
     "f_63_split_auxiliary"
   )
 
-  # TODO Fase 2 (auditoría): rasgos con bug confirmado o ambigüedad de spec.
-  # Se excluyen del loop comparativo y se reportan como "SKIP BUG f_XX" via
-  # cli::cli_inform(). Marcador grep-eable: "BUG f_". Cuando un fix de Fase 3
-  # cierre el bug, borrar la entrada de este vector y verificar verde.
-  bug_skipped <- c(
-    "f_47_hedges"       # BUG f_47: quizás no se detecta. Ver §f_47 + FEATURE_AUDIT.md
-  )
+  # bug_skipped: lista de rasgos con bug abierto que se excluyen del loop
+  # comparativo y se reportan como "SKIP BUG f_XX" via cli::cli_inform.
+  # Vacía al cierre de Fase 3 del audit (commits fix(f_06/f_23/f_24/f_47)).
+  # Marcador grep-eable: "BUG f_". Si vuelve a abrirse un bug, añadirlo aquí.
+  bug_skipped <- character(0)
 
   # Descargar modelo al cache de tests si no existe
   model_path <- tryCatch(
@@ -109,13 +107,12 @@ test_that("UDPipe spanish examples align with expected feature counts", {
   }
 
   # Reportar y excluir los rasgos en bug_skipped antes de cualquier comparación.
+  # (Lista vacía al cierre de Fase 3; el bloque queda como ancla por si se
+  # vuelve a abrir un bug en el futuro.)
   bug_seen <- intersect(bug_skipped, sample_examples$feature)
   if (length(bug_seen) > 0 && requireNamespace("cli", quietly = TRUE)) {
-    bug_labels <- c(
-      f_47_hedges = "BUG f_47: quizás no se detecta"
-    )
     for (bf in bug_seen) {
-      cli::cli_inform(paste0("SKIP ", bug_labels[[bf]], " (pendiente Fase 2)"))
+      cli::cli_inform(paste0("SKIP BUG ", bf, " (ver audit/FEATURE_AUDIT.md)"))
     }
   }
   sample_examples <- sample_examples |>

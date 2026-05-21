@@ -136,6 +136,22 @@ test_that("f_23 — relativa con 'que' sin tilde cuenta 0 (es f_29, no wh-clause
   expect_equal(as.numeric(r$f_23_wh_clause), 0)
 })
 
+test_that("f_47 — quizás detectado en locale C (regression-guard UTF-8)", {
+  # Causa raíz documentada: en locale "C", quanteda::tokens borra
+  # Encoding="UTF-8" y los acentos quedan como bytes crudos
+  # ("quizás" -> "quiz<c3><a1>s") rompiendo el match contra el dict.
+  # Fix: forzar LC_CTYPE=UTF-8 dentro de biber_es() con on.exit.
+  r <- run_biber("Quizás el resultado depende de otros factores.")
+  expect_gte(as.numeric(r$f_47_hedges), 1)
+})
+
+test_that("f_47 — biber_es restaura LC_CTYPE al salir", {
+  old <- Sys.getlocale("LC_CTYPE")
+  invisible(run_biber("Quizás venga."))
+  expect_equal(Sys.getlocale("LC_CTYPE"), old,
+               info = "biber_es debe restaurar el locale tras la llamada")
+})
+
 test_that("f_24 — misparse root|Inf sin AUX hijo NO cuenta", {
   # Spec §f_24: contar VerbForm=Inf en función de complemento + perífrasis.
   # UDPipe spanish-gsd mis-etiqueta "Quiero" como root|VerbForm=Inf cuando

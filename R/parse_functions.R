@@ -197,6 +197,15 @@ parse_biber_features <- function(tokens, measure, normalize,
     dplyr::summarise(text = paste(.data$token, collapse = " "), .groups = "drop")
 
   if (nrow(lexical_text) > 0) {
+    # Lower-casing previo con stringi::stri_trans_tolower (preserva la
+    # marca Encoding="UTF-8" en cualquier locale, incluido "C"). Si
+    # delegamos en quanteda::tokens_tolower, este borra el encoding y los
+    # acentos quedan como bytes crudos ("quizás" → "quiz<c3><a1>s" con
+    # Encoding="unknown"), lo que rompe el match contra el diccionario
+    # que sí tiene los lemas marcados como UTF-8 (caso documentado: f_47
+    # quizás no se detectaba en locale C).
+    lexical_text$text <- stringi::stri_trans_tolower(lexical_text$text)
+
     biber_tks <- quanteda::tokens(lexical_text$text, what = "word", remove_punct = FALSE)
     names(biber_tks) <- lexical_text$doc_id
 
@@ -205,8 +214,6 @@ parse_biber_features <- function(tokens, measure, normalize,
       multi_phrases <- quanteda::phrase(multiword_patterns)
       biber_tks     <- quanteda::tokens_compound(biber_tks, pattern = multi_phrases)
     }
-
-    biber_tks <- quanteda::tokens_tolower(biber_tks)
 
     biber_1 <- quanteda::tokens_lookup(biber_tks, dictionary = dict_lookup, nomatch = NULL) %>%
       quanteda::dfm() %>%
