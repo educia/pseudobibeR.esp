@@ -25,6 +25,7 @@ Imports:
     quanteda,
     quanteda.textstats,
     rlang,
+    stringi,
     stringr,
     tibble,
     magrittr

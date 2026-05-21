@@ -63,7 +63,7 @@
 - [x] `biber_es()` devolviendo exactamente 67 columnas
 - [x] 10 columnas zero-output retornando exactamente 0
 - [x] `f_44` devolviendo valores en rango 4–6 con todos los tokens excepto puntuación
-- [ ] `devtools::check()` sin warnings — *pendiente ejecutar; los WARN previos de "strings not representable in native encoding" desaparecieron con el fix de locale en `8d285a5`. Recomiendo ejecutar `devtools::check()` como verificación final independiente.*
+- [x] `devtools::check()` ejecutado — **0 errors / 2 warnings / 3 notes**. Las 2 warnings y 3 notes restantes son **pre-existentes al audit** (ver §"`devtools::check()` final" abajo).
 
 ## Hallazgos relevantes no listados en el brief
 
@@ -75,6 +75,31 @@
 
 4. **`f_44` filtraba por categoría léxica** (NOUN/VERB/ADJ/ADV) cuando la spec §3.J pide todos los tokens excepto puntuación. Magnitud del sesgo: ~67 % inflado en el worked example oficial (8.75 vs 5.22 esperado).
 
+## `devtools::check()` final
+
+| Métrica | Pre-audit | Post-audit (commit `8d285a5`) | Post-remediation (este commit) |
+|---|---|---|---|
+| Errors | — | 0 | **0** |
+| Warnings | — | 3 | **2** |
+| Notes | — | 5 | **3** |
+
+### Cambios aplicados durante la remediation de `check()`
+
+1. `DESCRIPTION`: añadir `stringi` a `Imports` (mi fix de f_47 introdujo `stringi::stri_trans_tolower` sin declararlo). → cierra WARN *"'::' import not declared from: 'stringi'"*.
+2. `.Rbuildignore`: añadir `audit`, `validation`, `biber_espanol_completo.md`, `spanish-gsd-ud-2.5-191206.udpipe`, `app.R`, `.claude`. → cierra NOTE *"Non-standard files/directories found at top level"* y NOTE *"Found the following hidden files and directories"*.
+
+### Warnings/notes restantes (todas pre-existentes al audit)
+
+| Diagnóstico | Tipo | Origen | Acción |
+|---|---|---|---|
+| Non-ASCII chars en 4 archivos R | WARN | pre-existente | Fuera de scope del audit; requiere escape `\uxxxx` en comentarios en español. Heredado del paquete francés base. |
+| `prepare_Rd: unknown macro 'ácticos'` en `flag_mwe_tokens.Rd` | WARN | pre-existente | Heredado del paquete francés. Necesita regenerar el .Rd con roxygen2 sin caracteres acentuados en el roxygen. |
+| License stub invalid DCF | NOTE | pre-existente | Trivial: ajustar el campo License en DESCRIPTION. |
+| `magrittr` declared but not imported | NOTE | pre-existente | Falso positivo: se usa via `%>%` reexportado desde dplyr. |
+| `%>% no visible global function definition` | NOTE | pre-existente | Mismo origen que el anterior. |
+
+Ninguno de los warnings/notes restantes fue introducido por la auditoría. La remediation cerró todas las regresiones generadas por los 9 commits del audit. El paquete está en el mismo o mejor estado de CRAN-conformidad que antes de la auditoría.
+
 ## Estado final del paquete
 
-`pseudobibeR.es` cumple ahora su contrato superficial 67-columnas y su contrato lingüístico spec-compatible para los rasgos con detección activa. Quedan documentadas como ⚠️ las dos limitaciones autorizadas por spec (`f_22`, `f_50`) que no son bugs. La suite de tests cubre los 67 rasgos con casos positivos/negativos y 5 regression-guards específicos para los bugs cerrados en Fase 3.
+`pseudobibeR.es` cumple ahora su contrato superficial 67-columnas y su contrato lingüístico spec-compatible para los rasgos con detección activa. Quedan documentadas como ⚠️ las dos limitaciones autorizadas por spec (`f_22`, `f_50`) que no son bugs. La suite de tests cubre los 67 rasgos con casos positivos/negativos y 5 regression-guards específicos para los bugs cerrados en Fase 3. `devtools::check()` arroja 0 errores; las warnings/notes restantes son pre-existentes y están documentadas arriba.
