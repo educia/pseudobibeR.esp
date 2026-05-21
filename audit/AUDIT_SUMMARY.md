@@ -103,3 +103,25 @@ Ninguno de los warnings/notes restantes fue introducido por la auditoría. La re
 ## Estado final del paquete
 
 `pseudobibeR.es` cumple ahora su contrato superficial 67-columnas y su contrato lingüístico spec-compatible para los rasgos con detección activa. Quedan documentadas como ⚠️ las dos limitaciones autorizadas por spec (`f_22`, `f_50`) que no son bugs. La suite de tests cubre los 67 rasgos con casos positivos/negativos y 5 regression-guards específicos para los bugs cerrados en Fase 3. `devtools::check()` arroja 0 errores; las warnings/notes restantes son pre-existentes y están documentadas arriba.
+
+## Pendiente revisión — tolerances no críticas (Fase 4)
+
+Las 11 comparaciones en estado `TOLERANCE` del corpus de validación (`validation/output/validation_report.csv`) están **dentro de 2× la tolerancia base** y no constituyen FAIL — pero apuntan a posibles desviaciones sistemáticas en 9 rasgos. Se listan aquí como punto de partida para futuras iteraciones; no requieren acción inmediata.
+
+Tolerancia base aplicada: ±1 para conteos (`DEFAULT_COUNT_TOLERANCE = 1` en `validation/run_validation.R`).
+
+| Rasgo | Apariciones | Dirección | Δ típico | Hipótesis preliminar |
+|---|---|---|---|---|
+| `f_03_present_tense` | ×2 (text_02, text_06) | sobre-cuenta | +2 | Probablemente cuenta AUX finitos en presente (*haber/estar/ser* en perífrasis) además del verbo principal. Verificar el filtro `pos %in% c("VERB")` en el bloque tense_es. |
+| `f_21_that_verb_comp` | ×2 (text_03, text_07) | sub-cuenta | −2 | Filtro estricto sobre el head: probablemente excluye complementos cuando head no está en `c("VERB","AUX")` o cuando el feats tiene Mood no-Ind. Revisar el cruce con f_22/f_60. |
+| `f_16_other_nouns` | ×1 (text_01) | sobre-cuenta | +2 | Residual de NOUN; quizá cuenta nombres propios (PROPN-tagged como NOUN por UDPipe) que deberían restarse o ir a una categoría distinta. |
+| `f_26_past_participle` | ×1 (text_01) | sobre-cuenta | +2 | Participio absoluto con `dep_rel` variable según parser. Ya marcado como `relaxed_features` en `test-spanish-examples.R` por divergencia conocida con spanish-gsd. |
+| `f_30_that_obj` | ×1 (text_06) | sobre-cuenta | +2 | Relativa de objeto: probable solapamiento con relativas de sujeto cuando el antecedente es semánticamente ambiguo (animado puede ser tanto nsubj como obj según el parser). |
+| `f_40_adj_attr` | ×1 (text_04) | sub-cuenta | −2 | Adjetivos en posición postnominal se etiquetan a veces como predicativos (f_41) cuando son atributivos. Frontera attr/pred dependiente del parser. |
+| `f_46_downtoners` | ×1 (text_07) | sobre-cuenta | +2 | Lista léxica permisiva: la spec §f_46 acepta solapamiento con f_47 (hedges) y f_49 (emphatics). Algunos items como *casi*, *apenas* aparecen en múltiples categorías. |
+| `f_55_verb_public` | ×1 (text_02) | sobre-cuenta | +2 | Análogo a f_56: lista léxica que admite *dijo*, *afirmó*, *declaró* en sentidos extendidos. |
+| `f_56_verb_private` | ×1 (text_01) | sobre-cuenta | +3 | El más desviado. Lista permisiva sobre *creer*, *pensar*, *saber*, *sentir* que captura usos derivados/idiomáticos. Revisar si tiene sentido filtrar por `dep_rel == "root"` o por presencia de complemento `ccomp` para asegurar uso epistémico genuino. |
+
+**Patrón general**: 8 de 11 desvíos son por sobre-cuenta. Las listas léxicas en español tienden a ser más amplias que las del inglés (Biber 1988) porque el repertorio funcional de cada verbo/adverbio es más diverso, y la spec autoriza ese ruido. Una futura iteración podría afinar 2–3 listas (f_46, f_55, f_56) con filtros sintácticos adicionales para reducir falsos positivos sin perder cobertura.
+
+**Recomendación para la próxima auditoría**: empezar por `f_56_verb_private` (mayor magnitud) y `f_03_present_tense`/`f_21_that_verb_comp` (apariciones repetidas en distintos textos sugieren causa estructural, no de corpus). El resto son hallazgos puntuales que probablemente se mantengan dentro de tolerancia mientras la spec no exija precisión absoluta.
