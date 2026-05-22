@@ -42,7 +42,7 @@ block_personal_pronouns_es(
 \item{wh_question_lemmas}{WH-word lemmas (default provided)}
 }
 \value{
-Data frame: one row per doc, columns f_06 ? f_09, f_13
+Data frame: one row per doc, columns f_06-f_08, f_13
 }
 \description{
 Personal pronoun, expletive, and WH-question features (Spanish)

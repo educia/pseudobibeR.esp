@@ -32,13 +32,14 @@ Data frame: one row per doc, columns:
 n_tokens, n_lex_tokens,
 f_43_type_token,
 f_44_mean_word_length,
-f_68_nominalization, f_68_nominalization_rate,
 f_69_mente_adverbs, f_69_mente_adverbs_rate,
 f_70_long_words, f_70_long_words_rate
+(f_68_nominalization eliminado: duplicado de f_14 de block_lexical_membership_es)
 }
 \description{
-Computes Biber (1988) features f_60 to f_64 for Spanish:
-nominalizations, type-token ratio, mean word length,
--mente adverbs, and long words (>= 6 letters).
+Computes Spanish lexical complexity features:
+type-token ratio (f_43), mean word length (f_44),
+-mente adverbs (f_69), and long words (f_70).
+Nominalization count (formerly f_68) eliminated as duplicate of f_14.
 }
 \keyword{internal}

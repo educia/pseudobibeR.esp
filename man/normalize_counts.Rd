@@ -13,6 +13,9 @@ normalize_counts(counts)
 A data frame with normalized counts (tot_counts column removed)
 }
 \description{
-Normalize feature counts to per-1000-word rates
+f_43_type_token (un ratio) y f_44_mean_word_length (longitud media en
+caracteres) son metricas derivadas, NO conteos: multiplicarlas por
+1000/tot_counts las corrompe (p.ej. longitud media 9 -> 714). Se excluyen
+de la normalizacion. n_tokens / n_lex_tokens tampoco se normalizan.
 }
 \keyword{internal}

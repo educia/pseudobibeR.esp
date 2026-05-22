@@ -4,7 +4,7 @@
 \alias{dictionary_to_lemmas}
 \title{Extract lemmas from a dictionary entry}
 \usage{
-dictionary_to_lemmas(dict_lookup, feature)
+dictionary_to_lemmas(dict_lookup, feature, head_word = FALSE)
 }
 \arguments{
 \item{dict_lookup}{The dict object}
