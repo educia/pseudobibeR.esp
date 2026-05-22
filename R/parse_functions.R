@@ -11,6 +11,7 @@
 #'   "es" for Spanish). Defaults to "fr" to preserve original behaviour.
 #' @return Data frame of extracted features
 #' 
+#' @importFrom magrittr %>%
 #' @importFrom rlang .data :=
 #' @importFrom utils tail
 #' @keywords internal

@@ -170,12 +170,26 @@ biber_es <- function(tokens,
 
   measure <- match.arg(measure)
 
-  # language = "es" activates all *_es blocks in parse_biber_features()
-  parse_biber_features(
-    tokens    = udpipe_tks,
-    measure   = measure,
-    normalize = normalize,
-    engine    = "udpipe",
-    language  = "es"
+  # language = "es" activates all *_es blocks in parse_biber_features().
+  # Muffle the cosmetic "cannot be translated from 'US-ASCII' to UTF-8, but is
+  # valid UTF-8" warnings that quanteda emits when the R session was started in
+  # locale "C" and the dictionary entries contain accented Spanish characters.
+  # These are encoding-translation noise: the strings are valid UTF-8 and the
+  # detection results are correct regardless.
+  withCallingHandlers(
+    parse_biber_features(
+      tokens    = udpipe_tks,
+      measure   = measure,
+      normalize = normalize,
+      engine    = "udpipe",
+      language  = "es"
+    ),
+    warning = function(w) {
+      msg <- conditionMessage(w)
+      if (grepl("cannot be translated", msg, fixed = TRUE) &&
+          grepl("but is valid UTF-8", msg, fixed = TRUE)) {
+        invokeRestart("muffleWarning")
+      }
+    }
   )
 }
