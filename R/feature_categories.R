@@ -164,8 +164,98 @@
 #'
 #' 55 rasgos: detectables - metricas. Cada uno debe satisfacer la
 #' invariante \code{count == nrow(filter(evidence, feature == X))} cuando
-#' count > 0.
+#' count > 0, MODULADA por la topologia del path de conteo (ver
+#' \code{.dual_path_features} y \code{.dict_only_features}).
 #'
 #' @keywords internal
 #' @noRd
 .evidence_features <- setdiff(.detectable_features, .metric_features)
+
+#' Rasgos dual-path: dict + block contribuyen al conteo final (interno)
+#'
+#' Estos rasgos reciben aportes tanto de la pipeline dict-based
+#' (\code{quanteda::tokens_lookup} sobre \code{dict}) como de algun
+#' \code{block_*_es()}. \code{parse_biber_features()} los combina al
+#' final via \code{pmax(.x, .y)} (para los pmax_features) o
+#' \code{.x + .y} (para los modales/verbos especializados restantes,
+#' excepto f_52 que es code-only).
+#'
+#' Implicacion para \code{biber_es_traced()}: el path-block produce
+#' evidencia estructural (tokens identificados por la regla sintactica
+#' del detector), pero la pipeline dict no expone tokens posicionalmente
+#' en v1. Por tanto, para estos rasgos vale la invariante RELAJADA:
+#'
+#'   \code{1 <= nrow(filter(evidence, feature == X)) <= counts[[X]]}
+#'
+#' La igualdad estricta no se cumple porque parte del count viene del
+#' dict path. Esto se documenta en \code{biber_es_traced()} y se valida
+#' en el test transversal con un test parametrizado distinto al strict.
+#'
+#' Listado autoritativo: derivado de \code{parse_functions.R} cruzando
+#' \code{pmax_features} y \code{combine_features} con \code{dict.yaml}.
+#' f_52 se excluye porque \code{code_only_features} lo fuerza a path
+#' block puro (dict path suprimido).
+#'
+#' @keywords internal
+#' @noRd
+.dual_path_features <- c(
+  "f_04_place_adverbials",
+  "f_05_time_adverbials",
+  "f_06_first_person_pronouns",
+  "f_07_second_person_pronouns",
+  "f_08_third_person_pronouns",
+  "f_11_indefinite_pronouns",
+  "f_51_demonstratives",
+  "f_53_modal_necessity",
+  "f_55_verb_public",
+  "f_56_verb_private",
+  "f_57_verb_suasive",
+  "f_58_verb_seem"
+)
+
+#' Rasgos dict-only: solo path dict produce el conteo (interno)
+#'
+#' Categoria K (clases lexicas, f_45-f_50). Estos rasgos vienen
+#' exclusivamente de \code{quanteda::tokens_lookup} sobre \code{dict};
+#' no hay block estructural en v1 que emita tokens para ellos.
+#'
+#' Implicacion para \code{biber_es_traced()}: en v1 no es posible
+#' construir evidencia para estos rasgos sin reemplazar la pipeline
+#' quanteda por una variante que preserve posiciones (opcion M3 en el
+#' design doc). El test transversal los marca con \code{skip()}
+#' explicito hasta que v2 los aborde. Su columna en \code{result$counts}
+#' tiene el valor correcto; \code{result$evidence} simplemente no
+#' contiene filas para ellos.
+#'
+#' Si el usuario quiere reconstruir manualmente los tokens que
+#' dispararon (p.ej.) f_47, puede joinear contra el dict en R:
+#'
+#'   \code{parsed \%>\% filter(tolower(lemma) \%in\% dict$f_47_hedges)}
+#'
+#' @keywords internal
+#' @noRd
+.dict_only_features <- c(
+  "f_45_conjuncts",
+  "f_46_downtoners",
+  "f_47_hedges",
+  "f_48_amplifiers",
+  "f_49_emphatics",
+  "f_50_discourse_particles"
+)
+
+#' Rasgos strict: invariante \code{count == nrow(evidence)} se cumple exactamente (interno)
+#'
+#' Complemento: \code{.evidence_features - .dual_path_features - .dict_only_features}.
+#' Son los rasgos que se generan exclusivamente por un \code{block_*_es()}
+#' estructural, sin contribucion dict, y por tanto su block evidencia
+#' captura el 100% del conteo.
+#'
+#' En el test transversal, estos rasgos se testean con la invariante
+#' ESTRICTA. Cualquier desviacion indica un bug en la migracion.
+#'
+#' @keywords internal
+#' @noRd
+.strict_evidence_features <- setdiff(
+  .evidence_features,
+  c(.dual_path_features, .dict_only_features)
+)

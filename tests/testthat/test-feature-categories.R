@@ -72,3 +72,35 @@ test_that(".evidence_features = detectable - metricas = 55", {
   expect_equal(length(intersect(evidence_pool, metric_feats)), 0L)
   expect_equal(length(intersect(evidence_pool, zero_out)),     0L)
 })
+
+# Topologia del path de conteo (M1: invariante relajada para dual-path)
+
+dual_path  <- pseudobibeR.es:::.dual_path_features
+dict_only  <- pseudobibeR.es:::.dict_only_features
+strict_ev  <- pseudobibeR.es:::.strict_evidence_features
+
+test_that(".dual_path_features, .dict_only_features y .strict_evidence_features son disjuntos", {
+  expect_equal(length(intersect(dual_path, dict_only)), 0L)
+  expect_equal(length(intersect(dual_path, strict_ev)), 0L)
+  expect_equal(length(intersect(dict_only, strict_ev)), 0L)
+})
+
+test_that("la union de los tres = .evidence_features (sin huecos ni solapes)", {
+  union_all <- sort(unique(c(dual_path, dict_only, strict_ev)))
+  expect_setequal(union_all, evidence_pool)
+})
+
+test_that(".dual_path_features tiene los 12 esperados y todos estan en .feature_categories", {
+  expect_length(dual_path, 12L)
+  expect_true(all(dual_path %in% names(cats)))
+})
+
+test_that(".dict_only_features tiene los 6 esperados (categoria K)", {
+  expect_length(dict_only, 6L)
+  expect_true(all(dict_only %in% names(cats)))
+  expect_true(all(grepl("^K\\.", cats[dict_only])))
+})
+
+test_that(".strict_evidence_features = 55 - 12 - 6 = 37", {
+  expect_length(strict_ev, 37L)
+})

@@ -151,12 +151,36 @@ ud_model <- if (!is.na(model_path)) {
 # Tests parametrizados: uno por rasgo
 # ---------------------------------------------------------------------------
 
+dual_path  <- pseudobibeR.es:::.dual_path_features
+dict_only  <- pseudobibeR.es:::.dict_only_features
+strict_ev  <- pseudobibeR.es:::.strict_evidence_features
+
+# Clasifica la invariante a aplicar segun la topologia del rasgo (M1):
+#  - strict:  count == nrow(evidence) exacta
+#  - relaxed: 1 <= nrow(evidence) <= count
+#  - skipped: dict-only, sin evidencia posible en v1
+invariant_for <- function(feature) {
+  if (feature %in% dict_only) return("skip_dict_only")
+  if (feature %in% dual_path) return("relaxed")
+  return("strict")
+}
+
 for (feat in names(cases)) {
   local({
     feature_name <- feat
     case         <- cases[[feat]]
+    mode         <- invariant_for(feature_name)
 
-    test_that(paste0(feature_name, ": count == nrow(evidence) y count >= min_count"), {
+    label <- switch(mode,
+      strict        = paste0(feature_name, " [strict]: count == nrow(evidence)"),
+      relaxed       = paste0(feature_name, " [relaxed dual-path]: 1 <= nrow(evidence) <= count"),
+      skip_dict_only= paste0(feature_name, " [dict-only]: skipped (sin evidencia v1)")
+    )
+
+    test_that(label, {
+      if (mode == "skip_dict_only") {
+        skip("dict-only feature: M1 difiere evidencia a v2 (ver .dict_only_features en R/feature_categories.R)")
+      }
       skip_until_migrated(feature_name)
       skip_if_not_installed("udpipe")
       skip_if(is.null(ud_model), "modelo UDPipe no disponible")
@@ -166,18 +190,28 @@ for (feat in names(cases)) {
       parsed <- udpipe::udpipe_annotate(ud_model, x = case$text, doc_id = "t1")
       result <- pseudobibeR.es::biber_es_traced(parsed)
 
-      # Invariante de count
+      # Invariante de count (independiente del modo)
       expect_true(feature_name %in% colnames(result$counts),
                   info = paste0(feature_name, " ausente de result$counts"))
       observed_count <- result$counts[[feature_name]][[1]]
       expect_gte(observed_count, case$min_count)
 
-      # Invariante de evidencia (LA CRITICA)
+      # Invariante de evidencia segun topologia
       ev_rows <- sum(result$evidence$feature == feature_name)
-      expect_equal(ev_rows, observed_count,
-                   info = paste0(feature_name,
-                                 ": count=", observed_count,
-                                 " pero nrow(evidence)=", ev_rows))
+
+      if (mode == "strict") {
+        expect_equal(ev_rows, observed_count,
+                     info = paste0(feature_name,
+                                   " [strict]: count=", observed_count,
+                                   " pero nrow(evidence)=", ev_rows))
+      } else if (mode == "relaxed") {
+        expect_gte(ev_rows, 1L,
+                   label = paste0(feature_name, " [relaxed]: evidence > 0 cuando count > 0"))
+        expect_lte(ev_rows, observed_count,
+                   label = paste0(feature_name,
+                                  " [relaxed]: nrow(evidence)=", ev_rows,
+                                  " > count=", observed_count))
+      }
     })
   })
 }
