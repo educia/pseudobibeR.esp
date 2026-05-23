@@ -637,11 +637,19 @@ parse_biber_features <- function(tokens, measure, normalize,
   # Phase 2: ensamblado de evidencia.
   # - ev_blocks puede tener entradas NULL si algun bloque no fue invocado en
   #   esta ruta de idioma/engine. bind_evidence() las filtra silenciosamente.
+  # - Renames aplicados a counts a lo largo del pipeline tambien deben
+  #   aplicarse a la columna `feature` de la evidencia para que los
+  #   sobrevivientes coincidan con las columnas de counts.
   # - El conjunto resultante puede tener filas cuyo `feature` no sobrevive
   #   a las combinaciones finales (merges, drops); se filtra para mantener
   #   coherencia con `biber_counts`.
   evidence <- do.call(bind_evidence, ev_blocks)
   if (nrow(evidence) > 0L) {
+    # Renames espejo de los aplicados a biber_counts mas arriba
+    evidence$feature <- dplyr::recode(
+      evidence$feature,
+      "f_11_indefinite_pronoun" = "f_11_indefinite_pronouns"
+    )
     surviving_features <- intersect(unique(evidence$feature), colnames(biber_counts))
     evidence <- evidence[evidence$feature %in% surviving_features, , drop = FALSE]
   }

@@ -80,6 +80,12 @@ block_tense_es <- function(
     indefinite_pronouns
 ) {
 
+  # Phase 2b migration: cada rasgo se computa via count_feature_traced(),
+  # que devuelve list(counts, evidence). El bloque agrega counts via
+  # left_join (como antes) y apila evidence via bind_evidence; retorna
+  # un block_result para que parse_biber_features() pueda recolectar
+  # ambas dimensiones cuando traced=TRUE.
+
   # -- f_01  Tiempo pasado (preterito indefinido / perfecto simple) ----------
   # DECISION segun biber_espanol_completo.md:
   # f_01 mapea al PRETERITO INDEFINIDO (Tense=Past, Mood=Ind, VerbForm=Fin),
@@ -95,12 +101,15 @@ block_tense_es <- function(
       dplyr::coalesce(extract_feat(.data$feats, "Mood"),  "") == "Ind",
       dplyr::coalesce(extract_feat(.data$feats, "VerbForm"), "") == "Fin"
     ) %>%
-    count_feature("f_01_past_tense")
+    count_feature_traced("f_01_past_tense")
 
   # -- f_71  Preterito imperfecto (extension espanola) ----------------------
   # Tense=Imp, Mood=Ind, VerbForm=Fin (caminaba, decia, era).
   # No existe en el catalogo original de Biber (1985).
   # Se mantiene como rasgo extendido del espanol; ver biber_espanol_completo.md.
+  # (NOTA: f_71 es eliminada del output final en parse_biber_features; su
+  #  evidencia se filtra alli automaticamente al no sobrevivir el nombre
+  #  como columna del counts final.)
   f71 <- tokens %>%
     dplyr::filter(
       .data$pos %in% c("VERB", "AUX"),
@@ -108,7 +117,7 @@ block_tense_es <- function(
       dplyr::coalesce(extract_feat(.data$feats, "Mood"),  "") == "Ind",
       dplyr::coalesce(extract_feat(.data$feats, "VerbForm"), "") == "Fin"
     ) %>%
-    count_feature("f_71_preterit")
+    count_feature_traced("f_71_preterit")
 
   # -- f_02  Aspecto perfecto: HABER + participio ----------------------------
   # Excluye ESTAR copulativo (pasiva de estado).
@@ -144,12 +153,12 @@ block_tense_es <- function(
              "head_token_id_int" = "cop_head_id")
     ) %>%
     dplyr::filter(
-      dplyr::coalesce(.data$head_morph_verbform, 
+      dplyr::coalesce(.data$head_morph_verbform,
                       extract_feat(.data$head_feats, "VerbForm"), "") == "Part",
       dplyr::coalesce(.data$head_morph_voice,
                       extract_feat(.data$head_feats, "Voice"),    "") != "Pass"
     ) %>%
-    count_feature("f_02_perfect_aspect")
+    count_feature_traced("f_02_perfect_aspect")
 
   # -- f_03  Tiempo presente -------------------------------------------------
   # Presente de indicativo simple (Tense=Pres, Mood=Ind, VerbForm=Fin).
@@ -162,7 +171,7 @@ block_tense_es <- function(
       dplyr::coalesce(extract_feat(.data$feats, "Mood"),     "") == "Ind",
       dplyr::coalesce(extract_feat(.data$feats, "VerbForm"), "") == "Fin"
     ) %>%
-    count_feature("f_03_present_tense")
+    count_feature_traced("f_03_present_tense")
 
   # -- f_04  Adverbiales de lugar ---------------------------------------------
   # Matching por lemma sobre lista lexica; POS = ADV o ADP.
@@ -171,7 +180,7 @@ block_tense_es <- function(
       .data$lemma %in% place_adverbials,
       .data$pos   %in% c("ADV", "ADP", "NOUN")
     ) %>%
-    count_feature("f_04_place_adverbials")
+    count_feature_traced("f_04_place_adverbials")
 
   # -- f_05  Adverbiales de tiempo -------------------------------------------
   f05 <- tokens %>%
@@ -179,38 +188,51 @@ block_tense_es <- function(
       .data$lemma %in% time_adverbials,
       .data$pos   %in% c("ADV", "NOUN", "ADP")
     ) %>%
-    count_feature("f_05_time_adverbials")
+    count_feature_traced("f_05_time_adverbials")
 
   # -- f_11  Pronombres indefinidos ------------------------------------------
   # biber_espanol_completo.md §f_11 (EXCLUDE crítico): un/una/unos/unas son
   # artículos (DET, PronType=Art), no pronombres. UDPipe los lematiza como
   # "uno"; el filtro PronType!=Art descarta el artículo y conserva el uso
   # pronominal (uno PRON PronType=Ind).
+  # NOTA: count_feature_traced usa el nombre "f_11_indefinite_pronoun"
+  # (sin la 's' final) porque parse_biber_features() lo renombra a
+  # f_11_indefinite_pronouns mas tarde. Hacemos lo mismo aqui para
+  # mantener paridad. La evidencia se etiqueta con el mismo nombre y
+  # se relabela en parse_biber_features tras el rename.
   f11 <- tokens %>%
     dplyr::filter(
       .data$lemma %in% indefinite_pronouns,
       .data$pos   %in% c("PRON", "DET"),
       !stringr::str_detect(dplyr::coalesce(.data$feats, ""), "PronType=Art")
     ) %>%
-    count_feature("f_11_indefinite_pronoun")
+    count_feature_traced("f_11_indefinite_pronoun")
 
   # f_12 (pro-verb do): INTRADUCIBLE en espanol.
   # El espanol resuelve la anafora verbal mediante elision, sin pro-verbo
   # equivalente a "do". Ver biber_espanol_completo.md sec. F_12.
   # Columna eliminada del output desde la auditoria de Fase 2.
 
-  # -- Ensamblar --------------------------------------------------------------
-  doc_ids %>%
-    dplyr::left_join(f01,  by = "doc_id") %>%
-    dplyr::left_join(f71,  by = "doc_id") %>%
-    dplyr::left_join(f02,  by = "doc_id") %>%
-    dplyr::left_join(f03,  by = "doc_id") %>%
-    dplyr::left_join(f04,  by = "doc_id") %>%
-    dplyr::left_join(f05,  by = "doc_id") %>%
-    dplyr::left_join(f11,  by = "doc_id") %>%
+  # -- Ensamblar counts ------------------------------------------------------
+  counts <- doc_ids %>%
+    dplyr::left_join(f01$counts, by = "doc_id") %>%
+    dplyr::left_join(f71$counts, by = "doc_id") %>%
+    dplyr::left_join(f02$counts, by = "doc_id") %>%
+    dplyr::left_join(f03$counts, by = "doc_id") %>%
+    dplyr::left_join(f04$counts, by = "doc_id") %>%
+    dplyr::left_join(f05$counts, by = "doc_id") %>%
+    dplyr::left_join(f11$counts, by = "doc_id") %>%
     dplyr::mutate(
       dplyr::across(-dplyr::any_of("doc_id"), ~ dplyr::coalesce(., 0L))
     )
+
+  # -- Ensamblar evidence ----------------------------------------------------
+  evidence <- bind_evidence(
+    f01$evidence, f71$evidence, f02$evidence, f03$evidence,
+    f04$evidence, f05$evidence, f11$evidence
+  )
+
+  make_block_result(counts = counts, evidence = evidence)
 }
 
 # -----------------------------------------------------------------------------
