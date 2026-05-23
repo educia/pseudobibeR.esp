@@ -289,7 +289,9 @@ block_personal_pronouns_es <- function(
   # En UDPipe Spanish-GSD, "se" se lematiza como "él" con Reflex=Yes y
   # dep_rel = "iobj"/"obj" (no expl:pass). Excluimos esos casos para que
   # el "se" pasivo/impersonal/reflexivo NO cuente como pronombre referencial.
-  count_person_pronouns <- function(lemma_list) {
+  # Phase 2c: solo filtra (sin colapsar columnas); el dedup+tally+evidencia
+  # lo hace count_feature_traced abajo.
+  filter_person_pronouns <- function(lemma_list) {
     tokens %>%
       dplyr::filter(
         .data$pos == "PRON",
@@ -297,41 +299,31 @@ block_personal_pronouns_es <- function(
         !dplyr::coalesce(.data$dep_rel, "") %in% reflexive_deps,
         !(tolower(.data$token) == "se" &
           stringr::str_detect(dplyr::coalesce(.data$feats, ""), "Reflex=Yes"))
-      ) %>%
-      dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int)
+      )
   }
 
   # -- f_06  1a persona -----------------------------------------------------
-  f06 <- count_person_pronouns(c(
+  f06 <- filter_person_pronouns(c(
     "yo", "nosotros", "nosotras",
     "me", "nos",
     "m\u00ed", "conmigo"
-  )) %>%
-    dplyr::group_by(.data$doc_id) %>%
-    dplyr::tally() %>%
-    dplyr::rename(f_06_first_person_pronouns = "n")
+  )) %>% count_feature_traced("f_06_first_person_pronouns")
 
   # -- f_07  2a persona -----------------------------------------------------
   # "te" puede ser 2a atono o parte de construccion impersonal;
   # la exclusion de reflexive_deps filtra los casos expl mas claros.
-  f07 <- count_person_pronouns(c(
+  f07 <- filter_person_pronouns(c(
     "t\u00fa", "vos", "vosotros", "vosotras",
     "usted", "ustedes",
     "te", "ti", "contigo", "os"
-  )) %>%
-    dplyr::group_by(.data$doc_id) %>%
-    dplyr::tally() %>%
-    dplyr::rename(f_07_second_person_pronouns = "n")
+  )) %>% count_feature_traced("f_07_second_person_pronouns")
 
   # -- f_08  3a persona -----------------------------------------------------
-  f08 <- count_person_pronouns(c(
+  f08 <- filter_person_pronouns(c(
     "\u00e9l", "ella", "ello", "ellos", "ellas",
     "le", "lo", "la", "les", "los", "las",
     "consigo"
-  )) %>%
-    dplyr::group_by(.data$doc_id) %>%
-    dplyr::tally() %>%
-    dplyr::rename(f_08_third_person_pronouns = "n")
+  )) %>% count_feature_traced("f_08_third_person_pronouns")
 
   # f_09 (pronombre it): INTRADUCIBLE en espanol.
   # El espanol es lengua de sujeto nulo; no existe expletivo equivalente a "it".
@@ -354,16 +346,21 @@ block_personal_pronouns_es <- function(
     dplyr::left_join(question_sentences,
                      by = c("doc_id", "sentence_id")) %>%
     dplyr::filter(!is.na(.data$has_question)) %>%
-    count_feature("f_13_wh_question")
+    count_feature_traced("f_13_wh_question")
 
-  # -- Ensamblar -------------------------------------------------------------
-  doc_ids %>%
-    dplyr::left_join(f06, by = "doc_id") %>%
-    dplyr::left_join(f07, by = "doc_id") %>%
-    dplyr::left_join(f08, by = "doc_id") %>%
-    dplyr::left_join(f13, by = "doc_id") %>%
+  # -- Ensamblar counts ------------------------------------------------------
+  counts <- doc_ids %>%
+    dplyr::left_join(f06$counts, by = "doc_id") %>%
+    dplyr::left_join(f07$counts, by = "doc_id") %>%
+    dplyr::left_join(f08$counts, by = "doc_id") %>%
+    dplyr::left_join(f13$counts, by = "doc_id") %>%
     dplyr::mutate(
       dplyr::across(-dplyr::any_of("doc_id"),
                     ~ dplyr::coalesce(., 0L))
     )
+
+  # -- Ensamblar evidence ----------------------------------------------------
+  evidence <- bind_evidence(f06$evidence, f07$evidence, f08$evidence, f13$evidence)
+
+  make_block_result(counts = counts, evidence = evidence)
 }

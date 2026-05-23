@@ -124,14 +124,21 @@ test_that("cases cubre exactamente los 55 .evidence_features", {
 # remueve sus rasgos de este set.
 #
 # MIGRADOS:
-#   Phase 2b -- block_tense_es: f_01, f_02, f_03, f_04, f_05, f_11
+#   Phase 2b -- block_tense_es:               f_01, f_02, f_03, f_04, f_05, f_11
+#   Phase 2c -- block_personal_pronouns_es:   f_06, f_07, f_08, f_13
 SKIPPED_FEATURES <- setdiff(names(cases), c(
+  # Phase 2b
   "f_01_past_tense",
   "f_02_perfect_aspect",
   "f_03_present_tense",
   "f_04_place_adverbials",
   "f_05_time_adverbials",
-  "f_11_indefinite_pronouns"
+  "f_11_indefinite_pronouns",
+  # Phase 2c
+  "f_06_first_person_pronouns",
+  "f_07_second_person_pronouns",
+  "f_08_third_person_pronouns",
+  "f_13_wh_question"
 ))
 
 skip_until_migrated <- function(feature) {
