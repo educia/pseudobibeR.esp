@@ -259,7 +259,13 @@
 #' @noRd
 .udpipe_limited_features <- c(
   "f_22_that_adj_comp",
-  "f_26_past_participle"
+  "f_26_past_participle",
+  # f_27 sufre el mismo problema que f_26: UDPipe spanish-gsd etiqueta el
+  # participio postnominal de forma inconsistente (ADJ sin VerbForm en
+  # algunos casos, VERB con dep_rel "amod" en otros). El detector es
+  # correcto cuando UDPipe acierta, pero no podemos forzar count >= 1
+  # sobre un ejemplo sintetico generico.
+  "f_27_past_participle_whiz"
 )
 
 #' Rasgos strict: invariante \code{count == nrow(evidence)} se cumple exactamente (interno)

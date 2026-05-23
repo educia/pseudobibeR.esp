@@ -95,7 +95,7 @@ block_participial_clauses_es <- function(tokens, doc_ids, head_lookup) {
       dplyr::coalesce(.data$dep_rel, "") != "root" |
         dplyr::coalesce(.data$has_aux_fin_child, FALSE)
     ) %>%
-    count_feature("f_24_infinitives")
+    count_feature_traced("f_24_infinitives")
 
   # -- f_25  Gerundio adverbial / complemento --------------------------------
   # VerbForm=Ger con dep_rel=advcl|ccomp, NO postnominal
@@ -108,7 +108,7 @@ block_participial_clauses_es <- function(tokens, doc_ids, head_lookup) {
         "^(advcl|ccomp)"
       )
     ) %>%
-    count_feature("f_25_present_participle")
+    count_feature_traced("f_25_present_participle")
 
   # -- f_26  Participio adverbial / absoluto ---------------------------------
   # VerbForm=Part + Voice?Pass con dep_rel=advcl|ccomp|acl
@@ -123,7 +123,7 @@ block_participial_clauses_es <- function(tokens, doc_ids, head_lookup) {
         "^(advcl|ccomp|acl)"
       )
     ) %>%
-    count_feature("f_26_past_participle")
+    count_feature_traced("f_26_past_participle")
 
   # -- f_27  Participio postnominal (whiz-deletion) --------------------------
   # VerbForm=Part, dep_rel=acl, head es NOUN/PROPN
@@ -143,7 +143,7 @@ block_participial_clauses_es <- function(tokens, doc_ids, head_lookup) {
     dplyr::filter(
       dplyr::coalesce(.data$head_pos, "") %in% c("NOUN", "PROPN")
     ) %>%
-    count_feature("f_27_past_participle_whiz")
+    count_feature_traced("f_27_past_participle_whiz")
 
   # f_28 (gerundio postnominal / whiz-deletion) ELIMINADO:
   # El gerundio espanol no puede funcionar como modificador nominal postnominal;
@@ -152,14 +152,16 @@ block_participial_clauses_es <- function(tokens, doc_ids, head_lookup) {
   # Mapear f_28 a esas relativas supondria doblar el conteo. Intraducible.
   # Ver biber_espanol_completo.md sec. F_28.
 
-  doc_ids %>%
-    dplyr::left_join(f24, by = "doc_id") %>%
-    dplyr::left_join(f25, by = "doc_id") %>%
-    dplyr::left_join(f26, by = "doc_id") %>%
-    dplyr::left_join(f27, by = "doc_id") %>%
+  counts <- doc_ids %>%
+    dplyr::left_join(f24$counts, by = "doc_id") %>%
+    dplyr::left_join(f25$counts, by = "doc_id") %>%
+    dplyr::left_join(f26$counts, by = "doc_id") %>%
+    dplyr::left_join(f27$counts, by = "doc_id") %>%
     dplyr::mutate(
       dplyr::across(-dplyr::any_of("doc_id"), ~ dplyr::coalesce(., 0L))
     )
+  evidence <- bind_evidence(f24$evidence, f25$evidence, f26$evidence, f27$evidence)
+  make_block_result(counts = counts, evidence = evidence)
 }
 
 # -----------------------------------------------------------------------------
@@ -312,13 +314,18 @@ block_relatives_es <- function(tokens, doc_ids, head_lookup) {
       dplyr::coalesce(.data$dep_rel, "") %in% rel_subj_roles
     )
 
+  # Phase 2f: select() preserva las columnas E1 antes del bind_rows; el
+  # dedup y la evidencia los hace count_feature_traced (mismo dedup que
+  # el distinct anterior, ahora con .keep_all = TRUE para conservar
+  # token/lemma/pos/feats).
+  rel_evidence_cols <- c("doc_id", "sentence_id", "token_id_int",
+                         "token", "lemma", "pos", "feats", "head_token_id_int")
   f29 <- dplyr::bind_rows(
-    f29_que       %>% dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int),
-    f29_que_sconj %>% dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int),
-    f29_wh        %>% dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int)
+    f29_que       %>% dplyr::select(dplyr::all_of(rel_evidence_cols)),
+    f29_que_sconj %>% dplyr::select(dplyr::all_of(rel_evidence_cols)),
+    f29_wh        %>% dplyr::select(dplyr::all_of(rel_evidence_cols))
   ) %>%
-    dplyr::distinct() %>%
-    count_feature("f_29_that_subj")
+    count_feature_traced("f_29_that_subj")
 
   # -- f_30  Relativa de objeto (que + quien/cual fusionados) ---------------
   # FUSION f_30 + f_32 segun biber_espanol_completo.md:
@@ -372,12 +379,11 @@ block_relatives_es <- function(tokens, doc_ids, head_lookup) {
     )
 
   f30 <- dplyr::bind_rows(
-    f30_que     %>% dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int),
-    f30_que_obj %>% dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int),
-    f30_wh      %>% dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int)
+    f30_que     %>% dplyr::select(dplyr::all_of(rel_evidence_cols)),
+    f30_que_obj %>% dplyr::select(dplyr::all_of(rel_evidence_cols)),
+    f30_wh      %>% dplyr::select(dplyr::all_of(rel_evidence_cols))
   ) %>%
-    dplyr::distinct() %>%
-    count_feature("f_30_that_obj")
+    count_feature_traced("f_30_that_obj")
 
   # f_31 y f_32 absorbidos en f_29 y f_30 respectivamente.
   # No se generan columnas independientes en el output.
@@ -402,7 +408,7 @@ block_relatives_es <- function(tokens, doc_ids, head_lookup) {
          dplyr::lag(.data$pos, n = 1L, default = "") == "DET")
     ) %>%
     dplyr::ungroup() %>%
-    count_feature("f_33_pied_piping")
+    count_feature_traced("f_33_pied_piping")
 
   # -- f_34  Relativa oracional (lo que, eso que, lo cual) -------------------
   # El antecedente es un pronombre neutro (eso, esto, ello, lo)
@@ -486,22 +492,23 @@ block_relatives_es <- function(tokens, doc_ids, head_lookup) {
     dplyr::filter(dplyr::coalesce(.data$vh_pos, "") == "VERB")
 
   f34 <- dplyr::bind_rows(
-    f34        %>% dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int),
-    f34_locual %>% dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int)
+    f34        %>% dplyr::select(dplyr::all_of(rel_evidence_cols)),
+    f34_locual %>% dplyr::select(dplyr::all_of(rel_evidence_cols))
   ) %>%
-    dplyr::distinct() %>%
-    count_feature("f_34_sentence_relatives")
+    count_feature_traced("f_34_sentence_relatives")
 
   # f_31 y f_32 han sido absorbidos en f_29 y f_30 respectivamente
   # (fusion segun biber_espanol_completo.md); no se generan columnas separadas.
-  doc_ids %>%
-    dplyr::left_join(f29, by = "doc_id") %>%
-    dplyr::left_join(f30, by = "doc_id") %>%
-    dplyr::left_join(f33, by = "doc_id") %>%
-    dplyr::left_join(f34, by = "doc_id") %>%
+  counts <- doc_ids %>%
+    dplyr::left_join(f29$counts, by = "doc_id") %>%
+    dplyr::left_join(f30$counts, by = "doc_id") %>%
+    dplyr::left_join(f33$counts, by = "doc_id") %>%
+    dplyr::left_join(f34$counts, by = "doc_id") %>%
     dplyr::mutate(
       dplyr::across(-dplyr::any_of("doc_id"), ~ dplyr::coalesce(., 0L))
     )
+  evidence <- bind_evidence(f29$evidence, f30$evidence, f33$evidence, f34$evidence)
+  make_block_result(counts = counts, evidence = evidence)
 }
 
 # -----------------------------------------------------------------------------

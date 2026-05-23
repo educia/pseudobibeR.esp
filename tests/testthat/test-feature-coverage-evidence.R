@@ -151,7 +151,17 @@ SKIPPED_FEATURES <- setdiff(names(cases), c(
   "f_35_because",
   "f_36_though",
   "f_37_if",
-  "f_38_other_adv_sub"
+  "f_38_other_adv_sub",
+  # Phase 2f -- block_participial_clauses_es
+  "f_24_infinitives",
+  "f_25_present_participle",
+  "f_26_past_participle",
+  "f_27_past_participle_whiz",
+  # Phase 2g -- block_relatives_es
+  "f_29_that_subj",
+  "f_30_that_obj",
+  "f_33_pied_piping",
+  "f_34_sentence_relatives"
 ))
 
 skip_until_migrated <- function(feature) {
