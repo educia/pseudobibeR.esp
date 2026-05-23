@@ -98,32 +98,38 @@ block_passive_voice_es <- function(tokens, doc_ids, head_lookup,
 
   # -----------------------------------------------------------------------
   # Union A + B
+  # Phase 2d: ampliamos el select() para preservar las columnas necesarias
+  # para evidencia (token, lemma, pos, feats, token_id_int). El conteo
+  # final sigue siendo "una fila por construccion pasiva" (distinct sobre
+  # head_token_id_int).
   # -----------------------------------------------------------------------
+  passive_aux_cols <- c("doc_id", "sentence_id", "token_id_int",
+                        "token", "lemma", "pos", "feats", "head_token_id_int",
+                        "passive_agent_next2", "passive_agent_next3")
   all_passive <- dplyr::bind_rows(
-    perifrastic_passive %>%
-      dplyr::select("doc_id", "sentence_id", "head_token_id_int",
-                    "passive_agent_next2", "passive_agent_next3"),
-    se_passive %>%
-      dplyr::select("doc_id", "sentence_id", "head_token_id_int",
-                    "passive_agent_next2", "passive_agent_next3")
+    perifrastic_passive %>% dplyr::select(dplyr::all_of(passive_aux_cols)),
+    se_passive          %>% dplyr::select(dplyr::all_of(passive_aux_cols))
   ) %>%
     dplyr::distinct(.data$doc_id, .data$sentence_id, .data$head_token_id_int,
                     .keep_all = TRUE)
 
   # f_17  Agentless passives (sin frase <<por>> en las dos posiciones siguientes)
-  f17 <- all_passive %>%
-    dplyr::filter(!.data$passive_agent_next2,
-                  !.data$passive_agent_next3) %>%
+  f17_rows <- all_passive %>%
+    dplyr::filter(!.data$passive_agent_next2, !.data$passive_agent_next3)
+  f17_counts <- f17_rows %>%
     dplyr::group_by(.data$doc_id) %>%
     dplyr::tally() %>%
     dplyr::rename(f_17_agentless_passives = "n")
+  f17_evidence <- evidence_from_rows(f17_rows, "f_17_agentless_passives")
 
   # f_18  By-passives (con frase <<por>>)
-  f18 <- all_passive %>%
-    dplyr::filter(.data$passive_agent_next2 | .data$passive_agent_next3) %>%
+  f18_rows <- all_passive %>%
+    dplyr::filter(.data$passive_agent_next2 | .data$passive_agent_next3)
+  f18_counts <- f18_rows %>%
     dplyr::group_by(.data$doc_id) %>%
     dplyr::tally() %>%
     dplyr::rename(f_18_by_passives = "n")
+  f18_evidence <- evidence_from_rows(f18_rows, "f_18_by_passives")
 
   # -----------------------------------------------------------------------
   # f_19  Ser/estar como verbo principal (copula nominal/adjetival)
@@ -167,9 +173,7 @@ block_passive_voice_es <- function(tokens, doc_ids, head_lookup,
                      by = c("doc_id", "sentence_id", "token_id_int")) %>%
     dplyr::anti_join(progressive_aux_ids,
                      by = c("doc_id", "sentence_id", "token_id_int")) %>%
-    dplyr::group_by(.data$doc_id) %>%
-    dplyr::tally() %>%
-    dplyr::rename(f_19_be_main_verb = "n")
+    count_feature_traced("f_19_be_main_verb")
 
   # -----------------------------------------------------------------------
   # f_20  Haber existencial impersonal (hay, habia, hubo, habra?)
@@ -213,21 +217,21 @@ block_passive_voice_es <- function(tokens, doc_ids, head_lookup,
       by = c("doc_id", "sentence_id", "token_id_int" = "head_token_id_int")
     )
 
-  f20 <- haber_nodes %>%
-    dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int) %>%
-    dplyr::group_by(.data$doc_id) %>%
-    dplyr::tally() %>%
-    dplyr::rename(f_20_existential_there = "n")
+  f20 <- haber_nodes %>% count_feature_traced("f_20_existential_there")
 
   # -----------------------------------------------------------------------
   # Ensamblar
   # -----------------------------------------------------------------------
-  doc_ids %>%
-    dplyr::left_join(f17, by = "doc_id") %>%
-    dplyr::left_join(f18, by = "doc_id") %>%
-    dplyr::left_join(f19, by = "doc_id") %>%
-    dplyr::left_join(f20, by = "doc_id") %>%
+  counts <- doc_ids %>%
+    dplyr::left_join(f17_counts,  by = "doc_id") %>%
+    dplyr::left_join(f18_counts,  by = "doc_id") %>%
+    dplyr::left_join(f19$counts,  by = "doc_id") %>%
+    dplyr::left_join(f20$counts,  by = "doc_id") %>%
     dplyr::mutate(
       dplyr::across(-dplyr::any_of("doc_id"), ~ dplyr::coalesce(., 0L))
     )
+
+  evidence <- bind_evidence(f17_evidence, f18_evidence, f19$evidence, f20$evidence)
+
+  make_block_result(counts = counts, evidence = evidence)
 }

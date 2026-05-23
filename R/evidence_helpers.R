@@ -159,6 +159,44 @@ extract_evidence <- function(x) {
        paste(class(x), collapse = "/"), call. = FALSE)
 }
 
+#' Construye evidencia E1 a partir de filas de tokens
+#'
+#' Helper para casos donde la evidencia no se deriva del mismo filtro que
+#' produce el conteo (e.g., pasivas donde el conteo es a nivel de
+#' construccion y la evidencia es el participio recuperado via join).
+#' Mapea explicitamente las columnas UD del data.frame de entrada al
+#' schema canonico E1.
+#'
+#' @param rows data.frame con columnas UD estandar (o equivalentes
+#'   renombradas via los parametros col_*).
+#' @param feature_name string con el nombre canonico del rasgo.
+#' @param token_id_col,token_col,lemma_col,pos_col,feats_col,head_id_col
+#'   nombres de columna en \code{rows} que mapean al schema E1. Defaults
+#'   coinciden con las columnas UD nativas tras lower-casing del POS.
+#' @return Un tibble con schema \code{.EVIDENCE_COLS}.
+#' @keywords internal
+#' @noRd
+evidence_from_rows <- function(rows, feature_name,
+                               token_id_col = "token_id_int",
+                               token_col    = "token",
+                               lemma_col    = "lemma",
+                               pos_col      = "pos",
+                               feats_col    = "feats",
+                               head_id_col  = "head_token_id_int") {
+  if (nrow(rows) == 0L) return(empty_evidence_tibble())
+  tibble::tibble(
+    doc_id        = as.character(rows$doc_id),
+    feature       = feature_name,
+    sentence_id   = as.integer(rows$sentence_id),
+    token_id      = as.integer(rows[[token_id_col]]),
+    token         = as.character(rows[[token_col]]),
+    lemma         = as.character(rows[[lemma_col]]),
+    upos          = as.character(rows[[pos_col]]),
+    feats         = as.character(rows[[feats_col]]),
+    head_token_id = as.integer(rows[[head_id_col]])
+  )
+}
+
 #' Apila tibbles de evidencia en uno solo
 #'
 #' Wrapper sobre \code{dplyr::bind_rows()} que devuelve el tibble vacio

@@ -138,7 +138,12 @@ SKIPPED_FEATURES <- setdiff(names(cases), c(
   "f_06_first_person_pronouns",
   "f_07_second_person_pronouns",
   "f_08_third_person_pronouns",
-  "f_13_wh_question"
+  "f_13_wh_question",
+  # Phase 2d -- block_passive_voice_es
+  "f_17_agentless_passives",
+  "f_18_by_passives",
+  "f_19_be_main_verb",
+  "f_20_existential_there"
 ))
 
 skip_until_migrated <- function(feature) {
