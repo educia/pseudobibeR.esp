@@ -143,7 +143,15 @@ SKIPPED_FEATURES <- setdiff(names(cases), c(
   "f_17_agentless_passives",
   "f_18_by_passives",
   "f_19_be_main_verb",
-  "f_20_existential_there"
+  "f_20_existential_there",
+  # Phase 2e -- block_clause_embedding_es
+  "f_21_that_verb_comp",
+  "f_22_that_adj_comp",
+  "f_23_wh_clause",
+  "f_35_because",
+  "f_36_though",
+  "f_37_if",
+  "f_38_other_adv_sub"
 ))
 
 skip_until_migrated <- function(feature) {
@@ -174,17 +182,20 @@ ud_model <- if (!is.na(model_path)) {
 # Tests parametrizados: uno por rasgo
 # ---------------------------------------------------------------------------
 
-dual_path  <- pseudobibeR.es:::.dual_path_features
-dict_only  <- pseudobibeR.es:::.dict_only_features
-strict_ev  <- pseudobibeR.es:::.strict_evidence_features
+dual_path     <- pseudobibeR.es:::.dual_path_features
+dict_only     <- pseudobibeR.es:::.dict_only_features
+strict_ev     <- pseudobibeR.es:::.strict_evidence_features
+udpipe_limit  <- pseudobibeR.es:::.udpipe_limited_features
 
 # Clasifica la invariante a aplicar segun la topologia del rasgo (M1):
-#  - strict:  count == nrow(evidence) exacta
-#  - relaxed: 1 <= nrow(evidence) <= count
-#  - skipped: dict-only, sin evidencia posible en v1
+#  - strict:        count == nrow(evidence) exacta
+#  - relaxed:       1 <= nrow(evidence) <= count
+#  - skip_dict_only: sin evidencia posible en v1 (categoria K)
+#  - skip_udpipe:   parser subreporta -- no se puede afirmar count >= 1
 invariant_for <- function(feature) {
-  if (feature %in% dict_only) return("skip_dict_only")
-  if (feature %in% dual_path) return("relaxed")
+  if (feature %in% udpipe_limit) return("skip_udpipe")
+  if (feature %in% dict_only)    return("skip_dict_only")
+  if (feature %in% dual_path)    return("relaxed")
   return("strict")
 }
 
@@ -195,14 +206,18 @@ for (feat in names(cases)) {
     mode         <- invariant_for(feature_name)
 
     label <- switch(mode,
-      strict        = paste0(feature_name, " [strict]: count == nrow(evidence)"),
-      relaxed       = paste0(feature_name, " [relaxed dual-path]: 1 <= nrow(evidence) <= count"),
-      skip_dict_only= paste0(feature_name, " [dict-only]: skipped (sin evidencia v1)")
+      strict         = paste0(feature_name, " [strict]: count == nrow(evidence)"),
+      relaxed        = paste0(feature_name, " [relaxed dual-path]: 1 <= nrow(evidence) <= count"),
+      skip_dict_only = paste0(feature_name, " [dict-only]: skipped (sin evidencia v1)"),
+      skip_udpipe    = paste0(feature_name, " [UDPipe-limited]: skipped (parser subreporta)")
     )
 
     test_that(label, {
       if (mode == "skip_dict_only") {
         skip("dict-only feature: M1 difiere evidencia a v2 (ver .dict_only_features en R/feature_categories.R)")
+      }
+      if (mode == "skip_udpipe") {
+        skip("UDPipe-limited feature: parser subreporta en construcciones especificas (ver .udpipe_limited_features)")
       }
       skip_until_migrated(feature_name)
       skip_if_not_installed("udpipe")

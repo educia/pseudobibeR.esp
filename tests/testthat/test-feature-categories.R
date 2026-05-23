@@ -90,6 +90,11 @@ test_that("la union de los tres = .evidence_features (sin huecos ni solapes)", {
   expect_setequal(union_all, evidence_pool)
 })
 
+test_that(".udpipe_limited_features es subconjunto de .evidence_features", {
+  udpipe_limit <- pseudobibeR.es:::.udpipe_limited_features
+  expect_true(all(udpipe_limit %in% evidence_pool))
+})
+
 test_that(".dual_path_features tiene los 12 esperados y todos estan en .feature_categories", {
   expect_length(dual_path, 12L)
   expect_true(all(dual_path %in% names(cats)))

@@ -243,6 +243,25 @@
   "f_50_discourse_particles"
 )
 
+#' Rasgos con limitacion conocida de UDPipe (interno)
+#'
+#' Rasgos cuyo detector es correcto pero UDPipe spanish-gsd subreporta
+#' por errores de tagging/parsing en construcciones especificas. La
+#' invariante strict/relaxed sigue valiendo logicamente (cuando UDPipe
+#' acierta), pero el test transversal no puede asumir count >= 1 sobre
+#' un ejemplo sintetico porque el parser ya devolvio 0 antes de que
+#' el detector pudiese opinar.
+#'
+#' Documentado en README "Known limitations" y biber_espanol_completo.md
+#' §f_22, §f_26. El test transversal los skipea con razon explicita.
+#'
+#' @keywords internal
+#' @noRd
+.udpipe_limited_features <- c(
+  "f_22_that_adj_comp",
+  "f_26_past_participle"
+)
+
 #' Rasgos strict: invariante \code{count == nrow(evidence)} se cumple exactamente (interno)
 #'
 #' Complemento: \code{.evidence_features - .dual_path_features - .dict_only_features}.

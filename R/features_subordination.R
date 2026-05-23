@@ -565,7 +565,7 @@ block_clause_embedding_es <- function(tokens, doc_ids, head_lookup,
       dplyr::coalesce(.data$head_pos, "") %in% c("VERB", "AUX"),
       !stringr::str_detect(dplyr::coalesce(.data$head_dep_rel, ""), "^acl")
     ) %>%
-    count_feature("f_21_that_verb_comp")
+    count_feature_traced("f_21_that_verb_comp")
 
   # -- f_22  <<que>> complementizador tras ADJ --------------------------------
   # El head inmediato de la clausula marcada con <<que>> es un ADJ
@@ -583,7 +583,7 @@ block_clause_embedding_es <- function(tokens, doc_ids, head_lookup,
     dplyr::filter(
       dplyr::coalesce(.data$head_pos, "") == "ADJ"
     ) %>%
-    count_feature("f_22_that_adj_comp")
+    count_feature_traced("f_22_that_adj_comp")
 
   # -- f_23  Clausula-wh (interrogativa indirecta) ---------------------------
   # Spec \u00a7f_23 Include: solo wh ACENTUADOS en posici\u00f3n subordinada/argumental.
@@ -655,8 +655,7 @@ block_clause_embedding_es <- function(tokens, doc_ids, head_lookup,
       # cuando el wh introduce una relativa (caso "El equipo que fue asignado").
       !dplyr::coalesce(.data$wh_head_dep, "") %in% c("acl", "acl:relcl")
     ) %>%
-    dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int) %>%
-    count_feature("f_23_wh_clause")
+    count_feature_traced("f_23_wh_clause")
 
   # -- f_35  Causal ----------------------------------------------------------
   # Solo "porque" -- restriccion lexica estrecha paralela a "because" en Biber
@@ -672,8 +671,7 @@ block_clause_embedding_es <- function(tokens, doc_ids, head_lookup,
         dplyr::coalesce(.data$dep_rel, ""), "^(mark|cc|advmod)"
       )
     ) %>%
-    dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int) %>%
-    count_feature("f_35_because")
+    count_feature_traced("f_35_because")
 
   # -- f_36  Concesiva -------------------------------------------------------
   # Solo "aunque" -- cubre tanto "although" como "though" de Biber (1985).
@@ -689,8 +687,7 @@ block_clause_embedding_es <- function(tokens, doc_ids, head_lookup,
         dplyr::coalesce(.data$dep_rel, ""), "^(mark|cc|advmod)"
       )
     ) %>%
-    dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int) %>%
-    count_feature("f_36_though")
+    count_feature_traced("f_36_though")
 
   # -- f_37  Condicional -----------------------------------------------------
   # "si" condicional + "a_menos_que" y "salvo_que" como equivalentes de
@@ -742,8 +739,7 @@ block_clause_embedding_es <- function(tokens, doc_ids, head_lookup,
     dplyr::filter(
       !dplyr::coalesce(.data$gp_lemma, "") %in% interrog_governors
     ) %>%
-    dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int) %>%
-    count_feature("f_37_if")
+    count_feature_traced("f_37_if")
 
   # -- f_38  Otros subordinadores adverbiales --------------------------------
   # Todo SCONJ con dep_rel=mark que NO sea ya contado en f_21/f_22/f_35/f_36/f_37
@@ -771,21 +767,27 @@ block_clause_embedding_es <- function(tokens, doc_ids, head_lookup,
       ),
       !.data$lemma %in% counted_sub
     ) %>%
-    dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int) %>%
-    count_feature("f_38_other_adv_sub")
+    count_feature_traced("f_38_other_adv_sub")
 
   # f_60 (that-deletion) ELIMINADO: intraducible.
   # Ver docstring y biber_espanol_completo.md sec. F_60.
 
-  doc_ids %>%
-    dplyr::left_join(f21, by = "doc_id") %>%
-    dplyr::left_join(f22, by = "doc_id") %>%
-    dplyr::left_join(f23, by = "doc_id") %>%
-    dplyr::left_join(f35, by = "doc_id") %>%
-    dplyr::left_join(f36, by = "doc_id") %>%
-    dplyr::left_join(f37, by = "doc_id") %>%
-    dplyr::left_join(f38, by = "doc_id") %>%
+  counts <- doc_ids %>%
+    dplyr::left_join(f21$counts, by = "doc_id") %>%
+    dplyr::left_join(f22$counts, by = "doc_id") %>%
+    dplyr::left_join(f23$counts, by = "doc_id") %>%
+    dplyr::left_join(f35$counts, by = "doc_id") %>%
+    dplyr::left_join(f36$counts, by = "doc_id") %>%
+    dplyr::left_join(f37$counts, by = "doc_id") %>%
+    dplyr::left_join(f38$counts, by = "doc_id") %>%
     dplyr::mutate(
       dplyr::across(-dplyr::any_of("doc_id"), ~ dplyr::coalesce(., 0L))
     )
+
+  evidence <- bind_evidence(
+    f21$evidence, f22$evidence, f23$evidence,
+    f35$evidence, f36$evidence, f37$evidence, f38$evidence
+  )
+
+  make_block_result(counts = counts, evidence = evidence)
 }
