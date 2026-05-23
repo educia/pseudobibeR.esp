@@ -14,10 +14,18 @@
 #' @importFrom magrittr %>%
 #' @importFrom rlang .data :=
 #' @importFrom utils tail
+#' @param traced Logical. Si \code{TRUE}, ademas del data.frame de conteos
+#'   se devuelve un tibble largo con el schema canonico de evidencia
+#'   (\code{.EVIDENCE_COLS}). El retorno pasa de ser un data.frame a una
+#'   \code{list(counts, evidence)}. Default \code{FALSE} (comportamiento
+#'   identico al pre-Phase-2). Esta bandera la activan exclusivamente
+#'   los wrappers \code{biber_es_traced()} y \code{biber_es_batch(trace=TRUE)};
+#'   \code{biber_es()} la mantiene en \code{FALSE} para no cambiar su API.
 #' @keywords internal
 parse_biber_features <- function(tokens, measure, normalize,
-                                 engine = c("spacy", "udpipe"),
-                                 language = c("fr", "es")) {
+                                 engine   = c("spacy", "udpipe"),
+                                 language = c("fr", "es"),
+                                 traced   = FALSE) {
   engine   <- match.arg(engine)
   language <- match.arg(language)
 
@@ -400,6 +408,14 @@ parse_biber_features <- function(tokens, measure, normalize,
     quanteda::tokens_remove("\\d_", valuetype = "regex") %>%
     quanteda::tokens_remove("_punct_", valuetype = "fixed")
 
+  # Phase 2: cada elemento de `df` puede ser un data.frame (formato antiguo,
+  # pre-migracion) o un block_result list(counts, evidence) (formato nuevo,
+  # post-migracion del bloque). Recolectamos evidencia primero (vacia para
+  # bloques no migrados) y normalizamos df a puros data.frames antes del
+  # reduce. extract_counts/extract_evidence son idempotentes sobre dfs.
+  ev_blocks <- if (traced) purrr::map(df, extract_evidence) else NULL
+  df        <- purrr::map(df, extract_counts)
+
   biber_2 <- df %>% purrr::reduce(dplyr::full_join, by = "doc_id")
 
   biber_counts <- dplyr::full_join(biber_1, biber_2, by = "doc_id") %>%
@@ -615,5 +631,20 @@ parse_biber_features <- function(tokens, measure, normalize,
     dplyr::select(dplyr::all_of(present_ordered), dplyr::any_of(remaining))
 
   biber_counts[] <- lapply(biber_counts, as.vector)
-  biber_counts
+
+  if (!traced) return(biber_counts)
+
+  # Phase 2: ensamblado de evidencia.
+  # - ev_blocks puede tener entradas NULL si algun bloque no fue invocado en
+  #   esta ruta de idioma/engine. bind_evidence() las filtra silenciosamente.
+  # - El conjunto resultante puede tener filas cuyo `feature` no sobrevive
+  #   a las combinaciones finales (merges, drops); se filtra para mantener
+  #   coherencia con `biber_counts`.
+  evidence <- do.call(bind_evidence, ev_blocks)
+  if (nrow(evidence) > 0L) {
+    surviving_features <- intersect(unique(evidence$feature), colnames(biber_counts))
+    evidence <- evidence[evidence$feature %in% surviving_features, , drop = FALSE]
+  }
+
+  list(counts = biber_counts, evidence = evidence)
 }
