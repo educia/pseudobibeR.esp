@@ -31,26 +31,10 @@ extract_feat <- function(feats_vec, feat_name) {
   m[, 2L]
 }
 
-# Cuenta ocurrencias distintas (doc, sent, tok) y agrega a nivel doc_id.
-# 2026-04-21: UDPipe MWT rows (e.g. "al"/"del" with token_id "4-5") have
-# token_id_int=NA; two MWTs in the same sentence would both get NA and collapse
-# to one row under distinct(), undercounting by 1 per extra MWT.
-# Fix: assign unique negative integers to NA positions before deduplication
-# so each MWT row is treated as a distinct token.
-count_feature <- function(tbl, col_name) {
-  tbl %>%
-    dplyr::mutate(
-      .tid_dedup = dplyr::if_else(
-        is.na(.data$token_id_int),
-        -.Machine$integer.max + dplyr::row_number(),
-        .data$token_id_int
-      )
-    ) %>%
-    dplyr::distinct(.data$doc_id, .data$sentence_id, .data$.tid_dedup) %>%
-    dplyr::group_by(.data$doc_id) %>%
-    dplyr::tally() %>%
-    dplyr::rename(!!col_name := "n")
-}
+# Phase 5: count_feature() (retornaba data.frame de conteos) eliminada
+# tras la migracion de Phase 2. Toda llamada productiva ahora pasa por
+# count_feature_traced() en R/evidence_helpers.R, que retorna
+# list(counts, evidence) con identica logica de dedup MWT-safe.
 
 # -----------------------------------------------------------------------------
 # 1.  block_tense_es

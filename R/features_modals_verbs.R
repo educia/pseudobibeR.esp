@@ -15,7 +15,7 @@
 #   exigimos que el verbo modal tenga al menos un dependiente con
 #   VerbForm=Inf enlazado por xcomp / ccomp / advcl / aux / obj.
 #
-# NOTA -- extract_feat() y count_feature() se definen en
+# NOTA -- extract_feat() se define en
 #   features_tense_pronouns.R y son visibles en el mismo namespace del paquete.
 
 # -----------------------------------------------------------------------------
