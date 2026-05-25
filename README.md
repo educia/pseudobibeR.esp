@@ -94,8 +94,11 @@ print(features)
 - **Normalización automática** a conteos por 1 000 tokens (opcional)
 - **Varias medidas de type-token ratio** (MATTR, TTR, CTTR, MSTTR)
 - **Integración con UDPipe** (y potencialmente spaCy en el futuro)
+- **Procesamiento por lotes** (`biber_es_batch()`) con ingestión polimórfica (CSV o `data.frame`), modos rápido/robusto y propagación de metadata
+- **Análisis trazable** (`biber_es_traced()`) que devuelve, junto a los conteos, una tabla larga con los tokens que dispararon cada detección
+- **Exportación a Excel** (`write_biber_xlsx()`) con orientación tidy compatible con `readxl`, `pandas` y SPSS
 - **Diccionarios y listas léxicas** en español bajo `data-raw/`
-- **Suite de tests** con ejemplos sintéticos reproducibles en `tests/testthat/`
+- **Suite de tests** con ejemplos sintéticos reproducibles en `tests/testthat/` (≥ 640 tests, incluyendo regression-guards para los 4 patrones complejos detectados en auditoría sistemática)
 - **Aplicación Shiny** integrada (`app.R`) para exploración interactiva de rasgos
 
 ## Dependencias y requisitos
@@ -124,6 +127,171 @@ features <- biber_es(parsed_data,
                      measure   = "MATTR",
                      normalize = TRUE)
 ```
+
+## Procesamiento por lotes
+
+`biber_es_batch()` es un wrapper de alto nivel que combina ingestión + parseo UDPipe + extracción de rasgos en una sola llamada. Pensado para corpora de múltiples documentos.
+
+### Ingestión polimórfica
+
+Acepta dos formatos de entrada sin esfuerzo adicional:
+
+```r
+library(udpipe)
+library(pseudobibeR.es)
+
+ud_model <- udpipe_load_model("spanish-gsd-ud-2.5-191206.udpipe")
+
+# Opción A: data.frame en memoria con metadata propagada
+corpus <- data.frame(
+  doc_id = c("d1", "d2", "d3"),
+  genre  = c("narr", "acad", "conv"),
+  year   = c(2020, 2021, 2022),
+  text   = c(
+    "María llegó tarde a la reunión.",
+    "El método permite comparar dos modelos estadísticos.",
+    "Sí, claro, lo que tú digas."
+  )
+)
+res <- biber_es_batch(corpus, ud_model, id_column = "doc_id")
+
+# Opción B: path a CSV (encoding UTF-8 forzado automáticamente)
+res <- biber_es_batch("corpus.csv", ud_model)
+
+# Si no pasás id_column, se autogenera: doc_0001, doc_0002, ...
+res <- biber_es_batch(data.frame(text = c("texto 1", "texto 2")), ud_model)
+```
+
+`res$counts` es un `data.frame` con orientación tidy:
+
+```
+doc_id | genre | year | f_01_past_tense | f_02_perfect_aspect | ... | n_tokens | n_lex_tokens
+d1     | narr  | 2020 | ...
+```
+
+Las columnas de metadata (genre, year, etc.) se insertan entre `doc_id` y los rasgos `f_NN_*` para que estén listas para análisis multivariado (MDA, PCA, regresión por grupo).
+
+### Modos `fast` vs `safe`
+
+```r
+# Fast (default): una sola pasada UDPipe + una sola extracción. Falla atómica.
+res <- biber_es_batch(corpus, ud_model)
+
+# Safe: loop por documento con tryCatch. Tolerante a corpora heterogéneos.
+res <- biber_es_batch(corpus, ud_model, safe = TRUE)
+res$counts        # Documentos que se procesaron OK
+res$failed_docs   # tibble con doc_id, error_message, stage para los que fallaron
+```
+
+Recomendación: `safe = FALSE` para corpora curados; `safe = TRUE` cuando los textos vienen de fuentes desconocidas o muy heterogéneas.
+
+### Procesamiento con evidencia
+
+```r
+res <- biber_es_batch(corpus, ud_model, trace = TRUE)
+res$counts     # mismo data.frame que antes
+res$evidence   # tibble largo con los tokens que dispararon cada detección
+```
+
+Ver la siguiente sección para los detalles del schema de evidencia.
+
+### Exportación a Excel
+
+```r
+library(writexl)  # paquete sugerido
+write_biber_xlsx(res, "output.xlsx")
+```
+
+El archivo se escribe con orientación tidy en todas las hojas (`raw`, `metadata`, opcionales `evidence`, `failed_docs`). El motivo es la compatibilidad con re-importación: cualquier coautor que use `readxl::read_xlsx()` en R, `pandas.read_excel()` en Python, o el importador estándar de SPSS obtiene exactamente la misma estructura que devuelve `res$counts` — sin necesidad de transposiciones manuales.
+
+Si el caso de uso es presentación visual y se prefiere "rasgos en filas × documentos en columnas" (ergonómico para corpora pequeños), la receta es una línea:
+
+```r
+res$counts %>%
+  tidyr::pivot_longer(starts_with("f_"), names_to = "feature", values_to = "value") %>%
+  tidyr::pivot_wider(names_from = doc_id, values_from = value)
+```
+
+## Análisis trazable
+
+`biber_es_traced()` es la variante de `biber_es()` que, además del data.frame de conteos, devuelve un tibble largo con los tokens individuales que dispararon cada detección. Útil para:
+
+- **Auditoría manual**: "¿qué tokens concretos contó el detector como hedges en este texto?"
+- **Depuración de la cadena UDPipe → detector**: ver el `feats` y la dependencia sintáctica que disparó un match inesperado.
+- **Análisis cross-feature**: "¿qué rasgos se activaron en este token específico?"
+
+### Estructura del retorno
+
+```r
+res <- biber_es_traced(parsed_data, measure = "none", normalize = FALSE)
+
+res$counts      # data.frame N filas × 70 cols, idéntico a biber_es()
+res$evidence    # tibble largo, 9 columnas (schema E1)
+```
+
+Las 9 columnas de `evidence`:
+
+| Columna | Contenido |
+|---|---|
+| `doc_id` | Identificador del documento (heredado del parsing). |
+| `feature` | Nombre del rasgo, p.ej. `"f_01_past_tense"`. |
+| `sentence_id` | Posición de la oración dentro del documento. |
+| `token_id` | Posición del token dentro de la oración (id UD). |
+| `token` | Forma superficial del token. |
+| `lemma` | Lema asignado por UDPipe. |
+| `upos` | POS universal (NOUN, VERB, ADJ, ...). |
+| `feats` | Atributos morfológicos UD (`Tense=Past\|Mood=Ind\|VerbForm=Fin`, ...). |
+| `head_token_id` | Posición del head sintáctico (para reconstruir la dependencia). |
+
+### Ejemplos de uso
+
+```r
+# Caso 1: auditar qué tokens dispararon f_47_hedges
+subset(res$evidence, feature == "f_47_hedges")
+
+# Caso 2: cross-feature en un token específico
+subset(res$evidence,
+       doc_id == "doc_1" & sentence_id == 1 & token_id == 5)
+
+# Caso 3: distribución de los detectores activados por documento
+table(res$evidence$doc_id, res$evidence$feature)
+
+# Caso 4: recuperar dep_rel (no incluido por defecto) joinando contra el parse
+library(dplyr)
+res$evidence %>%
+  left_join(parsed_data %>% select(doc_id, sentence_id, token_id, dep_rel),
+            by = c("doc_id", "sentence_id", "token_id"))
+```
+
+### Interpretación de la evidencia
+
+No todos los rasgos generan filas de evidencia. La tabla siguiente resume el comportamiento esperado:
+
+| Tipo de rasgo | Comportamiento de la evidencia | Ejemplos |
+|---|---|---|
+| Detección estructural directa | Una fila por token detectado (`nrow(evidence) == count`) | f_01–f_03, f_13, f_17–f_20, f_21, f_23–f_27, f_29–f_30, f_33–f_42 (parcial), f_52, f_54, f_63–f_67, f_10, f_14, f_16 |
+| Detección con apoyo de suplementos | Entre 1 fila y N (`nrow(evidence) ≤ count`) | f_06, f_07, f_08, f_11, f_51, f_53, f_55–f_58 |
+| Métricas continuas | No aparecen en evidencia (su valor vive solo en `counts`) | f_43 (TTR), f_44 (longitud media) |
+| Clases léxicas (v1) | No aparecen en evidencia | f_45, f_46, f_47, f_48, f_49, f_50 |
+| Limitación conocida del parser | Pueden no aparecer aunque el rasgo exista en el texto | f_22, f_26, f_27 |
+| Sin equivalente en español | No aparecen | f_09, f_12, f_15, f_28, f_31, f_32, f_59–f_62 |
+
+Para las clases léxicas (f_45–f_50), si necesitás los tokens individuales podés reconstruirlos contra el diccionario en una línea:
+
+```r
+parsed_data %>% dplyr::filter(tolower(lemma) %in% dict$f_47_hedges)
+```
+
+### Patrones complejos cubiertos por regression-guards
+
+El paquete mantiene tests de regresión dedicados para cuatro patrones detectados en auditoría sistemática:
+
+- **f_06** (1ª persona): excluye verbos conjugados con `Person=1` que el suplemento morfológico aceptaba erróneamente como pronombres.
+- **f_23** (wh-clause): exige tilde en la forma superficial y excluye heads `acl`/`acl:relcl` para no confundir relativas con interrogativas indirectas.
+- **f_24** (infinitivos): acepta `root|VerbForm=Inf` solo cuando hay un AUX finito hijo (perífrasis modal), evitando misparse del parser.
+- **f_47** (hedges): fuerza `LC_CTYPE=UTF-8` para que `quanteda` reconozca acentos en sesiones R con locale C.
+
+Estos guards corren con cada `devtools::test()` y bloquean regresiones silenciosas en los detectores afectados.
 
 ## Desarrollo y tests
 
