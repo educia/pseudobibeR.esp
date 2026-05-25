@@ -37,11 +37,13 @@ Suggests:
     gtsummary,
     knitr,
     mda.biber,
+    readxl,
     reticulate,
     rmarkdown,
     spacyr,
     testthat (>= 3.0.0),
     tidyr,
     udpipe,
+    writexl,
     yaml
 Config/testthat/edition: 3
