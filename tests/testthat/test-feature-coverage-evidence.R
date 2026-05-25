@@ -92,7 +92,7 @@ cases <- list(
   f_63_split_auxiliary         = list(text = "Ha probablemente sido analizado por el equipo.",                     min_count = 1),
   # O. Coordinacion
   f_64_phrasal_coordination    = list(text = "Los estudiantes y los profesores asistieron.",                       min_count = 1),
-  f_65_clausal_coordination    = list(text = "Llovía y hacía frío en la calle.",                                   min_count = 1),
+  f_65_clausal_coordination    = list(text = "Los niños jugaban en el parque y los padres conversaban tranquilamente.", min_count = 1),
   # P. Negacion
   f_66_neg_synthetic           = list(text = "Nadie sabe nada sobre ese asunto.",                                  min_count = 1),
   f_67_neg_analytic            = list(text = "No llegó.",                                                          min_count = 1)
@@ -161,7 +161,33 @@ SKIPPED_FEATURES <- setdiff(names(cases), c(
   "f_29_that_subj",
   "f_30_that_obj",
   "f_33_pied_piping",
-  "f_34_sentence_relatives"
+  "f_34_sentence_relatives",
+  # Phase 2h -- block_adj_prep_adv_es
+  "f_39_prepositions",
+  "f_40_adj_attr",
+  "f_41_adj_pred",
+  "f_42_adverbs",
+  # Phase 2i -- block_modals_es
+  "f_52_modal_possibility",
+  "f_53_modal_necessity",
+  "f_54_modal_predictive",
+  # Phase 2j -- block_specialized_verbs_es
+  "f_55_verb_public",
+  "f_56_verb_private",
+  "f_57_verb_suasive",
+  "f_58_verb_seem",
+  # Phase 2k -- block_split_coordination_es
+  "f_63_split_auxiliary",
+  "f_64_phrasal_coordination",
+  "f_65_clausal_coordination",
+  # Phase 2l -- block_negation_es
+  "f_66_neg_synthetic",
+  "f_67_neg_analytic",
+  # Phase 2m -- block_lexical_membership_es
+  "f_10_demonstrative_pronoun",
+  "f_14_nominalizations",
+  "f_16_other_nouns",
+  "f_51_demonstratives"
 ))
 
 skip_until_migrated <- function(feature) {

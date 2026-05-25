@@ -22,9 +22,20 @@
 # 0.  Helper: perifrasis modal (verbo-cabeza + infinitivo-dependiente)
 # -----------------------------------------------------------------------------
 
-count_modal_periphrasis <- function(tokens, lemmas) {
-  if (length(lemmas) == 0)
-    return(tibble::tibble(doc_id = character(), n = integer()))
+count_modal_periphrasis <- function(tokens, lemmas, feature_name = NULL) {
+  # Phase 2i: el retorno depende de feature_name.
+  #   - feature_name = NULL: comportamiento legacy, devuelve tibble(doc_id, n).
+  #     Conservado para callers que aun esperan ese shape.
+  #   - feature_name = string: retorna block_result(counts con columna nombrada,
+  #     evidence E1 con feature etiquetado).
+  if (length(lemmas) == 0) {
+    if (is.null(feature_name)) {
+      return(tibble::tibble(doc_id = character(), n = integer()))
+    }
+    return(make_block_result(
+      tibble::tibble(doc_id = character(), !!feature_name := integer())
+    ))
+  }
 
   modal_toks <- tokens %>%
     dplyr::filter(
@@ -59,8 +70,7 @@ count_modal_periphrasis <- function(tokens, lemmas) {
       inf_deps,
       by = c("doc_id", "sentence_id", "token_id_int" = "head_token_id_int")
     ) %>%
-    dplyr::filter(!is.na(.data$has_inf_dep)) %>%
-    dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int)
+    dplyr::filter(!is.na(.data$has_inf_dep))
 
   # Case 2: modal is AUX dependent whose head has VerbForm=Inf
   # (canonical UD Spanish structure: INF is root, modal is aux)
@@ -80,13 +90,26 @@ count_modal_periphrasis <- function(tokens, lemmas) {
       inf_heads,
       by = c("doc_id", "sentence_id", "head_token_id_int")
     ) %>%
-    dplyr::filter(dplyr::coalesce(.data$head_verbform, "") == "Inf") %>%
-    dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int)
+    dplyr::filter(dplyr::coalesce(.data$head_verbform, "") == "Inf")
 
-  dplyr::bind_rows(case1, case2) %>%
-    dplyr::distinct() %>%
-    dplyr::group_by(.data$doc_id) %>%
-    dplyr::tally()
+  modal_cols <- c("doc_id", "sentence_id", "token_id_int",
+                  "token", "lemma", "pos", "feats", "head_token_id_int")
+  combined <- dplyr::bind_rows(
+    case1 %>% dplyr::select(dplyr::all_of(modal_cols)),
+    case2 %>% dplyr::select(dplyr::all_of(modal_cols))
+  )
+
+  if (is.null(feature_name)) {
+    # Legacy shape para callers no migrados
+    return(
+      combined %>%
+        dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int) %>%
+        dplyr::group_by(.data$doc_id) %>%
+        dplyr::tally()
+    )
+  }
+
+  count_feature_traced(combined, feature_name)
 }
 
 # -----------------------------------------------------------------------------
@@ -117,7 +140,7 @@ block_adj_prep_adv_es <- function(tokens, doc_ids, dict_lookup,
   # dep_rel="case" causaba subconteo. Ver biber_espanol_completo.md F_39.
   f39 <- tokens %>%
     dplyr::filter(.data$pos == "ADP") %>%
-    count_feature("f_39_prepositions")
+    count_feature_traced("f_39_prepositions")
 
   # f_40  Adjetivo atributivo
   has_amod <- any(
@@ -131,7 +154,7 @@ block_adj_prep_adv_es <- function(tokens, doc_ids, dict_lookup,
         dplyr::coalesce(.data$dep_rel, "") == "amod",
         !stringr::str_detect(.data$token, "-")
       ) %>%
-      count_feature("f_40_adj_attr")
+      count_feature_traced("f_40_adj_attr")
   } else {
     # Fallback: ADJ inmediatamente antes de NOUN dentro de la misma oracion
     f40 <- tokens %>%
@@ -143,7 +166,7 @@ block_adj_prep_adv_es <- function(tokens, doc_ids, dict_lookup,
         dplyr::lead(.data$pos, default = "") %in% c("NOUN", "PROPN", "ADJ")
       ) %>%
       dplyr::ungroup() %>%
-      count_feature("f_40_adj_attr")
+      count_feature_traced("f_40_adj_attr")
   }
 
   # f_41  Adjetivo predicativo
@@ -198,9 +221,15 @@ block_adj_prep_adv_es <- function(tokens, doc_ids, dict_lookup,
     ) %>%
     dplyr::filter(.data$head_lemma %in% linking_verbs)
 
-  f41 <- dplyr::bind_rows(f41_dep, f41_cop_head, f41_cop_dep) %>%
-    dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int) %>%
-    count_feature("f_41_adj_pred")
+  # Phase 2h: preserve E1 columns para evidencia. count_feature_traced
+  # dedupea con .keep_all = TRUE internamente.
+  adj_evidence_cols <- c("doc_id", "sentence_id", "token_id_int",
+                         "token", "lemma", "pos", "feats", "head_token_id_int")
+  f41 <- dplyr::bind_rows(
+    f41_dep      %>% dplyr::select(dplyr::all_of(adj_evidence_cols)),
+    f41_cop_head %>% dplyr::select(dplyr::all_of(adj_evidence_cols)),
+    f41_cop_dep  %>% dplyr::select(dplyr::all_of(adj_evidence_cols))
+  ) %>% count_feature_traced("f_41_adj_pred")
 
   # f_42  Adverbios generales (excluye los ya capturados en otros rasgos:
   # f_04 lugar, f_05 tiempo, f_23 wh-, f_45 conjuncts, f_46 downtoners,
@@ -225,16 +254,18 @@ block_adj_prep_adv_es <- function(tokens, doc_ids, dict_lookup,
       .data$pos == "ADV",
       !.data$lemma %in% excluded_adv_lemmas
     ) %>%
-    count_feature("f_42_adverbs")
+    count_feature_traced("f_42_adverbs")
 
-  doc_ids %>%
-    dplyr::left_join(f39, by = "doc_id") %>%
-    dplyr::left_join(f40, by = "doc_id") %>%
-    dplyr::left_join(f41, by = "doc_id") %>%
-    dplyr::left_join(f42, by = "doc_id") %>%
+  counts <- doc_ids %>%
+    dplyr::left_join(f39$counts, by = "doc_id") %>%
+    dplyr::left_join(f40$counts, by = "doc_id") %>%
+    dplyr::left_join(f41$counts, by = "doc_id") %>%
+    dplyr::left_join(f42$counts, by = "doc_id") %>%
     dplyr::mutate(
       dplyr::across(-dplyr::any_of("doc_id"), ~ dplyr::coalesce(., 0L))
     )
+  evidence <- bind_evidence(f39$evidence, f40$evidence, f41$evidence, f42$evidence)
+  make_block_result(counts = counts, evidence = evidence)
 }
 
 # -----------------------------------------------------------------------------
@@ -262,8 +293,7 @@ block_modals_es <- function(tokens, doc_ids, dict_lookup) {
   # se busca en el árbol sintáctico con el infinitivo como dependiente.
   poss_lemmas <- dictionary_to_lemmas(dict_lookup, "f_52_modal_possibility",
                                       head_word = TRUE)
-  f52 <- count_modal_periphrasis(tokens, poss_lemmas) %>%
-    dplyr::rename(f_52_modal_possibility = "n")
+  f52 <- count_modal_periphrasis(tokens, poss_lemmas, "f_52_modal_possibility")
 
   # f_53  Necesidad
   #   deber + INF (sin "de" = necesidad deontica)
@@ -271,8 +301,7 @@ block_modals_es <- function(tokens, doc_ids, dict_lookup) {
   #   tener_que, haber_de, haber_que vienen compuestos del tokenizer
   nec_lemmas <- dictionary_to_lemmas(dict_lookup, "f_53_modal_necessity",
                                      head_word = TRUE)
-  f53 <- count_modal_periphrasis(tokens, nec_lemmas) %>%
-    dplyr::rename(f_53_modal_necessity = "n")
+  f53 <- count_modal_periphrasis(tokens, nec_lemmas, "f_53_modal_necessity")
 
   # f_54  Predictivo
   # Segun biber_espanol_completo.md:
@@ -286,8 +315,7 @@ block_modals_es <- function(tokens, doc_ids, dict_lookup) {
       .data$pos %in% c("VERB", "AUX"),
       dplyr::coalesce(extract_feat(.data$feats, "Tense"),    "") == "Fut",
       dplyr::coalesce(extract_feat(.data$feats, "VerbForm"), "") == "Fin"
-    ) %>%
-    dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int)
+    )
 
   #   (a2) Condicional (Mood=Cnd + VerbForm=Fin): hablaria, habria hablado, etc.
   f54_cnd <- tokens %>%
@@ -295,8 +323,7 @@ block_modals_es <- function(tokens, doc_ids, dict_lookup) {
       .data$pos %in% c("VERB", "AUX"),
       dplyr::coalesce(extract_feat(.data$feats, "Mood"),     "") == "Cnd",
       dplyr::coalesce(extract_feat(.data$feats, "VerbForm"), "") == "Fin"
-    ) %>%
-    dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int)
+    )
 
   #   (b) ir_a + INF  (ir con dep_rel aux cuyo head tiene VerbForm=Inf)
   # 2026-04-20: Filtro de Tense anadido para excluir desplazamiento fisico.
@@ -328,20 +355,25 @@ block_modals_es <- function(tokens, doc_ids, dict_lookup) {
       # Filtro de tiempo: solo futuro proximo (Pres) y futuro del pasado (Imp).
       # Se excluye Tense=Past (fue a + INF = desplazamiento fisico, no modalidad).
       dplyr::coalesce(extract_feat(.data$feats, "Tense"), "") %in% c("Pres", "Imp")
-    ) %>%
-    dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int)
+    )
 
-  f54 <- dplyr::bind_rows(f54_fut, f54_cnd, ir_a_inf) %>%
-    dplyr::distinct() %>%
-    count_feature("f_54_modal_predictive")
+  modal_evidence_cols <- c("doc_id", "sentence_id", "token_id_int",
+                           "token", "lemma", "pos", "feats", "head_token_id_int")
+  f54 <- dplyr::bind_rows(
+    f54_fut  %>% dplyr::select(dplyr::all_of(modal_evidence_cols)),
+    f54_cnd  %>% dplyr::select(dplyr::all_of(modal_evidence_cols)),
+    ir_a_inf %>% dplyr::select(dplyr::all_of(modal_evidence_cols))
+  ) %>% count_feature_traced("f_54_modal_predictive")
 
-  doc_ids %>%
-    dplyr::left_join(f52, by = "doc_id") %>%
-    dplyr::left_join(f53, by = "doc_id") %>%
-    dplyr::left_join(f54, by = "doc_id") %>%
+  counts <- doc_ids %>%
+    dplyr::left_join(f52$counts, by = "doc_id") %>%
+    dplyr::left_join(f53$counts, by = "doc_id") %>%
+    dplyr::left_join(f54$counts, by = "doc_id") %>%
     dplyr::mutate(
       dplyr::across(-dplyr::any_of("doc_id"), ~ dplyr::coalesce(., 0L))
     )
+  evidence <- bind_evidence(f52$evidence, f53$evidence, f54$evidence)
+  make_block_result(counts = counts, evidence = evidence)
 }
 
 # -----------------------------------------------------------------------------
@@ -366,14 +398,17 @@ block_modals_es <- function(tokens, doc_ids, dict_lookup) {
 block_specialized_verbs_es <- function(tokens, doc_ids, dict_lookup) {
 
   count_verb_class <- function(lemmas, col_name) {
-    if (length(lemmas) == 0)
-      return(tibble::tibble(doc_id = character(), !!col_name := integer()))
+    if (length(lemmas) == 0) {
+      return(make_block_result(
+        tibble::tibble(doc_id = character(), !!col_name := integer())
+      ))
+    }
     tokens %>%
       dplyr::filter(
         .data$lemma %in% lemmas,
         .data$pos   %in% c("VERB", "AUX")
       ) %>%
-      count_feature(col_name)
+      count_feature_traced(col_name)
   }
 
   f55 <- count_verb_class(
@@ -391,12 +426,14 @@ block_specialized_verbs_es <- function(tokens, doc_ids, dict_lookup) {
   f58 <- count_verb_class(
     dictionary_to_lemmas(dict_lookup, "f_58_verb_seem"),    "f_58_verb_seem")
 
-  doc_ids %>%
-    dplyr::left_join(f55, by = "doc_id") %>%
-    dplyr::left_join(f56, by = "doc_id") %>%
-    dplyr::left_join(f57, by = "doc_id") %>%
-    dplyr::left_join(f58, by = "doc_id") %>%
+  counts <- doc_ids %>%
+    dplyr::left_join(f55$counts, by = "doc_id") %>%
+    dplyr::left_join(f56$counts, by = "doc_id") %>%
+    dplyr::left_join(f57$counts, by = "doc_id") %>%
+    dplyr::left_join(f58$counts, by = "doc_id") %>%
     dplyr::mutate(
       dplyr::across(-dplyr::any_of("doc_id"), ~ dplyr::coalesce(., 0L))
     )
+  evidence <- bind_evidence(f55$evidence, f56$evidence, f57$evidence, f58$evidence)
+  make_block_result(counts = counts, evidence = evidence)
 }

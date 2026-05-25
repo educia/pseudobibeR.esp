@@ -87,7 +87,7 @@ block_split_coordination_es <- function(tokens, doc_ids, token_lookup,
       span_max = pmax(.data$token_id_int, .data$head_token_id_int)
     )
 
-  # f_63
+  # f_63  Phase 2k: preservar columnas para evidencia.
   f63 <- aux_deps %>%
     dplyr::left_join(adv_interveners, by = c("doc_id", "sentence_id")) %>%
     dplyr::filter(
@@ -95,9 +95,7 @@ block_split_coordination_es <- function(tokens, doc_ids, token_lookup,
       .data$adv_tok > .data$span_min,
       .data$adv_tok < .data$span_max
     ) %>%
-    dplyr::distinct(.data$doc_id, .data$token_id_int) %>%
-    dplyr::group_by(.data$doc_id) %>%
-    dplyr::summarise(f_63_split_auxiliary = dplyr::n(), .groups = "drop")
+    count_feature_traced("f_63_split_auxiliary")
 
   # cc_tokens: CCONJ con dep_rel=cc + atributos de su conjuncion hermana
   cc_tokens <- tokens %>%
@@ -145,8 +143,7 @@ block_split_coordination_es <- function(tokens, doc_ids, token_lookup,
       .data$first_conj_pos == .data$conj_pos,
       !.data$has_subject
     ) %>%
-    dplyr::group_by(.data$doc_id) %>%
-    dplyr::summarise(f_64_phrasal_coordination = dplyr::n(), .groups = "drop")
+    count_feature_traced("f_64_phrasal_coordination")
 
   # f_65  Coordinacion clausal
   #  (a) rama dependency: "y/e" con conj cuyo conjunto es VERB/AUX finito
@@ -158,8 +155,7 @@ block_split_coordination_es <- function(tokens, doc_ids, token_lookup,
       .data$has_subject,
       is.na(.data$conj_verbform) |
         !.data$conj_verbform %in% c("Inf", "Ger", "Part")
-    ) %>%
-    dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int)
+    )
 
   #  (b) rama posicional (biber_espanol_completo.md §f_65): "y/e" en
   #      posición inicial de cláusula, precedida por puntuación final de
@@ -172,21 +168,24 @@ block_split_coordination_es <- function(tokens, doc_ids, token_lookup,
       stringr::str_to_lower(.data$token) %in% c("y", "e"),
       .data$pos == "CCONJ",
       .data$token_id_int == 1L
-    ) %>%
-    dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int)
+    )
 
-  f65 <- dplyr::bind_rows(f65_dep, f65_initial) %>%
-    dplyr::distinct() %>%
-    dplyr::group_by(.data$doc_id) %>%
-    dplyr::summarise(f_65_clausal_coordination = dplyr::n(), .groups = "drop")
+  coord_evidence_cols <- c("doc_id", "sentence_id", "token_id_int",
+                           "token", "lemma", "pos", "feats", "head_token_id_int")
+  f65 <- dplyr::bind_rows(
+    f65_dep     %>% dplyr::select(dplyr::all_of(coord_evidence_cols)),
+    f65_initial %>% dplyr::select(dplyr::all_of(coord_evidence_cols))
+  ) %>% count_feature_traced("f_65_clausal_coordination")
 
-  doc_ids %>%
-    dplyr::left_join(f63, by = "doc_id") %>%
-    dplyr::left_join(f64, by = "doc_id") %>%
-    dplyr::left_join(f65, by = "doc_id") %>%
+  counts <- doc_ids %>%
+    dplyr::left_join(f63$counts, by = "doc_id") %>%
+    dplyr::left_join(f64$counts, by = "doc_id") %>%
+    dplyr::left_join(f65$counts, by = "doc_id") %>%
     dplyr::mutate(
       dplyr::across(-dplyr::any_of("doc_id"), ~ dplyr::coalesce(., 0L))
     )
+  evidence <- bind_evidence(f63$evidence, f64$evidence, f65$evidence)
+  make_block_result(counts = counts, evidence = evidence)
 }
 
 # -----------------------------------------------------------------------------
@@ -248,19 +247,21 @@ block_negation_es <- function(tokens, doc_ids,
     dplyr::distinct(.data$doc_id, .data$sentence_id, .data$neg_head_id)
 
   # -- f_67  Negacion analitica ----------------------------------------------
+  # Phase 2l: restauramos head_token_id_int (originalmente renombrado a
+  # neg_head_id para el join) para que count_feature_traced pueda construir
+  # evidencia con el schema E1.
   f67 <- tokens %>%
     dplyr::filter(
       .data$lemma %in% negation_part_lemmas,
       dplyr::coalesce(.data$dep_rel, "") == "advmod",
       !is.na(.data$head_token_id_int)
     ) %>%
-    dplyr::rename(neg_head_id = "head_token_id_int") %>%
     dplyr::inner_join(
-      analytic_heads,
-      by = c("doc_id", "sentence_id", "neg_head_id")
+      analytic_heads %>%
+        dplyr::rename(head_token_id_int = "neg_head_id"),
+      by = c("doc_id", "sentence_id", "head_token_id_int")
     ) %>%
-    dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int) %>%
-    count_feature("f_67_neg_analytic")
+    count_feature_traced("f_67_neg_analytic")
 
   # -- f_66  Negacion sintetica ----------------------------------------------
   # Pronombre/adverbio negativo con funcion sintactica real (nsubj, advmod,
@@ -279,15 +280,16 @@ block_negation_es <- function(tokens, doc_ids,
       .data$lemma %in% neg_synthetic_terms,
       .data$pos %in% c("PRON", "ADV", "DET", "CCONJ")
     ) %>%
-    dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int) %>%
-    count_feature("f_66_neg_synthetic")
+    count_feature_traced("f_66_neg_synthetic")
 
-  doc_ids %>%
-    dplyr::left_join(f66, by = "doc_id") %>%
-    dplyr::left_join(f67, by = "doc_id") %>%
+  counts <- doc_ids %>%
+    dplyr::left_join(f66$counts, by = "doc_id") %>%
+    dplyr::left_join(f67$counts, by = "doc_id") %>%
     dplyr::mutate(
       dplyr::across(-dplyr::any_of("doc_id"), ~ dplyr::coalesce(., 0L))
     )
+  evidence <- bind_evidence(f66$evidence, f67$evidence)
+  make_block_result(counts = counts, evidence = evidence)
 }
 
 # -----------------------------------------------------------------------------
@@ -334,7 +336,7 @@ block_lexical_membership_es <- function(tokens, doc_ids, word_lists_lookup) {
         stringr::str_to_lower(demonstr_terms),
       .data$pos == "PRON"
     ) %>%
-    count_feature("f_10_demonstrative_pronoun")
+    count_feature_traced("f_10_demonstrative_pronoun")
 
   # -- f_51  Demostrativos determinantes -------------------------------------
   # 2026-04-20: cambiado de pronoun_terms a demonstr_terms.
@@ -347,7 +349,7 @@ block_lexical_membership_es <- function(tokens, doc_ids, word_lists_lookup) {
       .data$pos == "DET",
       dplyr::coalesce(.data$dep_rel, "") == "det"
     ) %>%
-    count_feature("f_51_demonstratives")
+    count_feature_traced("f_51_demonstratives")
 
   # -- f_14  Nominalizaciones ------------------------------------------------
   if (length(nominalization_sfx) > 0) {
@@ -358,49 +360,46 @@ block_lexical_membership_es <- function(tokens, doc_ids, word_lists_lookup) {
     sfx_pat <- "^$"
   }
 
-  f14 <- tokens %>%
+  # -- f_14  Nominalizaciones ------------------------------------------------
+  # Phase 2m: identificamos los tokens nominalizados primero (para que tanto
+  # f_14 como f_16 puedan usar el mismo conjunto -- f_14 los cuenta, f_16
+  # los excluye anti_join para evitar la sustraccion post-hoc del count).
+  f14_rows <- tokens %>%
     dplyr::filter(.data$pos == "NOUN") %>%
     dplyr::mutate(lem_lower = stringr::str_to_lower(.data$lemma)) %>%
     dplyr::filter(
       stringr::str_detect(.data$lem_lower, sfx_pat),
       !.data$lem_lower %in% nominalization_stop
     ) %>%
-    count_feature("f_14_nominalizations")
+    dplyr::select(-"lem_lower")
+
+  f14 <- count_feature_traced(f14_rows, "f_14_nominalizations")
 
   # f_15 (gerundios) ELIMINADO: intraducible.
-  # El gerundio espanol no funciona como sustantivo; su uso nominal esta
-  # practicamente restringido a compuestos lexicalizados. Las funciones
-  # nominales del -ing ingles se realizan mediante infinitivos (f_24) y
-  # nominalizaciones (f_14). Ver biber_espanol_completo.md sec. F_15.
 
   # -- f_16  Otros sustantivos -----------------------------------------------
-  # En espanol: f_16 = total NOUN/PROPN - f_14 (nominalizaciones).
-  # No se resta f_15 porque f_15 es intraducible.
-  # biber_espanol_completo.md sec. F_16.
-  f16_raw <- tokens %>%
+  # En el codigo legacy esto se computaba como (total NOUN/PROPN) - f_14. Para
+  # preservar la invariante count == nrow(evidence), aqui anti-joineamos los
+  # tokens de f_14 antes de contar; resultado numerico identico.
+  f16_rows <- tokens %>%
     dplyr::filter(
       .data$pos %in% c("NOUN", "PROPN"),
       !stringr::str_detect(.data$token, "-")
     ) %>%
-    count_feature("f_16_other_nouns")
+    dplyr::anti_join(
+      f14_rows %>% dplyr::select("doc_id", "sentence_id", "token_id_int"),
+      by = c("doc_id", "sentence_id", "token_id_int")
+    )
+  f16 <- count_feature_traced(f16_rows, "f_16_other_nouns")
 
-  f16 <- f16_raw %>%
-    dplyr::left_join(
-      f14 %>% dplyr::rename(n_nom = "f_14_nominalizations"),
-      by = "doc_id"
-    ) %>%
-    dplyr::mutate(
-      n_nom = dplyr::coalesce(.data$n_nom, 0L),
-      f_16_other_nouns = pmax(0L, .data$f_16_other_nouns - .data$n_nom)
-    ) %>%
-    dplyr::select("doc_id", "f_16_other_nouns")
-
-  doc_ids %>%
-    dplyr::left_join(f10,  by = "doc_id") %>%
-    dplyr::left_join(f51,  by = "doc_id") %>%
-    dplyr::left_join(f14,  by = "doc_id") %>%
-    dplyr::left_join(f16,  by = "doc_id") %>%
+  counts <- doc_ids %>%
+    dplyr::left_join(f10$counts,  by = "doc_id") %>%
+    dplyr::left_join(f51$counts,  by = "doc_id") %>%
+    dplyr::left_join(f14$counts,  by = "doc_id") %>%
+    dplyr::left_join(f16$counts,  by = "doc_id") %>%
     dplyr::mutate(
       dplyr::across(-dplyr::any_of("doc_id"), ~ dplyr::coalesce(., 0L))
     )
+  evidence <- bind_evidence(f10$evidence, f51$evidence, f14$evidence, f16$evidence)
+  make_block_result(counts = counts, evidence = evidence)
 }
