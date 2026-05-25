@@ -9,7 +9,8 @@ parse_biber_features(
   measure,
   normalize,
   engine = c("spacy", "udpipe"),
-  language = c("fr", "es")
+  language = c("fr", "es"),
+  traced = FALSE
 )
 }
 \arguments{
@@ -23,6 +24,14 @@ parse_biber_features(
 
 \item{language}{Language code for feature heuristics ("fr" for French,
 "es" for Spanish). Defaults to "fr" to preserve original behaviour.}
+
+\item{traced}{Logical. Si \code{TRUE}, ademas del data.frame de conteos
+se devuelve un tibble largo con el schema canonico de evidencia
+(\code{.EVIDENCE_COLS}). El retorno pasa de ser un data.frame a una
+\code{list(counts, evidence)}. Default \code{FALSE} (comportamiento
+identico al pre-Phase-2). Esta bandera la activan exclusivamente
+los wrappers \code{biber_es_traced()} y \code{biber_es_batch(trace=TRUE)};
+\code{biber_es()} la mantiene en \code{FALSE} para no cambiar su API.}
 }
 \value{
 Data frame of extracted features
