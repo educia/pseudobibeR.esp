@@ -5,67 +5,71 @@
 [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Paquete compañero de `pseudobibeR` orientado a textos en **español**. Calcula los rasgos lexicogramaticales y funcionales descritos por Biber (1985) y ampliamente usados para el análisis de variación de registro y género textual. Comparte el mismo catálogo de referencia que la versión inglesa, pero se apoya en los recursos morfosintácticos de Universal Dependencies para español provistos por UDPipe y en heurísticas específicas del idioma implementadas en los bloques `*_es`.
+`pseudobibeR.es` implementa, para textos en lengua española, el catálogo de rasgos lexicogramaticales y funcionales descrito por Biber (1988). Constituye la contraparte hispánica de los paquetes `pseudobibeR` (inglés) y `pseudobibeR.fr` (francés), con los que comparte el inventario de referencia. Su propósito es facilitar el análisis multidimensional de variación de registro y género textual mediante la agregación, por documento, de las 67 categorías originales del marco de Biber, adaptadas a las propiedades morfosintácticas del español.
 
 ## Descripción general
 
-Este paquete **no** realiza el etiquetado gramatical por sí mismo. En su lugar, aprovecha los etiquetadores y analizadores de dependencias existentes —principalmente [udpipe](https://bnosac.github.io/udpipe/en/) con el modelo `spanish-gsd`— para extraer y agregar patrones lingüísticos. La precisión de los rasgos extraídos depende directamente de la calidad del etiquetado y del análisis de dependencias subyacente.
+El paquete no realiza por sí mismo el etiquetado gramatical ni el análisis sintáctico. Se apoya en herramientas externas de análisis morfosintáctico (principalmente [UDPipe](https://bnosac.github.io/udpipe/en/) con el modelo `spanish-gsd`) para obtener una representación en Universal Dependencies, sobre la cual se aplican las heurísticas de extracción específicas del español implementadas en los bloques `block_*_es()`. La precisión de los rasgos extraídos depende, por tanto, de la calidad del análisis morfológico y de dependencias subyacente.
 
-El español plantea desafíos específicos respecto al inglés o el francés: el sujeto nulo (*pro-drop*) hace innecesario un pronombre expletivo equivalente al inglés *it*; la negación opera con palabras negativas preverbales o posverbales; y las relativas introducidas por *que* funcionan tanto en posición de sujeto como de objeto. Estas diferencias se han tenido en cuenta en el diseño del extractor:
+El español presenta diferencias estructurales relevantes respecto del inglés y del francés que han condicionado el diseño del extractor:
 
-- **67 columnas de rasgo expuestas** para paridad superficial con `pseudobibeR.fr`. La salida contiene los 55 rasgos detectables en español + 2 fusiones (f_29 absorbe f_31, f_30 absorbe f_32) + 10 columnas constantes-cero para los rasgos intraducibles al español (`f_09_pronoun_it`, `f_12_proverb_do`, `f_15_gerunds`, `f_28_present_participle_whiz`, `f_31_wh_subj`, `f_32_wh_obj`, `f_59_contractions`, `f_60_that_deletion`, `f_61_stranded_preposition`, `f_62_split_infinitive`).
-- **Contrato lingüístico 1:1 con Biber 1988**: solo 57 rasgos tienen detección real (los 55 únicos + las 2 fusiones), alineados con `biber_espanol_completo.md §1`. Las 10 columnas-cero son **cicatrices de paridad superficial**, no rasgos efectivamente detectados.
-- **2 fusiones**: `f_29+f_31 → f_29_that_subj`; `f_30+f_32 → f_30_that_obj`.
+- El **sujeto nulo** o *pro-drop* hace innecesario un pronombre expletivo equivalente al inglés *it*.
+- La **negación** opera mediante palabras negativas preverbales o posverbales con concordancia negativa obligatoria.
+- Las **cláusulas relativas** introducidas por *que* funcionan tanto en posición de sujeto como de objeto.
+- El **gerundio** español no admite la función nominal del *-ing* inglés.
 
-**Nota:** Textos con ortografía muy irregular, puntuación no normativa o lenguaje muy especializado pueden producir salidas menos fiables salvo que el modelo UD se haya ajustado a ese dominio.
+### Contrato de salida
+
+La salida principal contiene **67 columnas de rasgo** organizadas en las 16 categorías de Biber (A–P). De ellas:
+
+- **57 columnas** corresponden a rasgos con detección lingüística efectiva (55 rasgos únicos del español más 2 fusiones: f_29 absorbe f_31, y f_30 absorbe f_32).
+- **10 columnas** son cicatrices de paridad superficial con valor constante igual a cero, conservadas para mantener la compatibilidad columna a columna con `pseudobibeR.fr` y permitir la sustitución directa en flujos de análisis preexistentes. Estas columnas corresponden a rasgos intraducibles al español: f_09 (`pronoun_it`), f_12 (`proverb_do`), f_15 (`gerunds`), f_28 (`present_participle_whiz`), f_31 (`wh_subj`), f_32 (`wh_obj`), f_59 (`contractions`), f_60 (`that_deletion`), f_61 (`stranded_preposition`) y f_62 (`split_infinitive`).
+
+El recuento real, por tanto, asciende a 55 rasgos detectados más 2 fusiones, lo que mantiene la equivalencia funcional con las 57 categorías efectivas de Biber (1988) tras descontar las inaplicables al español.
 
 ## Instalación
 
-Instala la versión de desarrollo desde GitHub:
+### Versión de desarrollo desde GitHub
 
 ```r
 # install.packages("devtools")
 devtools::install_github("browndw/pseudobibeR.es")
 ```
 
-### Instalar desde un tarball de versión
+### Instalación desde un archivo `tar.gz`
 
-1. Descarga el archivo `pseudobibeR.es_<version>.tar.gz` más reciente desde la [página de releases de GitHub](https://github.com/browndw/pseudobibeR.es/releases).
-2. En R, instala el archivo descargado con:
+1. Se descarga el archivo `pseudobibeR.es_<versión>.tar.gz` desde la [página de versiones del repositorio](https://github.com/browndw/pseudobibeR.es/releases).
+2. En una sesión de R se ejecuta:
 
    ```r
-   install.packages("/ruta/a/pseudobibeR.es_<version>.tar.gz", repos = NULL, type = "source")
+   install.packages("/ruta/al/archivo/pseudobibeR.es_<versión>.tar.gz",
+                    repos = NULL, type = "source")
    ```
 
-   En macOS y Linux puedes arrastrar el archivo al terminal para completar la ruta.
-3. Reinicia tu sesión de R para que el paquete recién instalado quede disponible.
+3. Se reinicia la sesión de R para que el paquete recién instalado quede disponible.
 
 ## Inicio rápido
 
-La función principal es `biber_es()`, que toma la salida de `udpipe::udpipe_annotate()` con un modelo UD de español y devuelve un `data.frame` de rasgos por documento.
-
-### Con UDPipe (recomendado)
-
-Recomendamos **UDPipe** para la mayoría de los usuarios por su sencillez (implementación pura en R, sin dependencias Python) y su fiabilidad con el esquema UD sobre el que están calibradas las heurísticas `_es`.
+La función principal es `biber_es()`. Recibe la salida de `udpipe::udpipe_annotate()` obtenida con un modelo Universal Dependencies para español y devuelve un `data.frame` con una fila por documento.
 
 ```r
 library(udpipe)
 library(pseudobibeR.es)
 
-# Descarga del modelo (solo una vez)
-model <- udpipe_download_model(language = "spanish-gsd")
+# Descarga del modelo (solo la primera vez)
+model    <- udpipe_download_model(language = "spanish-gsd")
 ud_model <- udpipe_load_model(model$file_model)
 
-# Datos de texto
+# Corpus de prueba
 text_data <- data.frame(
   doc_id = c("doc_1", "doc_2"),
   text = c(
     "El informe fue redactado por el equipo de investigación.",
-    "Nos gustaría aclarar lo que se propuso en la última sesión."
+    "La autora explica que el método permite comparar dos modelos."
   )
 )
 
-# Parsear el texto
+# Anotación morfosintáctica
 parsed_data <- udpipe_annotate(
   ud_model,
   x      = text_data$text,
@@ -74,67 +78,300 @@ parsed_data <- udpipe_annotate(
   parser = "default"
 )
 
-# Extraer rasgos de Biber
-features <- biber_es(parsed_data, measure = "none", normalize = FALSE)
+# Extracción de rasgos
+features <- biber_es(parsed_data, measure = "MATTR", normalize = TRUE)
 print(features)
 ```
 
-## Notas de parseo para español
+## Notas de parseo específicas del español
 
-- **Modelo UDPipe recomendado:** `spanish-gsd-ud-2.5-191206.udpipe`. Aunque existen versiones más recientes de modelos UD para español (AnCora, etc.), las heurísticas del paquete están validadas contra `spanish-gsd`.
-- **`feats` obligatorio:** el extractor depende de las características morfológicas del campo `feats` (p.ej. `Tense=Past`, `Mood=Ind`, `VerbForm=Fin`). Asegúrate de usar `parser = "default"` y `tagger = "default"` en `udpipe_annotate()`.
-- **Pro-drop:** el español es una lengua de sujeto nulo; solo se cuentan los pronombres explícitos en f_06–f_08. El rasgo inglés `f_09_pronoun_it` (pronombre expletivo) ha sido eliminado.
-- **Relativas con *que*:** UDPipe Spanish-GSD etiqueta siempre el relativo *que* como `SCONJ/mark` (no como `PRON`). El extractor maneja este comportamiento: todas las relativas con *que* se cuentan en `f_29_that_subj`; `f_30_that_obj` captura relativas con *quien/cual* en posición oblicua.
-- **Condicional *si*:** cuando *si* aparece al inicio de cláusula puede ser etiquetado como `CCONJ` por el parser; el extractor es más robusto con *si* en posición media de oración.
-- **Copulativas:** en UD español el adjetivo predicativo es el nodo raíz de la construcción copulativa (*ser/estar* depende como `cop`). El extractor detecta correctamente ambas estructuras para `f_41_adj_pred`.
+- **Modelo UDPipe recomendado**: `spanish-gsd-ud-2.5-191206.udpipe`. Las heurísticas del paquete han sido validadas contra este modelo. Existen modelos más recientes (AnCora, entre otros) cuyo uso no se garantiza al mismo nivel.
+- **Campo `feats` obligatorio**: el extractor depende de las características morfológicas codificadas en la columna `feats` (por ejemplo, `Tense=Past`, `Mood=Ind`, `VerbForm=Fin`). Se debe invocar `udpipe_annotate()` con `parser = "default"` y `tagger = "default"`.
+- **Sujeto nulo (pro-drop)**: en los rasgos f_06 a f_08 se cuentan exclusivamente los pronombres personales explícitos. El rasgo f_09, propio del inglés (`it` expletivo), no se aplica al español y se preserva como columna constante igual a cero.
+- **Relativas con *que***: el modelo `spanish-gsd` etiqueta el pronombre relativo *que* como `SCONJ/mark`, no como `PRON`. El extractor contempla este comportamiento: las relativas introducidas por *que* se contabilizan en `f_29_that_subj`, mientras que `f_30_that_obj` captura las relativas con *quien* o *cual* en posición oblicua.
+- **Condicional *si***: cuando *si* aparece en posición inicial de cláusula puede ser etiquetado como `CCONJ`. La heurística es más estable cuando *si* ocupa una posición intermedia.
+- **Construcciones copulativas**: en Universal Dependencies para el español, el adjetivo predicativo es la raíz de la construcción copulativa, mientras que *ser* o *estar* dependen como `cop`. El extractor detecta correctamente ambos patrones para `f_41_adj_pred`.
 
 ## Características principales
 
-- **67 columnas de rasgo expuestas** (paridad superficial con `pseudobibeR.fr`); 57 con detección real y 10 columnas-cero para rasgos intraducibles, organizados en 16 categorías (A–P)
-- **Normalización automática** a conteos por 1 000 tokens (opcional)
-- **Varias medidas de type-token ratio** (MATTR, TTR, CTTR, MSTTR)
-- **Integración con UDPipe** (y potencialmente spaCy en el futuro)
-- **Procesamiento por lotes** (`biber_es_batch()`) con ingestión polimórfica (CSV o `data.frame`), modos rápido/robusto y propagación de metadata
-- **Análisis trazable** (`biber_es_traced()`) que devuelve, junto a los conteos, una tabla larga con los tokens que dispararon cada detección
-- **Exportación a Excel** (`write_biber_xlsx()`) con orientación tidy compatible con `readxl`, `pandas` y SPSS
-- **Diccionarios y listas léxicas** en español bajo `data-raw/`
-- **Suite de tests** con ejemplos sintéticos reproducibles en `tests/testthat/` (≥ 640 tests, incluyendo regression-guards para los 4 patrones complejos detectados en auditoría sistemática)
-- **Aplicación Shiny** integrada (`app.R`) para exploración interactiva de rasgos
+- **67 columnas de rasgo** organizadas en 16 categorías (A–P), con 57 detectores activos y 10 columnas constantes igual a cero por paridad superficial con `pseudobibeR.fr`.
+- **Normalización opcional** a frecuencias por 1 000 tokens léxicos.
+- **Cuatro medidas de diversidad léxica** disponibles para f_43 (`MATTR`, `TTR`, `CTTR`, `MSTTR`).
+- **Integración con UDPipe** mediante la interfaz nativa de R.
+- **Funciones complementarias**: `biber_es_batch()` para procesamiento por lotes y `biber_es_traced()` para análisis con trazabilidad de evidencia token a token.
+- **Exportación a XLSX** mediante `write_biber_xlsx()`, con orientación tidy compatible con `readxl`, `pandas` y SPSS.
+- **Diccionarios y listas léxicas** específicas del español incluidos como datos del paquete.
+- **Suite de pruebas exhaustiva** (más de 640 pruebas) con cobertura de regresión para los patrones complejos detectados en auditoría sistemática.
 
 ## Dependencias y requisitos
 
-### Núcleo
+### Dependencias del núcleo
 
-- R (>= 3.5.0)
-- dplyr, purrr, quanteda, quanteda.textstats, rlang, stringr, tibble, magrittr
+- R (≥ 3.5.0)
+- `dplyr`, `purrr`, `quanteda`, `quanteda.textstats`, `rlang`, `stringi`, `stringr`, `tibble`, `magrittr`.
 
-### Para el parseo de texto
+### Componentes para el análisis morfosintáctico
 
-- Paquete [udpipe](https://bnosac.github.io/udpipe/en/)
-- Modelo UDPipe para español (`spanish-gsd-ud-2.5`); descárgalo con `udpipe::udpipe_download_model("spanish-gsd")`
+- Paquete [`udpipe`](https://bnosac.github.io/udpipe/en/).
+- Modelo UDPipe `spanish-gsd-ud-2.5`, que puede descargarse con:
 
-## Argumentos de la función
+  ```r
+  udpipe::udpipe_download_model("spanish-gsd")
+  ```
 
-`biber_es()` acepta los siguientes argumentos:
+### Dependencias opcionales
 
-- `tokens`: datos pre-parseados provenientes de `udpipe::udpipe_annotate()` (como `data.frame` o objeto `udpipe_connlu`)
-- `measure`: medida de type-token ratio (`"MATTR"`, `"TTR"`, `"CTTR"`, `"MSTTR"` o `"none"`)
-- `normalize`: si se normalizan los conteos a por 1 000 tokens (`TRUE`/`FALSE`)
+- `writexl` y `readxl`: requeridos para `write_biber_xlsx()` y para la lectura de corpus en formato Excel.
+- `cli`: utilizado para barras de progreso en modo robusto de `biber_es_batch()`.
+
+## Argumentos de la función `biber_es()`
+
+La función `biber_es()` admite tres argumentos:
+
+| Argumento | Descripción |
+|-----------|-------------|
+| `tokens` | Objeto devuelto por `udpipe::udpipe_annotate()` o un `data.frame` con las columnas `doc_id`, `token`, `lemma`, `upos`, `xpos`, `feats`, `head_token_id`, `dep_rel`. |
+| `measure` | Medida de diversidad léxica empleada para f_43. Valores admitidos: `"MATTR"` (recomendada para corpus de longitud variable), `"TTR"`, `"CTTR"`, `"MSTTR"` o `"none"`. Valor por defecto: `"MATTR"`. |
+| `normalize` | Lógico. Si `TRUE` (valor por defecto), los conteos se normalizan a frecuencia por 1 000 tokens léxicos. Si `FALSE`, se devuelven los recuentos absolutos. |
+
+### Ejemplo con parámetros personalizados
 
 ```r
-# Ejemplo con parámetros personalizados
 features <- biber_es(parsed_data,
                      measure   = "MATTR",
                      normalize = TRUE)
 ```
 
-## Procesamiento por lotes
+### Valor de retorno
 
-`biber_es_batch()` es un wrapper de alto nivel que combina ingestión + parseo UDPipe + extracción de rasgos en una sola llamada. Pensado para corpora de múltiples documentos.
+Un `data.frame` con una fila por documento y las siguientes columnas:
 
-### Ingestión polimórfica
+- `doc_id`: identificador del documento, heredado de la anotación.
+- `f_01_past_tense` a `f_67_neg_analytic`: 67 columnas con los conteos (o frecuencias normalizadas) de los rasgos de Biber. Las 10 columnas zero-output presentan siempre el valor cero.
+- `n_tokens`: número total de tokens del documento, excluyendo puntuación.
+- `n_lex_tokens`: número de tokens léxicos (NOUN, VERB, ADJ, ADV, PROPN).
 
-Acepta dos formatos de entrada sin esfuerzo adicional:
+## Rasgos lingüísticos extraídos
+
+A continuación se enumeran los 67 rasgos organizados según las categorías originales de Biber (1988). Las columnas constantes igual a cero, conservadas por paridad con `pseudobibeR.fr`, se identifican mediante el símbolo &nbsp;0️⃣.
+
+### A. Tiempo y aspecto
+
+| Código | Descripción |
+|--------|-------------|
+| `f_01_past_tense` | Pretérito indefinido (`Tense=Past, Mood=Ind, VerbForm=Fin`). |
+| `f_02_perfect_aspect` | Aspecto perfecto: *haber* + participio. |
+| `f_03_present_tense` | Presente de indicativo. |
+
+### B. Adverbiales de lugar y tiempo
+
+| Código | Descripción |
+|--------|-------------|
+| `f_04_place_adverbials` | Adverbiales de lugar (*aquí*, *allí*, *encima*…). |
+| `f_05_time_adverbials` | Adverbiales de tiempo (*ayer*, *hoy*, *siempre*…). |
+
+### C. Pronombres y proverbos
+
+| Código | Descripción |
+|--------|-------------|
+| `f_06_first_person_pronouns` | Pronombres de primera persona explícitos. |
+| `f_07_second_person_pronouns` | Pronombres de segunda persona explícitos. |
+| `f_08_third_person_pronouns` | Pronombres de tercera persona explícitos. |
+| `f_09_pronoun_it` &nbsp;0️⃣ | Pronombre expletivo *it*. Inexistente en español por sujeto nulo. |
+| `f_10_demonstrative_pronoun` | Pronombres demostrativos (*esto*, *eso*, *aquello*…). |
+| `f_11_indefinite_pronouns` | Pronombres indefinidos (*alguien*, *nadie*, *algo*…). |
+| `f_12_proverb_do` &nbsp;0️⃣ | Proverbo *do*. Sin equivalente productivo en español. |
+
+### D. Interrogativas
+
+| Código | Descripción |
+|--------|-------------|
+| `f_13_wh_question` | Preguntas directas con palabra interrogativa. |
+
+### E. Formas nominales
+
+| Código | Descripción |
+|--------|-------------|
+| `f_14_nominalizations` | Nominalizaciones derivadas (sufijos productivos: *-ción*, *-idad*, *-miento*, etc.). |
+| `f_15_gerunds` &nbsp;0️⃣ | Gerundios nominales. El gerundio español no admite función nominal. |
+| `f_16_other_nouns` | Sustantivos restantes (NOUN/PROPN, excluyendo las nominalizaciones contadas en f_14). |
+
+### F. Pasivas
+
+| Código | Descripción |
+|--------|-------------|
+| `f_17_agentless_passives` | Pasivas sin agente expreso (perifrásticas y se-pasivas). |
+| `f_18_by_passives` | Pasivas con agente introducido por *por*. |
+
+### G. Formas estativas
+
+| Código | Descripción |
+|--------|-------------|
+| `f_19_be_main_verb` | *Ser* o *estar* como verbo principal (cópula nominal o adjetival). |
+| `f_20_existential_there` | *Haber* impersonal existencial (*hay*, *había*, *hubo*…). |
+
+### H. Subordinación
+
+| Código | Descripción |
+|--------|-------------|
+| `f_21_that_verb_comp` | *Que* complementante tras verbo. |
+| `f_22_that_adj_comp` | *Que* complementante tras adjetivo. |
+| `f_23_wh_clause` | Cláusula con palabra *wh-* (interrogativa indirecta). |
+| `f_24_infinitives` | Infinitivos en función de complemento o como núcleo de perífrasis modal. |
+| `f_25_present_participle` | Gerundio adverbial o de complemento. |
+| `f_26_past_participle` | Participio adverbial o absoluto. |
+| `f_27_past_participle_whiz` | Participio postnominal (reducción de relativa de objeto). |
+| `f_28_present_participle_whiz` &nbsp;0️⃣ | Gerundio postnominal. Construcción agramatical en español normativo. |
+| `f_29_that_subj` | Cláusulas relativas con *que* (fusión de f_29 y f_31; absorbe el caso de relativa de sujeto). |
+| `f_30_that_obj` | Cláusulas relativas con *quien* o *cual* en posición oblicua (fusión de f_30 y f_32). |
+| `f_31_wh_subj` &nbsp;0️⃣ | Relativa de sujeto con *wh-*. Absorbida en f_29. |
+| `f_32_wh_obj` &nbsp;0️⃣ | Relativa de objeto con *wh-*. Absorbida en f_30. |
+| `f_33_pied_piping` | Preposición + relativo (*del que*, *con el cual*…). |
+| `f_34_sentence_relatives` | Relativas oracionales (*lo que*, *lo cual*…). |
+| `f_35_because` | Subordinada causal con *porque*. |
+| `f_36_though` | Subordinada concesiva con *aunque*. |
+| `f_37_if` | Subordinada condicional con *si*. |
+| `f_38_other_adv_sub` | Otros subordinantes adverbiales (*cuando*, *mientras*, *según*…). |
+
+### I. Sintagmas preposicionales, adjetivos y adverbios
+
+| Código | Descripción |
+|--------|-------------|
+| `f_39_prepositions` | Preposiciones (POS = ADP). |
+| `f_40_adj_attr` | Adjetivos atributivos (relación de dependencia `amod`). |
+| `f_41_adj_pred` | Adjetivos predicativos. |
+| `f_42_adverbs` | Adverbios generales (excluyendo los ya capturados en otros rasgos). |
+
+### J. Especificidad léxica
+
+| Código | Descripción |
+|--------|-------------|
+| `f_43_type_token` | Diversidad léxica (MATTR u otra medida seleccionada). |
+| `f_44_mean_word_length` | Longitud media en caracteres de los tokens no puntuados. |
+
+### K. Clases léxicas
+
+| Código | Descripción |
+|--------|-------------|
+| `f_45_conjuncts` | Conjuntos textuales (*sin embargo*, *por tanto*, *además*…). |
+| `f_46_downtoners` | Atenuadores (*casi*, *apenas*, *ligeramente*…). |
+| `f_47_hedges` | Modalizadores epistémicos (*quizás*, *tal vez*, *probablemente*…). |
+| `f_48_amplifiers` | Amplificadores (*muy*, *totalmente*, *enormemente*…). |
+| `f_49_emphatics` | Enfáticos (*de hecho*, *sin duda*, *realmente*…). |
+| `f_50_discourse_particles` | Partículas discursivas (*bueno*, *pues*, *claro*…). |
+| `f_51_demonstratives` | Determinantes demostrativos (*este*, *ese*, *aquel*…). |
+
+### L. Modales
+
+| Código | Descripción |
+|--------|-------------|
+| `f_52_modal_possibility` | Modal de posibilidad (*poder + infinitivo*). |
+| `f_53_modal_necessity` | Modal de necesidad (*deber + infinitivo*, *tener que + infinitivo*, *haber que + infinitivo*). |
+| `f_54_modal_predictive` | Modal predictivo: futuro sintético, condicional y *ir a + infinitivo*. |
+
+### M. Verbos especializados
+
+| Código | Descripción |
+|--------|-------------|
+| `f_55_verb_public` | Verbos públicos (*afirmar*, *declarar*, *anunciar*…). |
+| `f_56_verb_private` | Verbos privados o cognitivos (*creer*, *pensar*, *saber*…). |
+| `f_57_verb_suasive` | Verbos suasivos (*recomendar*, *pedir*, *sugerir*…). |
+| `f_58_verb_seem` | Verbos de apariencia (*parecer*, *resultar*). |
+
+### N. Formas reducidas
+
+| Código | Descripción |
+|--------|-------------|
+| `f_59_contractions` &nbsp;0️⃣ | Contracciones ortográficas. Inexistentes en español escrito normativo. |
+| `f_60_that_deletion` &nbsp;0️⃣ | Omisión de *que* complementante. Construcción marginal en español escrito. |
+| `f_61_stranded_preposition` &nbsp;0️⃣ | Preposición varada. Imposible en español: la preposición siempre precede al relativo. |
+| `f_62_split_infinitive` &nbsp;0️⃣ | Infinitivo escindido. Imposible en español. |
+| `f_63_split_auxiliary` | Auxiliar separado del verbo principal por un elemento interpuesto. |
+
+### O. Coordinación
+
+| Código | Descripción |
+|--------|-------------|
+| `f_64_phrasal_coordination` | Coordinación de sintagmas (N y N, ADJ y ADJ…). |
+| `f_65_clausal_coordination` | Coordinación de cláusulas independientes. |
+
+### P. Negación
+
+| Código | Descripción |
+|--------|-------------|
+| `f_66_neg_synthetic` | Negación sintética (*nadie*, *nunca*, *jamás*, *tampoco*…). |
+| `f_67_neg_analytic` | Negación analítica (*no* + verbo). |
+
+## Limitaciones conocidas
+
+Las siguientes limitaciones obedecen a decisiones de diseño documentadas o a comportamientos del modelo `spanish-gsd`. No constituyen errores: el comportamiento observado es el esperado tras la auditoría sistemática del paquete.
+
+- **f_22_that_adj_comp**: el modelo UDPipe `spanish-gsd` no etiqueta consistentemente el núcleo de *que* como `ADJ` en las construcciones copulativas (por ejemplo, *es importante que…*). El rasgo presenta subdetección por limitación del analizador sintáctico.
+- **f_26_past_participle** y **f_27_past_participle_whiz**: el participio absoluto y el participio postnominal se etiquetan con una relación de dependencia variable según el contexto. La detección es correcta cuando el análisis sintáctico acierta, pero presenta inconsistencias en construcciones límite.
+- **f_50_discourse_particles**: la implementación actual no aplica filtro posicional, por lo que ciertos monotokens (*bueno*, *claro*) pueden contabilizarse fuera de la posición inicial de cláusula. Este ruido está autorizado por la especificación.
+- **f_29 y f_30 en cláusulas con sujeto elidido**: en construcciones con sujeto nulo y sin `nsubj` explícito, la distinción entre relativa de sujeto y de objeto no es recuperable; la relativa se imputa a `f_29_that_subj`.
+- **Rasgos intraducibles**: las 10 columnas de paridad superficial (f_09, f_12, f_15, f_28, f_31, f_32, f_59, f_60, f_61, f_62) devuelven siempre cero. Su justificación lingüística se detalla en la tabla anterior.
+
+## Funciones complementarias
+
+El paquete proporciona dos funciones adicionales que **no sustituyen** a `biber_es()`, sino que la complementan en escenarios específicos. Ambas comparten el catálogo de detectores con `biber_es()` y producen conteos equivalentes; sus diferencias residen en la interfaz de entrada y en el formato de salida.
+
+### `biber_es_batch()`: procesamiento por lotes
+
+Función orientada al procesamiento de corpus extensos almacenados en disco o en memoria. Combina la ingestión de datos, el análisis morfosintáctico con UDPipe y la extracción de rasgos en una sola invocación.
+
+#### Firma
+
+```r
+biber_es_batch(input,
+               model,
+               text_column = "text",
+               id_column   = NULL,
+               trace       = FALSE,
+               safe        = FALSE,
+               measure     = c("MATTR", "TTR", "CTTR", "MSTTR", "none"),
+               normalize   = TRUE,
+               progress    = TRUE)
+```
+
+#### Parámetros
+
+| Parámetro | Descripción |
+|-----------|-------------|
+| `input` | Ruta a un archivo CSV (cadena de caracteres) o `data.frame` en memoria. La interfaz polimórfica admite ambos sin configuración adicional. Los archivos CSV se leen con codificación UTF-8 forzada. |
+| `model` | Modelo UDPipe previamente cargado mediante `udpipe::udpipe_load_model()`. Parámetro obligatorio: no admite valor por defecto para evitar efectos de red implícitos. |
+| `text_column` | Nombre de la columna que contiene el texto de cada documento. Valor por defecto: `"text"`. |
+| `id_column` | Nombre de la columna de identificadores. Si es `NULL` (valor por defecto), se generan identificadores automáticos con el patrón `doc_0001`, `doc_0002`, etc. |
+| `trace` | Lógico. Si `TRUE`, el resultado incluye un elemento `evidence` con la trazabilidad token a token. Valor por defecto: `FALSE`. |
+| `safe` | Lógico. Si `FALSE` (modo rápido, valor por defecto), se realiza una única invocación de UDPipe sobre el vector completo de textos; un fallo individual interrumpe el procesamiento. Si `TRUE` (modo robusto), se procesa documento por documento con `tryCatch`; los fallos individuales se acumulan en el elemento `failed_docs` del resultado. |
+| `measure` | Medida de diversidad léxica para f_43. Equivalente al parámetro homónimo de `biber_es()`. |
+| `normalize` | Lógico. Normalización de los conteos a frecuencia por 1 000 tokens léxicos. Valor por defecto: `TRUE`. |
+| `progress` | Lógico. Muestra una barra de progreso durante el procesamiento en modo robusto cuando el paquete `cli` está disponible. Valor por defecto: `TRUE`. Sin efecto en modo rápido. |
+
+#### Estructura de retorno
+
+Una lista con los siguientes elementos:
+
+- `counts`: `data.frame` con orientación *tidy* y una fila por documento. Contiene `doc_id`, las columnas de metadatos del corpus de entrada (si las hay), los 67 rasgos `f_NN_*`, y las columnas auxiliares `n_tokens` y `n_lex_tokens`. El total habitual es de 70 columnas más las columnas de metadatos heredadas.
+- `evidence` (solo si `trace = TRUE`): tibble en formato largo con el esquema descrito en `biber_es_traced()`.
+- `failed_docs` (solo si `safe = TRUE`): `data.frame` con tres columnas (`doc_id`, `error_message`, `stage`). Está vacío si todos los documentos se procesaron correctamente.
+
+#### Modos de operación
+
+- **Modo rápido** (`safe = FALSE`, valor por defecto): apropiado para corpus curados y homogéneos. Maximiza el rendimiento al procesar todos los documentos en una sola pasada de UDPipe. Un fallo en cualquier documento interrumpe la ejecución.
+- **Modo robusto** (`safe = TRUE`): apropiado para corpus heterogéneos o de procedencia desconocida. Procesa los documentos individualmente; los fallos se aíslan y se reportan en `result$failed_docs`. El sobrecoste de rendimiento es modesto.
+
+#### Exportación a XLSX
+
+La escritura del resultado a un archivo Excel se realiza mediante la función auxiliar `write_biber_xlsx()`:
+
+```r
+write_biber_xlsx(resultado, path = "salida.xlsx", include_per_1k = TRUE)
+```
+
+El archivo generado contiene las hojas `raw` (conteos brutos o normalizados según corresponda), `metadata` (fecha de generación, versión del paquete, dimensiones del corpus) y, opcionalmente, `per_1k` (frecuencias normalizadas adicionales), `evidence` (si se invocó con `trace = TRUE`) y `failed_docs` (si se invocó con `safe = TRUE` y existen fallos). La orientación es *tidy* en todas las hojas (un documento por fila), lo que permite la reimportación directa con `readxl::read_xlsx()` en R, `pandas.read_excel()` en Python o el importador estándar de SPSS sin necesidad de transposiciones manuales.
+
+#### Ejemplo reproducible
 
 ```r
 library(udpipe)
@@ -142,452 +379,199 @@ library(pseudobibeR.es)
 
 ud_model <- udpipe_load_model("spanish-gsd-ud-2.5-191206.udpipe")
 
-# Opción A: data.frame en memoria con metadata propagada
+# Corpus con metadatos
 corpus <- data.frame(
   doc_id = c("d1", "d2", "d3"),
-  genre  = c("narr", "acad", "conv"),
-  year   = c(2020, 2021, 2022),
+  genero = c("narrativo", "academico", "conversacional"),
+  ano    = c(2020, 2021, 2022),
   text   = c(
     "María llegó tarde a la reunión.",
     "El método permite comparar dos modelos estadísticos.",
-    "Sí, claro, lo que tú digas."
+    "Sí, claro, lo que se quiera."
   )
 )
-res <- biber_es_batch(corpus, ud_model, id_column = "doc_id")
 
-# Opción B: path a CSV (encoding UTF-8 forzado automáticamente)
-res <- biber_es_batch("corpus.csv", ud_model)
+resultado <- biber_es_batch(
+  input       = corpus,
+  model       = ud_model,
+  text_column = "text",
+  id_column   = "doc_id",
+  safe        = TRUE,
+  normalize   = FALSE
+)
 
-# Si no pasás id_column, se autogenera: doc_0001, doc_0002, ...
-res <- biber_es_batch(data.frame(text = c("texto 1", "texto 2")), ud_model)
+# Inspección del resultado
+str(resultado$counts[, 1:8])
+nrow(resultado$failed_docs)  # 0 si todos los documentos se procesaron correctamente
+
+# Exportación a Excel
+write_biber_xlsx(resultado, path = "corpus_biber.xlsx", include_per_1k = TRUE)
 ```
 
-`res$counts` es un `data.frame` con orientación tidy:
+### `biber_es_traced()`: análisis con trazabilidad de evidencia
 
-```
-doc_id | genre | year | f_01_past_tense | f_02_perfect_aspect | ... | n_tokens | n_lex_tokens
-d1     | narr  | 2020 | ...
-```
+Función orientada a la auditoría manual, la depuración del análisis y los usos didácticos. Devuelve, además de los conteos por documento, un *tibble* en formato largo que enumera los tokens individuales que dispararon cada detección.
 
-Las columnas de metadata (genre, year, etc.) se insertan entre `doc_id` y los rasgos `f_NN_*` para que estén listas para análisis multivariado (MDA, PCA, regresión por grupo).
-
-### Modos `fast` vs `safe`
+#### Firma
 
 ```r
-# Fast (default): una sola pasada UDPipe + una sola extracción. Falla atómica.
-res <- biber_es_batch(corpus, ud_model)
-
-# Safe: loop por documento con tryCatch. Tolerante a corpora heterogéneos.
-res <- biber_es_batch(corpus, ud_model, safe = TRUE)
-res$counts        # Documentos que se procesaron OK
-res$failed_docs   # tibble con doc_id, error_message, stage para los que fallaron
+biber_es_traced(tokens,
+                measure   = c("MATTR", "TTR", "CTTR", "MSTTR", "none"),
+                normalize = TRUE)
 ```
 
-Recomendación: `safe = FALSE` para corpora curados; `safe = TRUE` cuando los textos vienen de fuentes desconocidas o muy heterogéneas.
+Los parámetros tienen el mismo significado que en `biber_es()`.
 
-### Procesamiento con evidencia
+#### Estructura de retorno
 
-```r
-res <- biber_es_batch(corpus, ud_model, trace = TRUE)
-res$counts     # mismo data.frame que antes
-res$evidence   # tibble largo con los tokens que dispararon cada detección
-```
+Una lista con dos elementos:
 
-Ver la siguiente sección para los detalles del schema de evidencia.
+- `counts`: `data.frame` idéntico al producido por `biber_es()`, con una fila por documento y 70 columnas (`doc_id`, 67 rasgos, `n_tokens`, `n_lex_tokens`). La compatibilidad con `biber_es()` es bit a bit: ambas funciones devuelven los mismos valores numéricos para los mismos parámetros.
+- `evidence`: tibble en formato largo con nueve columnas:
 
-### Exportación a Excel
+| Columna | Tipo | Contenido |
+|---------|------|-----------|
+| `doc_id` | character | Identificador del documento. |
+| `feature` | character | Código del rasgo, por ejemplo `f_01_past_tense`. |
+| `sentence_id` | integer | Posición de la oración dentro del documento. |
+| `token_id` | integer | Posición del token dentro de la oración (identificador UD). |
+| `token` | character | Forma superficial del token. |
+| `lemma` | character | Lema asignado por UDPipe. |
+| `upos` | character | Categoría gramatical universal (NOUN, VERB, ADJ, …). |
+| `feats` | character | Atributos morfológicos en formato UD (`Tense=Past\|Mood=Ind\|VerbForm=Fin`). |
+| `head_token_id` | integer | Identificador del núcleo sintáctico para reconstruir la dependencia. |
 
-```r
-library(writexl)  # paquete sugerido
-write_biber_xlsx(res, "output.xlsx")
-```
+#### Interpretación de la columna `evidence`
 
-El archivo se escribe con orientación tidy en todas las hojas (`raw`, `metadata`, opcionales `evidence`, `failed_docs`). El motivo es la compatibilidad con re-importación: cualquier coautor que use `readxl::read_xlsx()` en R, `pandas.read_excel()` en Python, o el importador estándar de SPSS obtiene exactamente la misma estructura que devuelve `res$counts` — sin necesidad de transposiciones manuales.
-
-Si el caso de uso es presentación visual y se prefiere "rasgos en filas × documentos en columnas" (ergonómico para corpora pequeños), la receta es una línea:
-
-```r
-res$counts %>%
-  tidyr::pivot_longer(starts_with("f_"), names_to = "feature", values_to = "value") %>%
-  tidyr::pivot_wider(names_from = doc_id, values_from = value)
-```
-
-## Análisis trazable
-
-`biber_es_traced()` es la variante de `biber_es()` que, además del data.frame de conteos, devuelve un tibble largo con los tokens individuales que dispararon cada detección. Útil para:
-
-- **Auditoría manual**: "¿qué tokens concretos contó el detector como hedges en este texto?"
-- **Depuración de la cadena UDPipe → detector**: ver el `feats` y la dependencia sintáctica que disparó un match inesperado.
-- **Análisis cross-feature**: "¿qué rasgos se activaron en este token específico?"
-
-### Estructura del retorno
-
-```r
-res <- biber_es_traced(parsed_data, measure = "none", normalize = FALSE)
-
-res$counts      # data.frame N filas × 70 cols, idéntico a biber_es()
-res$evidence    # tibble largo, 9 columnas (schema E1)
-```
-
-Las 9 columnas de `evidence`:
-
-| Columna | Contenido |
-|---|---|
-| `doc_id` | Identificador del documento (heredado del parsing). |
-| `feature` | Nombre del rasgo, p.ej. `"f_01_past_tense"`. |
-| `sentence_id` | Posición de la oración dentro del documento. |
-| `token_id` | Posición del token dentro de la oración (id UD). |
-| `token` | Forma superficial del token. |
-| `lemma` | Lema asignado por UDPipe. |
-| `upos` | POS universal (NOUN, VERB, ADJ, ...). |
-| `feats` | Atributos morfológicos UD (`Tense=Past\|Mood=Ind\|VerbForm=Fin`, ...). |
-| `head_token_id` | Posición del head sintáctico (para reconstruir la dependencia). |
-
-### Ejemplos de uso
-
-```r
-# Caso 1: auditar qué tokens dispararon f_47_hedges
-subset(res$evidence, feature == "f_47_hedges")
-
-# Caso 2: cross-feature en un token específico
-subset(res$evidence,
-       doc_id == "doc_1" & sentence_id == 1 & token_id == 5)
-
-# Caso 3: distribución de los detectores activados por documento
-table(res$evidence$doc_id, res$evidence$feature)
-
-# Caso 4: recuperar dep_rel (no incluido por defecto) joinando contra el parse
-library(dplyr)
-res$evidence %>%
-  left_join(parsed_data %>% select(doc_id, sentence_id, token_id, dep_rel),
-            by = c("doc_id", "sentence_id", "token_id"))
-```
-
-### Interpretación de la evidencia
-
-No todos los rasgos generan filas de evidencia. La tabla siguiente resume el comportamiento esperado:
+No todos los rasgos generan filas de evidencia. La siguiente tabla resume el comportamiento esperado según el tipo de detector:
 
 | Tipo de rasgo | Comportamiento de la evidencia | Ejemplos |
-|---|---|---|
-| Detección estructural directa | Una fila por token detectado (`nrow(evidence) == count`) | f_01–f_03, f_13, f_17–f_20, f_21, f_23–f_27, f_29–f_30, f_33–f_42 (parcial), f_52, f_54, f_63–f_67, f_10, f_14, f_16 |
-| Detección con apoyo de suplementos | Entre 1 fila y N (`nrow(evidence) ≤ count`) | f_06, f_07, f_08, f_11, f_51, f_53, f_55–f_58 |
-| Métricas continuas | No aparecen en evidencia (su valor vive solo en `counts`) | f_43 (TTR), f_44 (longitud media) |
-| Clases léxicas (v1) | No aparecen en evidencia | f_45, f_46, f_47, f_48, f_49, f_50 |
-| Limitación conocida del parser | Pueden no aparecer aunque el rasgo exista en el texto | f_22, f_26, f_27 |
-| Sin equivalente en español | No aparecen | f_09, f_12, f_15, f_28, f_31, f_32, f_59–f_62 |
+|---------------|--------------------------------|----------|
+| Detección estructural directa | Una fila por token detectado. Se cumple la igualdad `count == nrow(evidence)`. | f_01–f_03, f_13, f_14, f_16, f_17–f_20, f_21, f_23–f_27, f_29, f_30, f_33–f_42, f_52, f_54, f_63–f_67. |
+| Detección con apoyo de suplementos | Número variable de filas, acotado superiormente por el conteo (`1 ≤ nrow(evidence) ≤ count`). | f_06, f_07, f_08, f_10, f_11, f_51, f_53, f_55–f_58. |
+| Métricas continuas | No producen filas de evidencia. El valor se encuentra exclusivamente en `counts`. | f_43 (TTR), f_44 (longitud media). |
+| Rasgos sin equivalente en español | No producen filas de evidencia. La columna correspondiente en `counts` presenta siempre el valor cero. | f_09, f_12, f_15, f_28, f_31, f_32, f_59–f_62. |
 
-Para las clases léxicas (f_45–f_50), si necesitás los tokens individuales podés reconstruirlos contra el diccionario en una línea:
+Para los rasgos de la categoría K (f_45–f_50), cuya detección se realiza por búsqueda en diccionario, la evidencia token a token no se produce en la versión actual. Si se requiere recuperarla manualmente, se puede emplear:
 
 ```r
 parsed_data %>% dplyr::filter(tolower(lemma) %in% dict$f_47_hedges)
 ```
 
-### Patrones complejos cubiertos por regression-guards
-
-El paquete mantiene tests de regresión dedicados para cuatro patrones detectados en auditoría sistemática:
-
-- **f_06** (1ª persona): excluye verbos conjugados con `Person=1` que el suplemento morfológico aceptaba erróneamente como pronombres.
-- **f_23** (wh-clause): exige tilde en la forma superficial y excluye heads `acl`/`acl:relcl` para no confundir relativas con interrogativas indirectas.
-- **f_24** (infinitivos): acepta `root|VerbForm=Inf` solo cuando hay un AUX finito hijo (perífrasis modal), evitando misparse del parser.
-- **f_47** (hedges): fuerza `LC_CTYPE=UTF-8` para que `quanteda` reconozca acentos en sesiones R con locale C.
-
-Estos guards corren con cada `devtools::test()` y bloquean regresiones silenciosas en los detectores afectados.
-
-## Desarrollo y tests
-
-pseudobibeR.es usa [testthat](https://testthat.r-lib.org/) para los tests unitarios. Los materiales fuente (oraciones de ejemplo, diccionarios, scripts de construcción) viven bajo `data-raw/`; el paquete distribuye solo los objetos `.rda` compilados en `data/` y los fixtures sintéticos declarados directamente en los archivos de test.
-
-### Estructura de tests
-
-- `tests/testthat/test-spanish-basic.R`: fixtures sintéticos (data.frames con columnas UD) para los rasgos principales sin necesidad de UDPipe: tiempos verbales (f_01, f_03), pronombres explícitos (f_06–f_08), pasivas (f_17, f_18), modales (f_52, f_53) y negación (f_66, f_67).
-- `tests/testthat/test-spanish-examples.R`: test de integración con UDPipe real, alimentado por `data-raw/spanish_examples.yaml`. Los rasgos con divergencias conocidas del parser se registran como informativos (*relaxed*), no como fallos.
-- `tests/testthat/test-spanish-modals.R`: cubre las perífrasis modales del español: `poder + inf`, `deber + inf`, `tener que + inf`, `ir a + inf` y el futuro sintético.
-
-### Divergencias conocidas de UDPipe Spanish-GSD
-
-Algunas construcciones generan conteos inconsistentes en el parser. Estos rasgos se marcan como `relaxed` en los tests y se documentan en `data-raw/spanish_examples.yaml`:
-
-| Rasgo | Comportamiento conocido |
-|-------|------------------------|
-| `f_22_that_adj_comp` | El nodo padre de *que* no siempre es `ADJ` |
-| `f_23_wh_clause` | Lematización de *quién/cuándo* variable con tilde |
-| `f_26_past_participle` | Participio absoluto con `dep_rel` variable |
-| `f_37_if` | *Si* inicial de oración puede etiquetarse como `CCONJ/case` |
-| `f_39_prepositions` | Conteo variable según la estructura del SN |
-
-### Actualizar datos y fixtures
-
-Si modificas algún archivo YAML bajo `data-raw/`, regenera los datos del paquete ejecutando desde la raíz del repositorio:
+#### Ejemplo reproducible
 
 ```r
-source("data-raw/build_french_dictionaries.R")
+library(udpipe)
+library(pseudobibeR.es)
+
+ud_model <- udpipe_load_model("spanish-gsd-ud-2.5-191206.udpipe")
+parsed   <- udpipe_annotate(ud_model,
+                            x      = "Quizás el resultado depende de otros factores.",
+                            doc_id = "doc_1")
+
+# Llamada equivalente a biber_es() pero con trazabilidad
+resultado <- biber_es_traced(parsed, measure = "none", normalize = FALSE)
+
+# Los conteos coinciden con biber_es()
+identical(resultado$counts,
+          biber_es(parsed, measure = "none", normalize = FALSE))
+#> [1] TRUE
+
+# Tokens que dispararon detecciones en este documento
+resultado$evidence
 ```
 
-Después de editar `data-raw/spanish_examples.yaml`, actualiza también los fixtures de test con UDPipe:
+## Desarrollo y pruebas
+
+El paquete utiliza [`testthat`](https://testthat.r-lib.org/) para las pruebas unitarias y de integración. Los recursos fuente (oraciones de ejemplo, diccionarios, listas léxicas) se almacenan en `data-raw/`. El paquete distribuye únicamente los objetos `.rda` compilados en `data/` y los fixtures sintéticos declarados directamente en los archivos de prueba.
+
+### Estructura de pruebas
+
+- `tests/testthat/test-spanish-basic.R`: fixtures sintéticos para rasgos principales sin necesidad de UDPipe.
+- `tests/testthat/test-spanish-examples.R`: pruebas de integración con UDPipe, alimentadas por `data-raw/spanish_examples.yaml`.
+- `tests/testthat/test-spanish-modals.R`: cobertura de perífrasis modales (*poder + infinitivo*, *deber + infinitivo*, *tener que + infinitivo*, *ir a + infinitivo*, futuro sintético).
+- `tests/testthat/test-feature-coverage-evidence.R`: invariante de cobertura de evidencia para los 55 rasgos con detección activa.
+- `tests/testthat/test-evidence-audit-regression.R`: pruebas de regresión específicas para los detectores corregidos durante la auditoría sistemática (f_06, f_23, f_24, f_47).
+
+### Ejecución de las pruebas
 
 ```r
-Rscript data-raw/generate_edge_case_fixture.R
-```
-
-Confirma siempre tanto los archivos YAML editados como los artefactos `.rda` regenerados para mantener sincronizados CI y los usuarios.
-
-### Ejecutar los tests
-
-```r
-# Todos los tests
+# Suite completa
 testthat::test_package("pseudobibeR.es")
 
 # Archivos específicos
 testthat::test_file("tests/testthat/test-spanish-basic.R")
-testthat::test_file("tests/testthat/test-spanish-examples.R")
-testthat::test_file("tests/testthat/test-spanish-modals.R")
+testthat::test_file("tests/testthat/test-feature-coverage-evidence.R")
 ```
 
 ## Datos del paquete
 
-El paquete incluye varios conjuntos de datos integrados:
+El paquete incluye los siguientes conjuntos de datos como objetos exportados:
 
-- `dict`: patrones de diccionario para la detección de rasgos (conjunciones, adverbios, pronombres…)
-- `word_lists`: listas léxicas de apoyo (sufijos de nominalización, verbos modales, verbos de actitud, etc.)
+- `dict`: patrones de diccionario para la detección léxica de rasgos (conjunciones, adverbios, pronombres, modales, verbos especializados).
+- `word_lists`: listas léxicas auxiliares (sufijos de nominalización, listas de exclusión, formas pronominales, marcadores demostrativos).
 
-Puedes explorarlos así:
+Pueden consultarse mediante:
 
 ```r
 library(pseudobibeR.es)
 
-# Ver diccionarios disponibles
-names(dict)
-
-# Explorar listas léxicas
-word_lists$nominalization_suffixes   # sufijos de nominalización
-word_lists$f_06_first_person_pronouns
+names(dict)                                # diccionarios disponibles
+word_lists$nominalization_suffixes         # sufijos de nominalización
+word_lists$f_06_first_person_pronouns      # pronombres de primera persona
 ```
 
-## Actualizar diccionarios y ejemplos
+## Actualización de diccionarios y ejemplos
 
-Los colaboradores pueden ampliar los recursos léxicos que alimentan el extractor. Los archivos YAML viven en `data-raw/` y se convierten en datos del paquete (`dict.rda`, `word_lists.rda`) mediante el script de construcción.
+Los recursos léxicos se editan en los archivos YAML de `data-raw/` y se compilan al formato `.rda` mediante un script de construcción. Las contribuciones deben preservar tanto el archivo YAML editado como el `.rda` regenerado para mantener la coherencia entre el desarrollo y la distribución.
 
-### 1. Editar los archivos YAML
+1. Edición del YAML correspondiente (`data-raw/dict.yaml`, `data-raw/word_lists.yaml` o `data-raw/spanish_examples.yaml`).
+2. Regeneración de los objetos del paquete:
 
-- `data-raw/dict.yaml`: asocia cada ID de rasgo (p.ej. `f_45_conjuncts`) con una lista de lemas o patrones multipalabra separados por guiones bajos. Todas las entradas se normalizan a minúsculas automáticamente. Los comentarios con `#` están permitidos.
-- **Importante:** el extractor convierte las entradas del diccionario a lemas antes de comparar. Solo se retiene el token final de cada cadena multipalabra. Los indicios perifrásticos complejos (p.ej. `tener que`, `ir a`) se gestionan directamente en `block_modals_es()` y similares; no es necesario duplicarlos en `dict.yaml`.
-- `data-raw/word_lists.yaml`: reúne listas auxiliares (pronombres, sufijos, listas de exclusión, etc.).
-- `data-raw/spanish_examples.yaml`: proporciona oraciones ilustrativas para los tests. Cada entrada tiene la forma:
+   ```r
+   source("data-raw/build_french_dictionaries.R")
+   ```
 
-  ```yaml
-  - feature: f_01_past_tense
-    example: "María llegó tarde a la reunión."
-    count: 1.0
-  ```
+3. Validación con `devtools::test()` y `devtools::document()`.
 
-  El campo `count` indica el número esperado de ocurrencias del rasgo en ese ejemplo.
+## Cita
 
-### 2. Regenerar los datos del paquete
+Al utilizar `pseudobibeR.es` en publicaciones académicas se recomienda citar tanto la obra fundacional como el paquete:
 
-Desde la raíz del repositorio:
+**Obra fundacional:**
 
-```r
-source("data-raw/build_french_dictionaries.R")
-```
+> Biber, D. (1988). *Variation across speech and writing*. Cambridge University Press. <https://doi.org/10.1017/CBO9780511621024>
 
-### 3. Validar los cambios
+**Paquete:**
 
-- `devtools::test()` confirma que los detectores de rasgos siguen pasando la suite de tests.
-- `devtools::document()` actualiza la documentación de ayuda.
-- Al modificar los diccionarios de modales u otras listas de lemas, recuerda añadir fixtures en `test-spanish-modals.R` o `test-spanish-basic.R` para evitar regresiones.
-
-Confirma siempre los archivos YAML editados *y* los activos `.rda` regenerados en `data/`.
+> Cordovez, M. (2024). *pseudobibeR.es: Extracción de rasgos morfológicos de Biber para español*. R package version 0.1.0. <https://github.com/browndw/pseudobibeR.es>
 
 ## Aplicación Shiny
 
-El repositorio incluye una aplicación Shiny (`app.R`) para la exploración interactiva de los rasgos sobre texto libre en español.
+El repositorio incluye una aplicación Shiny (`app.R`) para la exploración interactiva del catálogo de rasgos sobre texto libre. Su ejecución requiere que el modelo `spanish-gsd-ud-2.5-191206.udpipe` esté presente en el directorio de trabajo.
 
 ```r
-# Lanzar la aplicación (desde el directorio del paquete)
 shiny::runApp()
-```
-
-La aplicación requiere que el modelo UDPipe `spanish-gsd-ud-2.5-191206.udpipe` esté en el directorio de trabajo. Descárgalo previamente con:
-
-```r
-udpipe::udpipe_download_model("spanish-gsd")
-```
-
-La tabla de resultados muestra los 57 rasgos de Biber adaptados al español, organizados por grupo (A–P), con la posibilidad de filtrar por categoría y exportar a CSV o Excel.
-
-## Cita sugerida
-
-Al usar `pseudobibeR.es` en tu investigación, cita:
-
-**El artículo original de Biber (1985):**
-> Biber, D. (1985). Investigating macroscopic textual variation through multifeature/multidimensional analyses. *Linguistics*, 23(2), 337–360. DOI: [10.1515/ling.1985.23.2.337](https://doi.org/10.1515/ling.1985.23.2.337)
-
-**Este paquete:**
-> Cordovez, M. (2024). pseudobibeR.es: Extracción de rasgos morfológicos de Biber para español. R package version 0.1.0. <https://github.com/browndw/pseudobibeR.es>
-
-## Rasgos lingüísticos extraídos
-
-El paquete expone **67 columnas de rasgo** alineadas con `pseudobibeR.fr`, de las cuales **57 tienen detección lingüística real** y 10 son cicatrices de paridad superficial con valor `0` constante. De los 67 rasgos originales de Biber 1988, **8 son intraducibles al español** (f_09, f_12, f_15, f_28, f_59, f_60, f_61, f_62) y **2 han sido absorbidos por fusión** (f_31 → f_29; f_32 → f_30): 67 − 8 − 2 = 57 rasgos con detección efectiva. Las 10 columnas intraducibles/fusionadas se mantienen en la salida con valor `0` para facilitar la comparación lado-a-lado con `pseudobibeR.fr` y el drop-in en scripts que esperan los 67 nombres de Biber.
-
-### Categorías de rasgos
-
-| Categoría | Rasgos | Descripción |
-|-----------|--------|-------------|
-| **A. Tiempo y aspecto** | f_01–f_03 | Pretérito indefinido, aspecto perfecto, presente de indicativo |
-| **B. Adverbiales de lugar y tiempo** | f_04–f_05 | Adverbiales espaciales y temporales |
-| **C. Pronombres** | f_06–f_11 | 1.ª, 2.ª y 3.ª persona, demostrativos, indefinidos |
-| **D. Interrogativas** | f_13 | Preguntas directas con palabra *qu-* |
-| **E. Formas nominales** | f_14, f_16 | Nominalizaciones, otros sustantivos |
-| **F. Pasivas** | f_17–f_18 | Pasiva sin agente y pasiva con *por* |
-| **G. Formas estativas** | f_19–f_20 | *Ser/estar* como verbo principal; existencial con *haber* |
-| **H. Subordinación** | f_21–f_38 | Completivas, relativas, subordinadas adverbiales |
-| **I. Sintagmas prep., adj. y adv.** | f_39–f_42 | Preposiciones, adjetivo atributivo/predicativo, adverbios |
-| **J. Especificidad léxica** | f_43–f_44 | TTR (type-token ratio), longitud media de palabra |
-| **K. Clases léxicas** | f_45–f_51 | Conjuntos textuales, atenuadores, *hedges*, amplificadores, enfáticos, demostrativos |
-| **L. Modales** | f_52–f_54 | Posibilidad (*poder*), necesidad (*deber*, *tener que*), predictivos (*ir a* + inf., futuro) |
-| **M. Verbos especializados** | f_55–f_58 | Verbos públicos, privados, suasivos, de apariencia |
-| **N. Formas reducidas** | f_63 | Auxiliar escindido |
-| **O. Coordinación** | f_64–f_65 | Coordinación frasal y clausal |
-| **P. Negación** | f_66–f_67 | Negación sintética (*nadie*, *nunca*…) y analítica (*no* + V) |
-
-### Lista detallada de rasgos
-
-| Rasgo | Ejemplos en español |
-|-------|---------------------|
-| **A. Tiempo y aspecto** | |
-| f_01_past_tense | *llegó*, *presentaron*, *fue* (pretérito indefinido) |
-| f_02_perfect_aspect | *ha terminado*, *han llegado* (haber + participio) |
-| f_03_present_tense | *explica*, *muestran*, *funciona* (presente de indicativo) |
-| **B. Adverbiales de lugar y tiempo** | |
-| f_04_place_adverbials | *aquí*, *allí*, *encima*, *lejos*, *afuera*… |
-| f_05_time_adverbials | *ayer*, *hoy*, *siempre*, *nunca*, *después*… |
-| **C. Pronombres** | |
-| f_06_first_person_pronouns | *yo*, *nosotros*, *me*, *nos*, *mí*… |
-| f_07_second_person_pronouns | *tú*, *usted*, *te*, *ti*, *vosotros*… |
-| f_08_third_person_pronouns | *él*, *ella*, *ellos*, *lo*, *le*, *les*… |
-| f_10_demonstrative_pronoun | *este*, *ese*, *aquel*, *esto*, *eso*… |
-| f_11_indefinite_pronouns | *alguien*, *nadie*, *algo*, *nada*, *todo*… |
-| **D. Interrogativas** | |
-| f_13_wh_question | *¿Quién llamó?* / *¿Qué hora es?* / *¿Cuándo llega?* |
-| **E. Formas nominales** | |
-| f_14_nominalizations | *organización*, *distribución*, *productividad* (-ción, -idad…) |
-| f_16_other_nouns | Otros sustantivos léxicos |
-| **F. Pasivas** | |
-| f_17_agentless_passives | *La propuesta fue aprobada sin debate* |
-| f_18_by_passives | *La novela fue escrita por García Márquez* |
-| **G. Formas estativas** | |
-| f_19_be_main_verb | *El libro es interesante* / *El autor es conocido* |
-| f_20_existential_there | *Hay tres errores en el documento* |
-| **H. Subordinación** | |
-| f_21_that_verb_comp | *Creo que el proyecto tendrá éxito* |
-| f_22_that_adj_comp | *Es importante que todos participen* |
-| f_23_wh_clause | *No sé quién llamó ni cuándo llegó* |
-| f_24_infinitives | *Quiero terminar el trabajo para poder descansar* |
-| f_25_present_participle | *Caminando por el parque, encontré a mi vecino* |
-| f_26_past_participle | *Terminado el examen, los alumnos salieron* |
-| f_27_past_participle_whiz | *El informe redactado ayer es muy completo* |
-| f_29_that_subj | *El estudiante que llegó tarde…* [f_29+f_31 fusionados] |
-| f_30_that_obj | *La persona con quien hablé…* [f_30+f_32 fusionados] |
-| f_33_pied_piping | *el asunto del que habló* |
-| f_34_sentence_relatives | *…, lo que es sorprendente* |
-| f_35_because | *No pudo asistir porque estaba enfermo* |
-| f_36_though | *Aunque llovía, salimos a caminar* |
-| f_37_if | *Lo aprobarás si estudias con dedicación* |
-| f_38_other_adv_sub | *cuando*, *mientras*, *como*, *aunque* (otros subordinantes adv.) |
-| **I. Sintagmas prep., adj. y adv.** | |
-| f_39_prepositions | *de*, *en*, *con*, *para*, *sobre*, *entre*… |
-| f_40_adj_attr | *un brillante estudiante*, *una nueva solución* (amod) |
-| f_41_adj_pred | *El resultado es positivo* / *parece correcto* |
-| f_42_adverbs | *muy*, *rápidamente*, *siempre*, *puntualmente*… |
-| **J. Especificidad léxica** | |
-| f_43_type_token | Ratio tipos/tokens del documento |
-| f_44_mean_word_length | Longitud media de palabra (tokens léxicos) |
-| **K. Clases léxicas** | |
-| f_45_conjuncts | *sin embargo*, *además*, *por tanto*, *en cambio*… |
-| f_46_downtoners | *casi*, *apenas*, *algo*, *ligeramente*… |
-| f_47_hedges | *quizás*, *tal vez*, *probablemente*, *en cierta medida*… |
-| f_48_amplifiers | *muy*, *totalmente*, *enormemente*, *absolutamente*… |
-| f_49_emphatics | *de hecho*, *sin duda*, *realmente*, *evidentemente*… |
-| f_50_discourse_particles | *bueno*, *pues*, *claro*, *mira*… |
-| f_51_demonstratives | *este*, *ese*, *aquel* (determinantes demostrativos) |
-| **L. Modales** | |
-| f_52_modal_possibility | *poder + inf.* («podemos mejorar») |
-| f_53_modal_necessity | *deber + inf.*, *tener que + inf.*, *hay que + inf.* |
-| f_54_modal_predictive | *ir a + inf.*, futuro sintético (*presentará*) |
-| **M. Verbos especializados** | |
-| f_55_verb_public | *afirmar*, *declarar*, *anunciar*, *señalar*… |
-| f_56_verb_private | *creer*, *pensar*, *saber*, *suponer*… |
-| f_57_verb_suasive | *recomendar*, *pedir*, *sugerir*, *ordenar*… |
-| f_58_verb_seem | *parecer*, *resultar* («parece que los resultados…») |
-| **N. Formas reducidas** | |
-| f_63_split_auxiliary | *ha probablemente sido analizado* |
-| **O. Coordinación** | |
-| f_64_phrasal_coordination | *los estudiantes y los profesores* (N y N) |
-| f_65_clausal_coordination | *Llovía y hacía frío* (prop. independientes con *y/o*) |
-| **P. Negación** | |
-| f_66_neg_synthetic | *Nadie sabe nada* / *Nunca llegó* / *Tampoco avisó* |
-| f_67_neg_analytic | *No llegó* / *El resultado no es válido* |
-
-### Rasgos eliminados y fusionados
-
-**8 rasgos eliminados** (intraducibles al español):
-
-| Rasgo | Motivo |
-|-------|--------|
-| f_09_pronoun_it | El español es lengua de sujeto nulo; no existe pronombre expletivo equivalente |
-| f_12_proverb_do | *Hacer* pro-verbal no tiene el mismo comportamiento que *do* en inglés |
-| f_15_gerunds | El gerundio español tiene distribución distinta; no existe equivalente a los gerundios nominales del inglés |
-| f_28_present_participle_whiz | Sin equivalente productivo en español escrito estándar |
-| f_59_contractions | No existen contracciones ortográficas equivalentes en español escrito |
-| f_60_that_deletion | La omisión de *que* complementante es marginal en español escrito |
-| f_61_stranded_preposition | La preposición varada no existe en español (siempre precede al relativo) |
-| f_62_split_infinitive | El infinitivo no se escinde en español |
-
-**2 rasgos fusionados** (absorbidos en rasgos existentes):
-
-| Rasgos originales | Fusión | Motivo |
-|-------------------|--------|--------|
-| f_29_that_subj + f_31_wh_subj | → **f_29_that_subj** | En español, *que* relativo cubre tanto sujeto como objeto; la distinción that/wh no aplica |
-| f_30_that_obj + f_32_wh_obj | → **f_30_that_obj** | *Quien/cual* en posición oblicua absorbe el rol de f_32 |
-
-## Known limitations
-
-Estas tres limitaciones son **por diseño**, no bugs. Si observas conteos inesperados en estos rasgos, es el comportamiento esperado documentado tras la auditoría:
-
-- **f_22_that_adj_comp**: UDPipe `spanish-gsd` no etiqueta el head de *que* como `ADJ` en construcciones copulativas (*es importante que…*); el rasgo subdetecta complementos de adjetivo. Limitación del parser, reconocida en `biber_espanol_completo.md §f_22`.
-- **f_50_discourse_particles**: la versión base no aplica filtro posicional, por lo que algunos mono-tokens (*bueno*, *claro*) pueden contarse fuera de posición inicial de cláusula. Ruido aceptable autorizado explícitamente por `biber_espanol_completo.md §f_50`.
-- **f_29/f_30 (relativas con *que*) en pro-drop puro**: cuando el sujeto está elidido y no hay `nsubj` explícito, el hueco sujeto/objeto no es distinguible y la relativa se cuenta en f_29. Documentado en `biber_espanol_completo.md §2.5/§6/§f_29`.
-
-## Roadmap
-
-```
-Post-audit: bilingual architecture (Option C)
-- Bring block_*_fr from original pseudobibeR.fr repo
-- Decide: single package with dispatcher vs. two packages
-- Re-wire testthat discovery for tests/testthat/fr/
-- Update DESCRIPTION to reflect bilingual scope
 ```
 
 ## Contribuciones
 
-¡Las contribuciones son bienvenidas! Puedes abrir *issues* o *pull requests* en [GitHub](https://github.com/browndw/pseudobibeR.es).
+Las contribuciones al paquete pueden remitirse mediante *issues* o *pull requests* en [GitHub](https://github.com/browndw/pseudobibeR.es). Al reportar problemas se recomienda incluir:
 
-### Al reportar problemas
-
-Por favor incluye:
-
-- Un ejemplo mínimo reproducible
-- Tu versión de R y de los paquetes relevantes
-- El modelo UDPipe utilizado y su versión
+- Un ejemplo mínimo reproducible.
+- La versión de R y de los paquetes implicados.
+- El modelo UDPipe utilizado y su versión.
 
 ## Licencia
 
-Este paquete está bajo la licencia MIT. Consulta el archivo [LICENSE](LICENSE) para más detalles.
+Distribuido bajo licencia MIT. Véase el archivo [LICENSE](LICENSE) para los términos completos.
 
-## Recursos relacionados
+## Referencias y recursos
 
-- [Biber (1985) — artículo original](https://doi.org/10.1515/ling.1985.23.2.337)
-- [udpipe](https://bnosac.github.io/udpipe/en/) — herramienta de NLP para R
-- [quanteda](https://quanteda.io/) — marco de análisis de texto usado internamente
-- [pseudobibeR](https://github.com/browndw/pseudobibeR) — versión original en inglés
-- [pseudobibeR.fr](https://github.com/browndw/pseudobibeR.fr) — versión en francés
+- Biber, D. (1985). Investigating macroscopic textual variation through multifeature/multidimensional analyses. *Linguistics*, 23(2), 337–360. <https://doi.org/10.1515/ling.1985.23.2.337>
+- Biber, D. (1988). *Variation across speech and writing*. Cambridge University Press.
+- [`pseudobibeR`](https://github.com/browndw/pseudobibeR): versión original para textos en inglés.
+- [`pseudobibeR.fr`](https://github.com/browndw/pseudobibeR.fr): versión para textos en francés.
+- [`udpipe`](https://bnosac.github.io/udpipe/en/): herramienta de análisis morfosintáctico para R.
+- [`quanteda`](https://quanteda.io/): marco de análisis cuantitativo de texto empleado internamente.
+- [Universal Dependencies](https://universaldependencies.org/): especificación del formato de anotación sintáctica empleado.
