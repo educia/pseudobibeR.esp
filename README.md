@@ -544,7 +544,7 @@ Al utilizar `pseudobibeR.es` en publicaciones académicas se recomienda citar ta
 
 **Paquete:**
 
-> Cordovez, M. (2024). *pseudobibeR.es: Extracción de rasgos morfológicos de Biber para español*. R package version 0.1.0. <https://github.com/browndw/pseudobibeR.es>
+> Cordovez, M. (2026). *pseudobibeR.es: Extracción de rasgos morfológicos de Biber para español*. R package version 0.1.0. <https://github.com/browndw/pseudobibeR.es>
 
 ## Aplicación Shiny
 
