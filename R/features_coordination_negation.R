@@ -87,6 +87,31 @@ block_split_coordination_es <- function(tokens, doc_ids, token_lookup,
       span_max = pmax(.data$token_id_int, .data$head_token_id_int)
     )
 
+  # REVISION HERNAN (Fase 5): además del auxiliar propio (dep_rel=aux), cubrir
+  # la PERÍFRASIS MODAL, donde spanish-gsd hace al modal la cabeza (VERB root)
+  # y al verbo auxiliado un infinitivo xcomp/obj ('podría [fácilmente]
+  # resolver'). El span va del modal (head) al infinitivo; el ADV interpuesto
+  # cuenta en f_63.
+  modal_deps <- tokens %>%
+    dplyr::filter(
+      dplyr::coalesce(extract_feat(.data$feats, "VerbForm"), "") == "Inf",
+      stringr::str_detect(dplyr::coalesce(.data$dep_rel, ""), "^(xcomp|obj|ccomp)"),
+      !is.na(.data$head_token_id_int)
+    ) %>%
+    dplyr::left_join(
+      head_lookup,
+      by = c("doc_id", "sentence_id", "head_token_id_int" = "token_id_int")
+    ) %>%
+    dplyr::filter(
+      dplyr::coalesce(.data$head_pos, "") %in% c("VERB", "AUX"),
+      .data$token_id_int != .data$head_token_id_int
+    ) %>%
+    dplyr::mutate(
+      span_min = pmin(.data$token_id_int, .data$head_token_id_int),
+      span_max = pmax(.data$token_id_int, .data$head_token_id_int)
+    )
+  aux_deps <- dplyr::bind_rows(aux_deps, modal_deps)
+
   # f_63  Phase 2k: preservar columnas para evidencia.
   f63 <- aux_deps %>%
     dplyr::left_join(adv_interveners, by = c("doc_id", "sentence_id")) %>%

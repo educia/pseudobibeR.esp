@@ -66,4 +66,12 @@ test_that("f_58: 'resultar' solo en uso copulativo de apariencia; 'parecer' siem
   expect_equal(p5("El accidente resultó de una falla.", "f_58_verb_seem"), 0) # consecuencia
 })
 
+test_that("f_63: adverbio interpuesto (auxiliar y perífrasis modal); excluye sujeto", {
+  skip_if_not_installed("udpipe")
+  expect_equal(p5("Ha siempre sostenido su postura.", "f_63_split_auxiliary"), 1)  # AUX perfecto
+  expect_equal(p5("Podría fácilmente resolverse.", "f_63_split_auxiliary"), 1)     # perífrasis modal
+  expect_equal(p5("Debe siempre revisar los datos.", "f_63_split_auxiliary"), 1)   # perífrasis modal
+  expect_equal(p5("Podía yo saberlo.", "f_63_split_auxiliary"), 0)                 # sujeto interpuesto
+})
+
 # nolint end
