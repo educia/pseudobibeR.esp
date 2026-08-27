@@ -192,11 +192,19 @@ block_tense_es <- function(
   # f_11_indefinite_pronouns mas tarde. Hacemos lo mismo aqui para
   # mantener paridad. La evidencia se etiqueta con el mismo nombre y
   # se relabela en parse_biber_features tras el rename.
+  # REVISION HERNAN (Fase 4): control sintáctico. Solo cuenta la función
+  # nominal INDEPENDIENTE (pronominal). Se excluye el uso DETERMINANTE
+  # (dep_rel=det: 'todo el día', 'cualquier libro', 'algún caso'), que no es
+  # pronominal. El adjetival ('un libro cualquiera' -> ADJ/amod) ya queda fuera
+  # por el filtro de POS. LÍMITE documentado: el 'algo' adverbial de grado
+  # ('está algo cansado') el modelo lo mis-etiqueta PRON|nsubj, idéntico al
+  # pronominal ('algo falló') -> inseparable, no se fuerza.
   f11 <- tokens %>%
     dplyr::filter(
       .data$lemma %in% indefinite_pronouns,
       .data$pos   %in% c("PRON", "DET"),
-      !stringr::str_detect(dplyr::coalesce(.data$feats, ""), "PronType=Art")
+      !stringr::str_detect(dplyr::coalesce(.data$feats, ""), "PronType=Art"),
+      dplyr::coalesce(.data$dep_rel, "") != "det"
     ) %>%
     count_feature_traced("f_11_indefinite_pronoun")
 

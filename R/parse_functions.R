@@ -447,7 +447,11 @@ parse_biber_features <- function(tokens, measure, normalize,
   # sin POS y cuenta el sustantivo; la rama de código (.y, block_modals_es
   # → count_modal_periphrasis) ya exige pos ∈ {VERB,AUX} + infinitivo
   # dependiente. Para f_52 se toma solo la rama de código.
-  code_only_features <- c("f_52_modal_possibility")
+  # REVISION HERNAN (Fase 4): f_11 pasa a code-only. La rama quanteda matchea
+  # 'todo/cualquiera/algo' por superficie sin POS ni dep_rel y anula el control
+  # sintáctico (excluir el uso determinante). Se toma solo la rama de código,
+  # que aplica el filtro pronominal.
+  code_only_features <- c("f_52_modal_possibility", "f_11_indefinite_pronoun")
   for (feature in combine_features) {
     x_col <- paste0(feature, ".x")
     y_col <- paste0(feature, ".y")
