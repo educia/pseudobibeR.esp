@@ -74,4 +74,15 @@ test_that("f_63: adverbio interpuesto (auxiliar y perífrasis modal); excluye su
   expect_equal(p5("Podía yo saberlo.", "f_63_split_auxiliary"), 0)                 # sujeto interpuesto
 })
 
+test_that("f_39: una locución preposicional cuenta como UNA preposición", {
+  skip_if_not_installed("udpipe")
+  # Locuciones sin acento (locale-robustas): 'a causa de' y 'por medio de'
+  # tienen 2 ADP pero cuentan 1. (Las acentuadas como 'en relación con'
+  # requieren locale UTF-8; ver deaccent en features_modals_verbs.R.)
+  expect_equal(p5("Llegó a causa de la lluvia.", "f_39_prepositions"), 1)
+  expect_equal(p5("Lo resolvió por medio de un truco.", "f_39_prepositions"), 1)
+  # Preposiciones sueltas (incl. contracciones al/del) cuentan cada una:
+  expect_equal(p5("Fue del pueblo al río.", "f_39_prepositions"), 2)
+})
+
 # nolint end

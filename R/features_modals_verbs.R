@@ -142,6 +142,49 @@ block_adj_prep_adv_es <- function(tokens, doc_ids, dict_lookup,
     dplyr::filter(.data$pos == "ADP") %>%
     count_feature_traced("f_39_prepositions")
 
+  # REVISION HERNAN (Fase 5, §f_39): las LOCUCIONES PREPOSICIONALES cuentan como
+  # UNA preposición, no como sus ADP componentes. spanish-gsd no las marca
+  # estructuralmente (cada ADP es 'case' de su propio núcleo), así que se
+  # detectan por secuencia léxica y se resta el exceso (cada locución de 2 ADP
+  # debe contar 1, no 2). 'al'/'del' (contracciones) SÍ cuentan una cada una.
+  prep_locutions <- c(
+    "a causa de", "a través de", "a partir de", "a pesar de", "a fin de",
+    "a lo largo de", "a favor de", "a raíz de", "a base de", "a fuerza de",
+    "en relación con", "en relación a", "en cuanto a", "en función de",
+    "en contra de", "en medio de", "en virtud de", "en torno a",
+    "con respecto a", "con relación a", "de acuerdo con", "por medio de",
+    "por causa de"
+  )
+  # Desacentuar ambos lados del match para ser robustos al locale (en locale C
+  # el token pre-lowercaseado puede quedar mal marcado y el match fixed sobre
+  # acentos falla). Re-marcamos UTF-8 y quitamos diacríticos ('Latin-ASCII').
+  deaccent <- function(x) {
+    stringi::stri_trans_general(
+      stringi::stri_enc_toutf8(x, validate = TRUE), "Latin-ASCII")
+  }
+  loc_patterns <- deaccent(paste0(" ", prep_locutions, " "))
+  doc_text <- tokens %>%
+    dplyr::group_by(.data$doc_id) %>%
+    dplyr::arrange(.data$sentence_id, .data$token_id_int, .by_group = TRUE) %>%
+    dplyr::summarise(
+      txt = deaccent(paste0(
+        " ", paste(stringr::str_to_lower(.data$token), collapse = " "), " ")),
+      .groups = "drop"
+    ) %>%
+    dplyr::mutate(
+      loc_excess = vapply(.data$txt, function(t) {
+        sum(stringr::str_count(t, stringr::fixed(loc_patterns)))
+      }, integer(1))
+    )
+  f39$counts <- f39$counts %>%
+    dplyr::left_join(dplyr::select(doc_text, "doc_id", "loc_excess"),
+                     by = "doc_id") %>%
+    dplyr::mutate(
+      f_39_prepositions = pmax(
+        .data$f_39_prepositions - dplyr::coalesce(.data$loc_excess, 0L), 0L)
+    ) %>%
+    dplyr::select(-"loc_excess")
+
   # f_40  Adjetivo atributivo
   has_amod <- any(
     !is.na(tokens$dep_rel) & tokens$dep_rel == "amod" & tokens$pos == "ADJ"
