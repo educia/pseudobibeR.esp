@@ -231,29 +231,17 @@ block_adj_prep_adv_es <- function(tokens, doc_ids, dict_lookup,
     f41_cop_dep  %>% dplyr::select(dplyr::all_of(adj_evidence_cols))
   ) %>% count_feature_traced("f_41_adj_pred")
 
-  # f_42  Adverbios generales (excluye los ya capturados en otros rasgos:
-  # f_04 lugar, f_05 tiempo, f_23 wh-, f_45 conjuncts, f_46 downtoners,
-  # f_47 hedges, f_48 amplifiers, f_49 emphatics, f_50 discourse, f_67 'no')
-  excluded_adv_lemmas <- unique(c(
-    dictionary_to_lemmas(dict_lookup, "f_04_place_adverbials"),
-    dictionary_to_lemmas(dict_lookup, "f_05_time_adverbials"),
-    dictionary_to_lemmas(dict_lookup, "f_45_conjuncts"),
-    dictionary_to_lemmas(dict_lookup, "f_46_downtoners"),
-    dictionary_to_lemmas(dict_lookup, "f_47_hedges"),
-    dictionary_to_lemmas(dict_lookup, "f_48_amplifiers"),
-    dictionary_to_lemmas(dict_lookup, "f_49_emphatics"),
-    dictionary_to_lemmas(dict_lookup, "f_50_discourse_particles"),
-    # Wh-adverbios interrogativos indirectos (f_23)
-    "dónde", "cuándo", "cómo", "cuánto", "cuánta", "cuántos", "cuántas",
-    "donde", "cuando", "como",
-    negation_adverbs
-  ))
-
+  # f_42  Total de adverbios (REVISION HERNAN, Fase 1).
+  # El rasgo ingles es "Total adverbs". La version residual anterior excluia
+  # f_04/f_05/f_23/f_45-f_50/f_67 y por eso NO media lo mismo que el paquete
+  # ingles ni el frances. Regla nueva: contar TODOS los tokens ADV, sin
+  # exclusiones. Los solapamientos son deliberados (p. ej. 'hoy' cuenta en
+  # f_05 y en f_42; 'muy' en f_48 y en f_42; 'no' en f_67 y en f_42). De f_50
+  # solo entran aqui las unidades que sean formalmente ADV: 'mira'/'vamos'
+  # (verbos) no cuentan. El parametro negation_adverbs queda sin uso a
+  # proposito tras esta simplificacion.
   f42 <- tokens %>%
-    dplyr::filter(
-      .data$pos == "ADV",
-      !.data$lemma %in% excluded_adv_lemmas
-    ) %>%
+    dplyr::filter(.data$pos == "ADV") %>%
     count_feature_traced("f_42_adverbs")
 
   counts <- doc_ids %>%

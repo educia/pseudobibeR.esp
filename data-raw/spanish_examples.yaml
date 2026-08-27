@@ -242,10 +242,11 @@
   count: 2.0
 
 - feature: f_42_adverbs
-  # Residual = total ADV − f_05 − f_48 (siempre va en f_05, muy va en f_48);
-  # quedan rápidamente + puntualmente. Antes contaba 3 por incluir siempre.
+  # REVISION HERNAN (Fase 1): f_42 = "Total adverbs". Cuenta TODOS los ADV, con
+  # solapamientos deliberados: muy (tb. f_48), siempre (tb. f_05), rápidamente,
+  # puntualmente = 4. Antes se restaban f_05/f_48 y daba 2.
   example: "Habla muy rápidamente y siempre llega puntualmente."
-  count: 2.0
+  count: 4.0
 
 # ─────────────────────────────────────────────────────────────────────────────
 # MARCADORES DE POSICIÓN (STANCE)

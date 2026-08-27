@@ -70,19 +70,27 @@ block_tense_es <- function(
   # un block_result para que parse_biber_features() pueda recolectar
   # ambas dimensiones cuando traced=TRUE.
 
-  # -- f_01  Tiempo pasado (preterito indefinido / perfecto simple) ----------
-  # DECISION segun biber_espanol_completo.md:
-  # f_01 mapea al PRETERITO INDEFINIDO (Tense=Past, Mood=Ind, VerbForm=Fin),
-  # equivalente funcional directo del "simple past" de Biber en contextos
-  # narrativos (hablo, dijo, fue).
-  # El preterito imperfecto se recoge en f_71 (extension espanola).
-  # El perfecto compuesto (ha hablado) se recoge en f_02.
-  # Para comparaciones translingues: f_01 + f_02 + f_71 = proxy "total pasado".
+  # -- f_01  Tiempos de pasado de indicativo y subjuntivo --------------------
+  # REVISION HERNAN (Fase 1): el "past tense" ingles abarca varios tiempos y
+  # aspectos del espanol en indicativo Y subjuntivo. f_01 cuenta todo verbo
+  # finito con Tense in {Past, Imp, Pqp}, SIN filtrar por Mood:
+  #   - perfecto simple ind. (corri)      -> Tense=Past
+  #   - imperfecto ind. (corria)          -> Tense=Imp
+  #   - imperfecto subj. (corriera)       -> Tense=Imp
+  #   - pluscuamperfecto ind. (habia ...) -> aux 'habia' con Tense=Imp
+  #   - pluscuamperf. subj. (hubiera ...) -> aux 'hubiera' con Tense=Imp
+  # NOTA UD (verificado, test-udpipe-tag-verification.R): spanish-gsd NO emite
+  # Tense=Pqp; el pluscuamperfecto sale con Tense=Imp en el auxiliar. Se deja
+  # "Pqp" por robustez ante otros modelos, pero es rama muerta con spanish-gsd.
+  # VerbForm=Fin se conserva a proposito: excluye el participio (corrido, que
+  # lleva Tense=Past|VerbForm=Part) para no contar el compuesto dos veces aqui.
+  # Solapamiento DELIBERADO con f_02: el auxiliar 'habia'/'hubiera' cuenta en
+  # f_01 y ademas en f_02 (haber+participio), replicando "had written" del
+  # ingles. Ver INSTRUCCIONES_CLAUDE_CODE_pseudobiber_es.md, Fase 1 / f_01.
   f01 <- tokens %>%
     dplyr::filter(
       .data$pos %in% c("VERB", "AUX"),
-      dplyr::coalesce(extract_feat(.data$feats, "Tense"), "") == "Past",
-      dplyr::coalesce(extract_feat(.data$feats, "Mood"),  "") == "Ind",
+      dplyr::coalesce(extract_feat(.data$feats, "Tense"), "") %in% c("Past", "Imp", "Pqp"),
       dplyr::coalesce(extract_feat(.data$feats, "VerbForm"), "") == "Fin"
     ) %>%
     count_feature_traced("f_01_past_tense")
@@ -286,28 +294,64 @@ block_personal_pronouns_es <- function(
       )
   }
 
-  # -- f_06  1a persona -----------------------------------------------------
-  f06 <- filter_person_pronouns(c(
-    "yo", "nosotros", "nosotras",
-    "me", "nos",
-    "m\u00ed", "conmigo"
-  )) %>% count_feature_traced("f_06_first_person_pronouns")
+  # -- Posesivos: rutado por Person morfologico (REVISION HERNAN, Fase 1) -----
+  # El rasgo ingles incluye los posesivos (our/your/their). spanish-gsd los
+  # etiqueta como DET con Poss=Yes y Person fiable (verificado en
+  # test-udpipe-tag-verification.R): mi/nuestro -> Person=1, tu/vuestro ->
+  # Person=2, su -> Person=3. 'su' de 'usted' concuerda en 3a y se asigna a
+  # f_08 por criterio morfologico (documentado). Los tonicos sustantivados
+  # (mio, tuyo, suyo...) salen NOUN SIN Poss=Yes y se capturan por lema.
+  # Sin doble conteo: count_feature_traced dedupe por posicion y la pasada
+  # lexica excluye Poss=Yes.
+  possessive_by_person <- function(person) {
+    tokens %>%
+      dplyr::filter(
+        stringr::str_detect(dplyr::coalesce(.data$feats, ""), "Poss=Yes"),
+        dplyr::coalesce(extract_feat(.data$feats, "Person"), "") == person
+      )
+  }
+  possessive_lexical <- function(lemma_list) {
+    tokens %>%
+      dplyr::filter(
+        .data$lemma %in% lemma_list,
+        !stringr::str_detect(dplyr::coalesce(.data$feats, ""), "Poss=Yes"),
+        .data$pos %in% c("NOUN", "PRON", "ADJ")
+      )
+  }
+  # Voseo: spanish-gsd suele etiquetar "vos" como NOUN (lema "tu"), perdiendolo
+  # en la pasada pronominal (pos==PRON). Rescate por token; el dedup evita el
+  # doble conteo cuando si viene como PRON.
+  voseo_forms <- function() {
+    tokens %>% dplyr::filter(tolower(.data$token) == "vos")
+  }
 
-  # -- f_07  2a persona -----------------------------------------------------
+  # -- f_06  1a persona (pronombres + posesivos) ----------------------------
+  f06 <- dplyr::bind_rows(
+    filter_person_pronouns(c("yo", "nosotros", "nosotras", "me", "nos",
+                             "m\u00ed", "conmigo")),
+    possessive_by_person("1"),
+    possessive_lexical(c("m\u00edo", "nuestro"))
+  ) %>% count_feature_traced("f_06_first_person_pronouns")
+
+  # -- f_07  2a persona (pronombres + posesivos + voseo) --------------------
   # "te" puede ser 2a atono o parte de construccion impersonal;
   # la exclusion de reflexive_deps filtra los casos expl mas claros.
-  f07 <- filter_person_pronouns(c(
-    "t\u00fa", "vos", "vosotros", "vosotras",
-    "usted", "ustedes",
-    "te", "ti", "contigo", "os"
-  )) %>% count_feature_traced("f_07_second_person_pronouns")
+  f07 <- dplyr::bind_rows(
+    filter_person_pronouns(c("t\u00fa", "vos", "vosotros", "vosotras",
+                             "usted", "ustedes", "te", "ti", "contigo", "os")),
+    possessive_by_person("2"),
+    possessive_lexical(c("tuyo", "vuestro")),
+    voseo_forms()
+  ) %>% count_feature_traced("f_07_second_person_pronouns")
 
-  # -- f_08  3a persona -----------------------------------------------------
-  f08 <- filter_person_pronouns(c(
-    "\u00e9l", "ella", "ello", "ellos", "ellas",
-    "le", "lo", "la", "les", "los", "las",
-    "consigo"
-  )) %>% count_feature_traced("f_08_third_person_pronouns")
+  # -- f_08  3a persona (pronombres + posesivos) ----------------------------
+  f08 <- dplyr::bind_rows(
+    filter_person_pronouns(c("\u00e9l", "ella", "ello", "ellos", "ellas",
+                             "le", "lo", "la", "les", "los", "las",
+                             "consigo", "s\u00ed")),
+    possessive_by_person("3"),
+    possessive_lexical(c("suyo"))
+  ) %>% count_feature_traced("f_08_third_person_pronouns")
 
   # f_09 (pronombre it): INTRADUCIBLE en espanol.
   # El espanol es lengua de sujeto nulo; no existe expletivo equivalente a "it".

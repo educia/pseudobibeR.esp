@@ -4,7 +4,7 @@
 # neg_text = NA → rasgo residual/métrico sin negativo limpio (solo sanity).
 
 fc_cases <- list(
-  list("f_01_past_tense",          "Juan llegó tarde y habló con ella.",            1, "Juan hablaba mientras ella leía.",            0),
+  list("f_01_past_tense",          "Juan llegó tarde y habló con ella.",            1, "Juan habla mientras ella lee.",               0),
   list("f_02_perfect_aspect",      "He terminado el informe esta mañana.",          1, "Terminé el informe ayer.",                    0),
   list("f_03_present_tense",       "María trabaja en la oficina central.",          1, "María trabajó ayer en casa.",                 0),
   list("f_04_place_adverbials",    "El perro está aquí y el gato allí afuera.",     1, "Hoy comimos muy temprano.",                   0),
@@ -116,7 +116,9 @@ test_that("f_07 — verbal Person=2 alone must not count (regression-guard)", {
 })
 
 test_that("f_08 — verbal Person=3 alone must not count (regression-guard)", {
-  r <- run_biber("Comió pizza con sus amigos.")
+  # Sin pronombre ni posesivo: 'Comió' (VERB, Person=3) no debe inflar f_08.
+  # (Fase 1: los posesivos como 'sus' sí cuentan ahora; por eso se evitan aquí.)
+  r <- run_biber("Comió pizza en el parque.")
   expect_equal(as.numeric(r$f_08_third_person_pronouns), 0,
                info = "Verbal Person=3 inflection alone must not count per spec §f_08")
 })
