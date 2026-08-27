@@ -80,10 +80,31 @@ block_participial_clauses_es <- function(tokens, doc_ids, head_lookup) {
                     head_token_id_int = .data$head_token_id_int) %>%
     dplyr::mutate(has_aux_fin_child = TRUE)
 
+  # -- f_15  Infinitivos en función nominal (REVISION HERNAN, Fase 3) ---------
+  # f_15_gerunds (nombre de columna INVARIABLE) deja de ser 0 y cuenta el
+  # infinitivo en función NOMINAL. spanish-gsd solo marca de forma fiable el
+  # infinitivo SUJETO como csubj (verificado en test-udpipe-tag-verification.R):
+  # 'Fumar perjudica', 'Me gusta nadar' -> csubj. LÍMITES documentados (no
+  # forzados, §1.2/§10): el objeto nominal sale xcomp (indistinguible del
+  # complemento verbal -> f_24) y con determinante ('el fumar') el modelo
+  # re-etiqueta NOUN (pierde VerbForm=Inf), así que 'el continuo transitar' y
+  # 'Nadar es saludable' (inicial) no se detectan. Exclusión mutua con f_24
+  # por construcción (f_24 descarta csubj/csubj:pass).
+  f15 <- tokens %>%
+    dplyr::filter(
+      .data$pos == "VERB",
+      .data$.vf == "Inf",
+      dplyr::coalesce(.data$dep_rel, "") %in% c("csubj", "csubj:pass")
+    ) %>%
+    count_feature_traced("f_15_gerunds")
+
   f24 <- tokens %>%
     dplyr::filter(
       .data$pos == "VERB",
-      .data$.vf == "Inf"
+      .data$.vf == "Inf",
+      # Exclusión mutua con f_15: los infinitivos nominales-sujeto (csubj)
+      # cuentan en f_15, no aquí.
+      !dplyr::coalesce(.data$dep_rel, "") %in% c("csubj", "csubj:pass")
     ) %>%
     dplyr::left_join(
       aux_fin_children,
@@ -153,6 +174,7 @@ block_participial_clauses_es <- function(tokens, doc_ids, head_lookup) {
   # Ver biber_espanol_completo.md sec. F_28.
 
   counts <- doc_ids %>%
+    dplyr::left_join(f15$counts, by = "doc_id") %>%
     dplyr::left_join(f24$counts, by = "doc_id") %>%
     dplyr::left_join(f25$counts, by = "doc_id") %>%
     dplyr::left_join(f26$counts, by = "doc_id") %>%
@@ -160,7 +182,8 @@ block_participial_clauses_es <- function(tokens, doc_ids, head_lookup) {
     dplyr::mutate(
       dplyr::across(-dplyr::any_of("doc_id"), ~ dplyr::coalesce(., 0L))
     )
-  evidence <- bind_evidence(f24$evidence, f25$evidence, f26$evidence, f27$evidence)
+  evidence <- bind_evidence(f15$evidence, f24$evidence, f25$evidence,
+                            f26$evidence, f27$evidence)
   make_block_result(counts = counts, evidence = evidence)
 }
 
