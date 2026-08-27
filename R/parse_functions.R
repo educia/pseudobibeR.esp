@@ -615,10 +615,11 @@ parse_biber_features <- function(tokens, measure, normalize,
   }
   # Inyectar columnas constantes-cero para los 10 rasgos no-detectables en
   # espanol (paridad superficial con FR).
+  # REVISION HERNAN (Fase 2): f_31/f_32 salen de la lista siempre-cero (ahora
+  # los pobla block_relatives_es con quien/el cual). f_15 saldrá en Fase 3.
   surface_only_zero <- c(
     "f_09_pronoun_it", "f_12_proverb_do", "f_15_gerunds",
     "f_28_present_participle_whiz",
-    "f_31_wh_subj", "f_32_wh_obj",
     "f_59_contractions", "f_60_that_deletion",
     "f_61_stranded_preposition", "f_62_split_infinitive"
   )

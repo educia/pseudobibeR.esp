@@ -216,7 +216,9 @@
 # En Spanish-GSD "que" relativo es siempre SCONJ/mark (absorbido en f_29).
 # f_30 detecta "quien/cual" en posición de objeto (dep_rel=obl/obj).
 - feature: f_30_that_obj
-  example: "La persona con quien hablé es muy amable."
+  # REVISION HERNAN (Fase 2): 'con quien' es pied-piping -> f_33, no f_30.
+  # f_30 (que objeto) requiere sujeto explícito en la relativa (María).
+  example: "El libro que María escribió es famoso."
   count: 1.0
 
 # f_31_wh_subject ABSORBIDO en f_29_that_subj (fusión española).

@@ -59,7 +59,7 @@ cases <- list(
   f_26_past_participle         = list(text = "Terminado el examen, los alumnos salieron.",                         min_count = 1),
   f_27_past_participle_whiz    = list(text = "El informe redactado ayer es muy completo.",                         min_count = 1),
   f_29_that_subj               = list(text = "El estudiante que llegó tarde no pudo entrar.",                      min_count = 1),
-  f_30_that_obj                = list(text = "La persona con quien hablé es muy amable.",                          min_count = 1),
+  f_30_that_obj                = list(text = "El libro que María escribió es famoso.",                              min_count = 1),
   f_33_pied_piping             = list(text = "El asunto del que hablamos requiere atención.",                      min_count = 1),
   f_34_sentence_relatives      = list(text = "El resultado fue inesperado, lo que sorprendió a todos.",            min_count = 1),
   f_35_because                 = list(text = "No pudo asistir porque estaba enfermo.",                             min_count = 1),
