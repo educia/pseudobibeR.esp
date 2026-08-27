@@ -263,7 +263,9 @@
   count: 1.0
 
 - feature: f_46_downtoners
-  example: "El error es casi imperceptible."
+  # REVISION HERNAN (Fase 4): 'casi' pasó a f_47 (hedges). Ejemplo con un
+  # atenuador que permanece en f_46.
+  example: "El cambio es apenas perceptible."
   count: 1.0
 
 - feature: f_46_downtoners

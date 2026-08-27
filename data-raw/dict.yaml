@@ -72,8 +72,19 @@ f_04_place_adverbials:
   - al_sur
   - al_este
   - al_oeste
+  # REVISION HERNAN (Fase 4): locuciones de lugar añadidas (spec §f_04).
+  - en_mitad_de
+  - más_allá
+  - mas_alla
+  - más_allá_de
+  - mas_alla_de
+  - por_todas_partes
+  - a_lo_lejos
 
 f_05_time_adverbials:
+  # REVISION HERNAN (Fase 4): locuciones de tiempo añadidas (spec §f_05).
+  - hace_poco
+  - hace_tiempo
   - ayer
   - hoy
   - mañana
@@ -337,8 +348,9 @@ f_45_conjuncts:
 # ─────────────────────────────────────────────────────────────────────────────
 
 f_46_downtoners:
+  # REVISION HERNAN (Fase 4): 'casi' se retira de f_46 y se cuenta en f_47
+  # (hedges), por coherencia con 'almost' del inglés (Biber). Ya está en f_47.
   - apenas
-  - casi
   - ligeramente
   - levemente
   - algo

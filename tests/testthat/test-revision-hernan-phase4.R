@@ -31,4 +31,20 @@ test_that("f_11 excluye el uso NO pronominal (adjetival y determinante)", {
   expect_equal(f11_count("Todo el día estuvo lloviendo."), 0) # DET/det ('todo el día')
 })
 
+test_that("f_46/f_47: 'casi' cuenta en f_47 (hedges), no en f_46 (downtoners)", {
+  skip_if_not_installed("udpipe")
+  r <- run_biber("Casi termino el informe.")
+  expect_equal(as.numeric(r$f_47_hedges), 1)
+  expect_equal(as.numeric(r$f_46_downtoners), 0)
+  # 'apenas' permanece en f_46:
+  expect_equal(as.numeric(run_biber("Apenas se nota el cambio.")$f_46_downtoners), 1)
+})
+
+test_that("f_04/f_05: locuciones añadidas al diccionario se cuentan", {
+  skip_if_not_installed("udpipe")
+  expect_equal(as.numeric(run_biber("Lo dejó en mitad de la sala.")$f_04_place_adverbials), 1)
+  expect_equal(as.numeric(run_biber("El pueblo está más allá del río.")$f_04_place_adverbials), 1)
+  expect_equal(as.numeric(run_biber("Hace poco llegaron los datos.")$f_05_time_adverbials), 1)
+})
+
 # nolint end
