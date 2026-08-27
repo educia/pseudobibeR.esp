@@ -442,8 +442,20 @@ block_specialized_verbs_es <- function(tokens, doc_ids, dict_lookup) {
   f56 <- count_verb_class(private_lemmas, "f_56_verb_private")
   f57 <- count_verb_class(
     dictionary_to_lemmas(dict_lookup, "f_57_verb_suasive"), "f_57_verb_suasive")
-  f58 <- count_verb_class(
-    dictionary_to_lemmas(dict_lookup, "f_58_verb_seem"),    "f_58_verb_seem")
+  # REVISION HERNAN (Fase 5): 'resultar' solo en usos de apariencia/evaluación
+  # (copulativo: 'resulta adecuada', 'resulta evidente'), donde dep_rel=cop.
+  # Excluye el cambio de estado ('resultó ganador') y la consecuencia
+  # ('resultó de una falla'), donde 'resultar' es verbo pleno (root/no cop).
+  # 'parecer' (y demás lemas de la clase) cuentan siempre.
+  seem_lemmas <- dictionary_to_lemmas(dict_lookup, "f_58_verb_seem")
+  f58 <- tokens %>%
+    dplyr::filter(
+      .data$lemma %in% seem_lemmas,
+      .data$pos   %in% c("VERB", "AUX"),
+      .data$lemma != "resultar" |
+        dplyr::coalesce(.data$dep_rel, "") == "cop"
+    ) %>%
+    count_feature_traced("f_58_verb_seem")
 
   counts <- doc_ids %>%
     dplyr::left_join(f55$counts, by = "doc_id") %>%

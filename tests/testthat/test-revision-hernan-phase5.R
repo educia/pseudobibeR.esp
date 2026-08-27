@@ -45,4 +45,25 @@ test_that("f_67: 'no' de foco sobre constituyentes no verbales cuenta; excluye s
   expect_equal(p5("El no del comité fue claro.", "f_67_neg_analytic"), 0)   # 'no' sustantivo
 })
 
+test_that("f_37: 'a menos que' y 'salvo que' cuentan como condicional (no en f_38)", {
+  skip_if_not_installed("udpipe")
+  r1 <- run_biber("No saldré a menos que pare la lluvia.")
+  expect_equal(as.numeric(r1$f_37_if), 1)
+  expect_equal(as.numeric(r1$f_38_other_adv_sub), 0)
+  r2 <- run_biber("Salvo que llueva, saldremos.")
+  expect_equal(as.numeric(r2$f_37_if), 1)
+  expect_equal(as.numeric(r2$f_38_other_adv_sub), 0)
+  # 'si' condicional sigue contando; 'cuando' sigue en f_38:
+  expect_equal(p5("Si llueve no salgo.", "f_37_if"), 1)
+  expect_equal(p5("Cuando llegó, todos aplaudieron.", "f_38_other_adv_sub"), 1)
+})
+
+test_that("f_58: 'resultar' solo en uso copulativo de apariencia; 'parecer' siempre", {
+  skip_if_not_installed("udpipe")
+  expect_equal(p5("La propuesta resulta adecuada.", "f_58_verb_seem"), 1)     # cop
+  expect_equal(p5("Parece difícil el examen.", "f_58_verb_seem"), 1)          # parecer
+  expect_equal(p5("Resultó ganador del premio.", "f_58_verb_seem"), 0)        # cambio de estado
+  expect_equal(p5("El accidente resultó de una falla.", "f_58_verb_seem"), 0) # consecuencia
+})
+
 # nolint end

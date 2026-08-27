@@ -765,7 +765,9 @@ block_clause_embedding_es <- function(tokens, doc_ids, head_lookup,
       gp_lemma = .data$lemma
     )
 
-  f37 <- tokens %>%
+  f37_evidence_cols <- c("doc_id", "sentence_id", "token_id_int",
+                         "token", "lemma", "pos", "feats", "head_token_id_int")
+  f37_si <- tokens %>%
     dplyr::filter(
       .data$lemma %in% conditional_lemmas,
       .data$pos   %in% c("SCONJ", "ADV"),
@@ -780,7 +782,56 @@ block_clause_embedding_es <- function(tokens, doc_ids, head_lookup,
                      by = c("doc_id", "sentence_id", "gp_id")) %>%
     dplyr::filter(
       !dplyr::coalesce(.data$gp_lemma, "") %in% interrog_governors
+    )
+
+  # REVISION HERNAN (Fase 5): 'a menos que' / 'salvo que' son condicionales
+  # multipalabra (equivalentes de 'unless'). spanish-gsd las segmenta
+  # (a[mark] menos[fixed] que[mark]), así que 'a_menos_que'/'salvo_que' nunca
+  # matchean por lema. Detectamos el 'que' (mark) precedido de 'menos'/'salvo'
+  # y lo contamos en f_37; sus componentes (la 'a'/'salvo' que se cuelan como
+  # mark) se excluyen de f_38 vía loc_exclude.
+  pos_ctx <- tokens %>%
+    dplyr::arrange(.data$doc_id, .data$sentence_id, .data$token_id_int) %>%
+    dplyr::group_by(.data$doc_id, .data$sentence_id) %>%
+    dplyr::mutate(prev1 = dplyr::lag(stringr::str_to_lower(.data$token), 1L)) %>%
+    dplyr::ungroup()
+  # 'salvo que': 'que' (mark) precedido de 'salvo' (patrón donde el modelo
+  # etiqueta 'que' como mark).
+  loc_que <- pos_ctx %>%
+    dplyr::filter(
+      .data$lemma == "que",
+      dplyr::coalesce(.data$dep_rel, "") == "mark",
+      dplyr::coalesce(.data$prev1, "") %in% c("salvo", "menos")
+    )
+  # 'a menos que': el modelo hace 'a' el mark del advcl, con 'menos'/'que'
+  # como hijos 'fixed'. Detectamos la 'a' cabeza del 'menos' fixed.
+  a_menos_ids <- tokens %>%
+    dplyr::filter(
+      tolower(.data$token) == "menos",
+      dplyr::coalesce(.data$dep_rel, "") == "fixed",
+      !is.na(.data$head_token_id_int)
     ) %>%
+    dplyr::distinct(.data$doc_id, .data$sentence_id,
+                    token_id_int = .data$head_token_id_int)
+  loc_a_menos <- tokens %>%
+    dplyr::semi_join(a_menos_ids,
+                     by = c("doc_id", "sentence_id", "token_id_int"))
+  # Tokens de locución condicional contados en f_37 (uno por locución).
+  loc_cond <- dplyr::bind_rows(
+    loc_que     %>% dplyr::select(dplyr::all_of(f37_evidence_cols)),
+    loc_a_menos %>% dplyr::select(dplyr::all_of(f37_evidence_cols))
+  ) %>%
+    dplyr::distinct(.data$doc_id, .data$sentence_id,
+                    .data$token_id_int, .keep_all = TRUE)
+  # Excluir de f_38 los tokens ya contados como locución (evita que la 'a'
+  # mark de 'a menos que' se cuele como subordinador adverbial).
+  loc_exclude <- loc_cond %>%
+    dplyr::distinct(.data$doc_id, .data$sentence_id, .data$token_id_int)
+
+  f37 <- dplyr::bind_rows(
+    f37_si   %>% dplyr::select(dplyr::all_of(f37_evidence_cols)),
+    loc_cond %>% dplyr::select(dplyr::all_of(f37_evidence_cols))
+  ) %>%
     count_feature_traced("f_37_if")
 
   # -- f_38  Otros subordinadores adverbiales --------------------------------
@@ -808,6 +859,12 @@ block_clause_embedding_es <- function(tokens, doc_ids, head_lookup,
           stringr::str_to_lower(.data$lemma) %in% adv_sub_cconj
       ),
       !.data$lemma %in% counted_sub
+    ) %>%
+    # REVISION HERNAN (Fase 5): excluir los componentes de 'a menos que' /
+    # 'salvo que' (ya contados en f_37), que si no se cuelan aquí como mark.
+    dplyr::anti_join(
+      loc_exclude,
+      by = c("doc_id", "sentence_id", "token_id_int")
     ) %>%
     count_feature_traced("f_38_other_adv_sub")
 
