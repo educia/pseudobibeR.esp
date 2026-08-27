@@ -63,12 +63,21 @@ block_passive_voice_es <- function(tokens, doc_ids, head_lookup,
   # suele ser "él" (no "se"). Tampoco marca Voice=Pass en el verbo. Por
   # eso detectamos por superficie: token "se" + verbo finito como head.
   #
-  # Esta heurística captura tanto pasivas reflejas (se publicaron los
-  # hallazgos) como impersonales con se (se debe seguir, se recomienda),
-  # que comparten la función comunicativa de pasiva sin agente. Acepta
-  # algún ruido por reflexivos genuinos (se levantó), pero en registros
-  # académicos/instruccionales el "se" + V es mayoritariamente impersonal.
+  # REVISION HERNAN (Fase 5, §f_17): SOLO la PASIVA REFLEJA cuenta en f_17;
+  # la IMPERSONAL con se se EXCLUYE. Criterio (spec): la pasiva refleja tiene
+  # un sujeto paciente que concuerda con el verbo ('se publicaron LOS INFORMES'
+  # -> nsubj plural), mientras que la impersonal no lo tiene ('se entrevistó A
+  # LOS CANDIDATOS' -> objeto con 'a', sin nsubj; 'se recomienda leer' ->
+  # xcomp). Requerimos por tanto que el verbo tenga un hijo nsubj/nsubj:pass.
   # -----------------------------------------------------------------------
+  verbs_with_patient_subj <- tokens %>%
+    dplyr::filter(
+      stringr::str_detect(dplyr::coalesce(.data$dep_rel, ""), "^nsubj"),
+      !is.na(.data$head_token_id_int)
+    ) %>%
+    dplyr::distinct(.data$doc_id, .data$sentence_id,
+                    head_token_id_int = .data$head_token_id_int)
+
   se_passive <- tokens %>%
     dplyr::filter(
       tolower(.data$token) == "se",
@@ -86,6 +95,12 @@ block_passive_voice_es <- function(tokens, doc_ids, head_lookup,
       stringr::str_detect(
         dplyr::coalesce(.data$head_feats, ""), "Person=3"
       )
+    ) %>%
+    # Pasiva refleja: el verbo tiene sujeto paciente (nsubj). Excluye la
+    # impersonal (sin nsubj).
+    dplyr::semi_join(
+      verbs_with_patient_subj,
+      by = c("doc_id", "sentence_id", "head_token_id_int")
     ) %>%
     # Excluir cuando ya hay un aux:pass (ya contado en perifrástica)
     dplyr::anti_join(

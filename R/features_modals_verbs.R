@@ -283,6 +283,37 @@ block_modals_es <- function(tokens, doc_ids, dict_lookup) {
                                       head_word = TRUE)
   f52 <- count_modal_periphrasis(tokens, poss_lemmas, "f_52_modal_possibility")
 
+  # REVISION HERNAN (Fase 5): 'puede que' + subjuntivo (correlato de may/might).
+  # spanish-gsd analiza 'Puede que' como expresión FIJA: 'poder' (AUX/VERB) con
+  # un hijo 'que' dep_rel=fixed (verificado; el verbo subordinado suele salir
+  # mal-etiquetado Mood=Ind, por eso no se filtra por modo). Disjunto de
+  # poder+INF, así que no hay doble conteo. Se cuenta el 'poder' cabeza.
+  que_fixed_heads <- tokens %>%
+    dplyr::filter(
+      .data$lemma == "que",
+      dplyr::coalesce(.data$dep_rel, "") == "fixed",
+      !is.na(.data$head_token_id_int)
+    ) %>%
+    dplyr::distinct(.data$doc_id, .data$sentence_id,
+                    poder_id = .data$head_token_id_int)
+  f52_pq <- tokens %>%
+    dplyr::filter(.data$lemma == "poder", .data$pos %in% c("VERB", "AUX")) %>%
+    dplyr::inner_join(
+      que_fixed_heads,
+      by = c("doc_id", "sentence_id", "token_id_int" = "poder_id")
+    ) %>%
+    count_feature_traced("f_52_modal_possibility")
+  f52 <- make_block_result(
+    counts = dplyr::full_join(f52$counts, f52_pq$counts,
+                              by = "doc_id", suffix = c("", ".pq")) %>%
+      dplyr::mutate(
+        f_52_modal_possibility = dplyr::coalesce(.data$f_52_modal_possibility, 0L) +
+          dplyr::coalesce(.data$f_52_modal_possibility.pq, 0L)
+      ) %>%
+      dplyr::select("doc_id", "f_52_modal_possibility"),
+    evidence = bind_evidence(f52$evidence, f52_pq$evidence)
+  )
+
   # f_53  Necesidad
   #   deber + INF (sin "de" = necesidad deontica)
   #   deber_de + INF (probabilidad epistemica; incluido por convencion)

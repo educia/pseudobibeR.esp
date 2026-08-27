@@ -134,11 +134,16 @@ block_split_coordination_es <- function(tokens, doc_ids, token_lookup,
     )
 
   # f_64  Coordinacion sintagmatica
+  # REVISION HERNAN (Fase 5): cubrir las CUATRO categorías del rasgo inglés:
+  # nombres, adjetivos, adverbios Y verbos (coordinación de SV con sujeto
+  # compartido, p. ej. 'lee y escribe'). El guard !has_subject separa la
+  # coordinación sintagmática (SV compartido) de la clausal (f_65, sujetos
+  # propios), evitando el doble conteo.
   f64 <- cc_tokens %>%
     dplyr::filter(
       dplyr::coalesce(.data$conj_dep_rel, "") == "conj",
       dplyr::coalesce(.data$conj_pos,     "") %in%
-        c("NOUN", "PROPN", "ADJ", "ADV"),
+        c("NOUN", "PROPN", "ADJ", "ADV", "VERB", "AUX"),
       !is.na(.data$first_conj_pos),
       .data$first_conj_pos == .data$conj_pos,
       !.data$has_subject
@@ -217,9 +222,14 @@ block_negation_es <- function(tokens, doc_ids,
     "nunca", "jamás", "jamas", "tampoco"
   ))
 
-  # -- Tabla auxiliar de heads verbales negados analiticamente ---------------
+  # -- Tabla auxiliar de heads negados analiticamente ------------------------
   # Columnas: doc_id, sentence_id, neg_head_id
-  verb_pos <- c("VERB", "AUX")
+  # REVISION HERNAN (Fase 5): f_67 se amplía más allá de la anteposición al
+  # verbo. 'no' como adverbio de foco sobre otros constituyentes también cuenta:
+  # 'una respuesta no definitiva' (head ADJ), 'no muy lejos' (head ADV). El
+  # filtro dep_rel=advmod ya excluye 'no' como respuesta independiente (INTJ/
+  # root) y como sustantivo ('el no del comité' -> NOUN, no advmod).
+  verb_pos <- c("VERB", "AUX", "ADJ", "ADV")
 
   analytic_heads <- tokens %>%
     dplyr::filter(
