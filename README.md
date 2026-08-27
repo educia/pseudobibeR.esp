@@ -22,8 +22,13 @@ El español presenta propiedades gramaticales que han condicionado el diseño de
 
 La función principal devuelve siempre **67 columnas de rasgo**, organizadas en las 16 categorías de Biber (A–P). La cifra corresponde al marco original; en español no todas son aplicables:
 
-- **57 columnas** registran rasgos con detección activa. De ellas, 55 corresponden a fenómenos genuinamente presentes en español y 2 son fusiones: `f_29` absorbe el caso de relativa de sujeto que en inglés ocupa `f_31`, y `f_30` absorbe el de relativa oblicua que en inglés ocupa `f_32`.
-- **10 columnas** valen siempre cero porque los rasgos que representan no existen en español o son ajenos al estándar escrito normativo: `f_09` (*it* expletivo), `f_12` (proverbo *do*), `f_15` (gerundio nominal), `f_28` (gerundio postnominal), `f_31` y `f_32` (relativas *wh-* de sujeto y objeto, absorbidas en `f_29` y `f_30`), `f_59` (contracciones ortográficas), `f_60` (omisión del complementante *que*), `f_61` (preposición varada) y `f_62` (infinitivo escindido). Estas columnas se conservan para garantizar la compatibilidad con `pseudobibeR` y `pseudobibeR.fr` y permitir su sustitución directa en flujos de análisis preexistentes.
+- **60 columnas** registran rasgos con detección activa. Tras la revisión de Hernán, `f_15` (infinitivo nominal), `f_31` y `f_32` (relativas con *quien*/*el cual*) dejaron de valer cero y pasaron a tener detección propia; `f_29`/`f_30` quedan reservados a las relativas con *que*.
+- **7 columnas** valen siempre cero porque los rasgos que representan no existen en español o son ajenos al estándar escrito normativo: `f_09` (*it* expletivo), `f_12` (proverbo *do*), `f_28` (gerundio postnominal), `f_59` (contracciones ortográficas), `f_60` (omisión del complementante *que*), `f_61` (preposición varada) y `f_62` (infinitivo escindido). Estas columnas se conservan para garantizar la compatibilidad con `pseudobibeR` y `pseudobibeR.fr` y permitir su sustitución directa en flujos de análisis preexistentes.
+
+> **Nota (revisión de Hernán):** el comportamiento real de cada rasgo sobre el
+> modelo `spanish-gsd`, con sus etiquetas nuevas y limitaciones documentadas,
+> está en [`TABLA_RASGOS_ES.md`](TABLA_RASGOS_ES.md); la comparación
+> antes/después, en [`TABLA_COMPARATIVA_ES.md`](TABLA_COMPARATIVA_ES.md).
 
 ## Instalación
 
@@ -85,8 +90,8 @@ print(features)
 
 - **Modelo UDPipe recomendado**: `spanish-gsd-ud-2.5-191206.udpipe`. Las heurísticas del paquete han sido validadas con este modelo. Existen modelos más recientes (AnCora, entre otros) cuya compatibilidad no se garantiza en el mismo grado.
 - **Campo `feats` obligatorio**: los detectores dependen de las características morfológicas en la columna `feats` (por ejemplo, `Tense=Past`, `Mood=Ind`, `VerbForm=Fin`). Es necesario invocar `udpipe_annotate()` con `parser = "default"` y `tagger = "default"`.
-- **Sujeto nulo (pro-drop)**: en los rasgos `f_06` a `f_08` se cuentan exclusivamente los pronombres personales explícitos. El rasgo `f_09`, propio del inglés (*it* expletivo), no tiene equivalente en español y se conserva como columna constante igual a cero.
-- **Relativas con *que***: el modelo `spanish-gsd` etiqueta el pronombre relativo *que* como `SCONJ/mark`, no como `PRON`. El paquete contempla este comportamiento: las relativas introducidas por *que* se contabilizan en `f_29_that_subj`, mientras que `f_30_that_obj` recoge las relativas con *quien* o *cual* en posición oblicua.
+- **Sujeto nulo (pro-drop)**: en los rasgos `f_06` a `f_08` se cuentan los pronombres personales explícitos **y los posesivos** (ruteados por persona: *mi*/*nuestro* → f_06, *tu*/*vuestro* → f_07, *su* → f_08). El rasgo `f_09`, propio del inglés (*it* expletivo), no tiene equivalente en español y se conserva como columna constante igual a cero.
+- **Relativas con *que***: el modelo `spanish-gsd` etiqueta el pronombre relativo *que* como `SCONJ/mark`, no como `PRON`. El paquete contempla este comportamiento: las relativas introducidas por *que* se contabilizan en `f_29_that_subj` (sujeto) y `f_30_that_obj` (objeto, cuando hay sujeto explícito en la relativa), mientras que las relativas con *quien*/*el cual* van a `f_31`/`f_32` y las de preposición antepuesta a `f_33`.
 - **Condicional *si***: cuando *si* aparece en posición inicial de cláusula, puede ser etiquetado como `CCONJ`. La heurística es más estable cuando *si* ocupa una posición intermedia.
 - **Construcciones copulativas**: en Universal Dependencies para el español, el adjetivo predicativo es la raíz de la construcción copulativa, mientras que *ser* o *estar* dependen como `cop`. El extractor detecta correctamente ambos patrones para `f_41_adj_pred`.
 
@@ -145,7 +150,7 @@ features <- biber_es(parsed_data,
 Un `data.frame` con una fila por documento y las siguientes columnas:
 
 - `doc_id`: identificador del documento, heredado de la anotación.
-- `f_01_past_tense` a `f_67_neg_analytic`: 67 columnas con los recuentos (o frecuencias normalizadas) de los rasgos. Las 10 columnas sin equivalente en español presentan siempre el valor cero.
+- `f_01_past_tense` a `f_67_neg_analytic`: 67 columnas con los recuentos (o frecuencias normalizadas) de los rasgos. Las 7 columnas sin equivalente en español presentan siempre el valor cero.
 - `n_tokens`: número total de tokens, excluida la puntuación.
 - `n_lex_tokens`: número de tokens léxicos (NOUN, VERB, ADJ, ADV, PROPN).
 
@@ -159,7 +164,7 @@ Estos rasgos describen cómo el texto sitúa los eventos en el tiempo y expresa 
 
 | Código | Descripción |
 |--------|-------------|
-| `f_01_past_tense` | Verbos en pretérito indefinido (*cantó*, *llegaron*, *fue*). Señala una orientación narrativa o retrospectiva en el texto. Se identifica mediante `Tense=Past|Mood=Ind|VerbForm=Fin`. |
+| `f_01_past_tense` | Verbos en tiempos de pasado de indicativo y subjuntivo (*cantó*, *cantaba*, *cantara*, *había cantado*). Se identifica mediante `Tense ∈ {Past, Imp, Pqp}` sobre verbo finito, sin filtrar el modo. |
 | `f_02_perfect_aspect` | Aspecto perfecto, expresado mediante la perífrasis *haber* + participio (*ha llegado*, *habían terminado*). Indica que la acción tiene relevancia en el momento de referencia. |
 | `f_03_present_tense` | Verbos en presente de indicativo (*habla*, *se observa*, *representa*). Característico de textos expositivos, normativos y de carácter general. |
 
@@ -201,7 +206,7 @@ Este grupo reúne construcciones nominales que compactan información en el text
 | Código | Descripción |
 |--------|-------------|
 | `f_14_nominalizations` | Nominalizaciones derivadas: sustantivos formados a partir de verbos o adjetivos mediante sufijos productivos (*-ción*, *-sión*, *-idad*, *-miento*, *-eza*, *-ura*...). Son el principal indicador de densidad nominal en el análisis multidimensional. |
-| `f_15_gerunds` &nbsp;0️⃣ | En inglés, el gerundio (*-ing*) puede funcionar como sustantivo (*Swimming is healthy*). El gerundio español (*nadando*) no admite esta función: el equivalente sería el infinitivo (*nadar*) o una nominalización (*la natación*). Esta columna siempre devuelve cero. |
+| `f_15_gerunds` | Infinitivos en función nominal. La función que el inglés expresa con el gerundio (*Swimming is healthy*) el español la expresa con infinitivo (*Nadar es saludable*). Se detecta el infinitivo en función de sujeto (`csubj`). Con determinante (*el fumar*) el modelo lo re-etiqueta como sustantivo y no se capta. |
 | `f_16_other_nouns` | Sustantivos comunes y propios (NOUN y PROPN) que no constituyen nominalizaciones derivadas; es decir, los no contabilizados en `f_14`. |
 
 ### F. Pasivas
@@ -210,7 +215,7 @@ Las construcciones pasivas permiten omitir o desplazar el agente de la acción, 
 
 | Código | Descripción |
 |--------|-------------|
-| `f_17_agentless_passives` | Pasivas sin agente expreso, tanto perifrásticas (*fue redactado*, *fueron aprobadas*) como se-pasivas (*se publicó el informe*, *se han revisado los datos*). |
+| `f_17_agentless_passives` | Pasivas sin complemento agente: perifrásticas (*fue redactado*, *fueron aprobadas*) y pasivas reflejas (*se publicaron los informes*). Se excluye la impersonal con *se* (*se entrevistó a los candidatos*, *se recomienda leer*), que no tiene sujeto paciente. |
 | `f_18_by_passives` | Pasivas con agente explícito introducido por la preposición *por* (*fue redactado por el equipo*, *fue aprobado por el comité*). |
 
 ### G. Formas estativas
@@ -238,8 +243,8 @@ Estos rasgos identifican los distintos mecanismos de subordinación del español
 | `f_28_present_participle_whiz` &nbsp;0️⃣ | En inglés, el gerundio puede ocupar posición postnominal como modificador (*the man running in the park*). Esta construcción es agramatical en el español normativo escrito. La columna siempre devuelve cero. |
 | `f_29_that_subj` | Cláusulas relativas introducidas por *que* en función de sujeto o complemento directo (*el libro que está en la mesa*, *la novela que leí*). En esta implementación, `f_29` absorbe también los casos que el marco original asigna a `f_31`, dado que en español ambos tipos de relativa se introducen con *que*. |
 | `f_30_that_obj` | Cláusulas relativas encabezadas por *quien* o *cual* en posición oblicua (*la autora con quien colaboré*, *el método por el cual se analizaron los datos*). Absorbe los casos del `f_32` original. |
-| `f_31_wh_subj` &nbsp;0️⃣ | Relativa de sujeto con pronombre *wh-* del inglés (*the person who called*). En español estas relativas se introducen con *que* y su recuento queda integrado en `f_29`. La columna siempre devuelve cero. |
-| `f_32_wh_obj` &nbsp;0️⃣ | Relativa de objeto con pronombre *wh-* del inglés (*the book which I read*). En español queda absorbida en `f_30`. La columna siempre devuelve cero. |
+| `f_31_wh_subj` | Relativas introducidas por *quien*/*el cual* en función de sujeto (*la autora, quien presentó el proyecto*). Tras la revisión de Hernán dejan de integrarse en `f_29` y tienen columna propia. |
+| `f_32_wh_obj` | Relativas introducidas por *quien*/*el cual* en función de complemento directo. Casi siempre cero: `spanish-gsd` etiqueta *cual* objeto como sujeto, y los casos con preposición (*a quien*) van a `f_33`. |
 | `f_33_pied_piping` | Relativas en que la preposición precede al pronombre relativo: *del que*, *con el cual*, *para quien*, *a la que*... |
 | `f_34_sentence_relatives` | Relativas oracionales cuyo antecedente es toda una proposición: *lo que*, *lo cual*. |
 | `f_35_because` | Cláusulas causales introducidas por *porque*. |
@@ -256,7 +261,7 @@ Estos rasgos miden la densidad de modificadores y complementos circunstanciales.
 | `f_39_prepositions` | Preposiciones (categoría ADP en Universal Dependencies). Una alta frecuencia de preposiciones es característica de la complejidad nominal del discurso escrito formal. |
 | `f_40_adj_attr` | Adjetivos que modifican directamente a un sustantivo (*libro interesante*, *casa grande*, *resultado positivo*). En Universal Dependencies se identifican mediante la relación de dependencia `amod`. |
 | `f_41_adj_pred` | Adjetivos predicativos: adjetivos que aparecen como atributo en una construcción copulativa (*el resultado es positivo*, *está cansada*, *se considera relevante*). |
-| `f_42_adverbs` | Adverbios no contabilizados en otras categorías (f_04, f_05, f_46, f_47, f_48, f_49 y f_50). |
+| `f_42_adverbs` | Total de adverbios (todos los tokens `ADV`). Los solapamientos con otras categorías (f_04, f_05, f_46–f_50, f_67) son deliberados, siguiendo el rasgo *Total adverbs* del inglés. |
 
 ### J. Especificidad léxica
 
@@ -274,8 +279,8 @@ Estos rasgos recogen elementos léxicos con funciones discursivas específicas: 
 | Código | Descripción |
 |--------|-------------|
 | `f_45_conjuncts` | Conectores textuales que articulan el discurso (*sin embargo*, *por tanto*, *además*, *no obstante*, *en consecuencia*...). |
-| `f_46_downtoners` | Atenuadores que reducen la fuerza de la afirmación (*casi*, *apenas*, *ligeramente*, *en cierta medida*, *algo*...). |
-| `f_47_hedges` | Modalizadores epistémicos que expresan incertidumbre o reserva del hablante (*quizás*, *tal vez*, *probablemente*, *a lo mejor*, *posiblemente*...). |
+| `f_46_downtoners` | Atenuadores que reducen la fuerza de la afirmación (*apenas*, *ligeramente*, *en cierta medida*, *un poco*...). *casi* pasó a `f_47`. |
+| `f_47_hedges` | Modalizadores epistémicos y aproximativos que expresan incertidumbre o reserva del hablante (*quizás*, *tal vez*, *probablemente*, *más o menos*, *una especie de*, *casi*...). |
 | `f_48_amplifiers` | Amplificadores que intensifican la propiedad expresada (*muy*, *totalmente*, *enormemente*, *absolutamente*, *completamente*...). |
 | `f_49_emphatics` | Expresiones enfáticas que refuerzan la asertividad del enunciado (*de hecho*, *sin duda*, *realmente*, *por supuesto*, *ciertamente*...). |
 | `f_50_discourse_particles` | Partículas discursivas características de la oralidad (*bueno*, *pues*, *claro*, *vamos*, *mira*...). |
