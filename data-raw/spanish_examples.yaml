@@ -20,8 +20,10 @@
 #    del catálogo Biber 67; eran extensiones internas retiradas del output).
 #  - f_43 (TTR) y f_44 (longitud media) dependen del texto completo;
 #    no se incluyen aquí.
-#  - Algunos rasgos (f_22, f_23, f_26, f_39) muestran divergencias conocidas
+#  - Algunos rasgos (f_23, f_26, f_39) muestran divergencias conocidas
 #    con UDPipe spanish-gsd; están marcados como relaxed en el test.
+#    (f_22 salió de esta lista: era un bug de la regla, no del parser;
+#    corregido en la revisión de Hernán — ver biber_espanol_completo.md §f_22.)
 
 # ─────────────────��─────────────────────────────��─────────────────────────────
 # TIEMPO VERBAL
@@ -151,7 +153,6 @@
   example: "Dijo que vendría y prometió que traería los documentos."
   count: 2.0
 
-# f_22: divergencia conocida UDPipe (head de "que" no siempre ADJ)
 - feature: f_22_that_adj_comp
   example: "Es importante que todos participen."
   count: 1.0

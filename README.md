@@ -233,8 +233,8 @@ Estos rasgos identifican los distintos mecanismos de subordinación del español
 
 | Código | Descripción |
 |--------|-------------|
-| `f_21_that_verb_comp` | Cláusulas subordinadas sustantivas introducidas por *que* que funcionan como complemento directo de un verbo (*cree que...*, *afirma que...*, *sostiene que...*). |
-| `f_22_that_adj_comp` | Cláusulas subordinadas sustantivas introducidas por *que* que complementan a un adjetivo (*es probable que...*, *está claro que...*, *es necesario que...*). Nota: el modelo `spanish-gsd` presenta inconsistencias en este contexto; véase la sección de limitaciones. |
+| `f_21_that_verb_comp` | Cláusulas subordinadas sustantivas introducidas por *que* que funcionan como complemento directo de un verbo (*cree que...*, *afirma que...*, *sostiene que...*). Se distingue de `f_22` comprobando que el predicado real (el head del verbo subordinado) sea un verbo, no un adjetivo. |
+| `f_22_that_adj_comp` | Cláusulas subordinadas sustantivas introducidas por *que* que complementan a un adjetivo (*es probable que...*, *está claro que...*, *es necesario que...*). El adjetivo se busca en el head del verbo subordinado, no en el head inmediato de *que* (que siempre es un verbo). |
 | `f_23_wh_clause` | Cláusulas interrogativas indirectas introducidas por una palabra interrogativa (*no sé quién vino*, *preguntó cómo se hacía*). |
 | `f_24_infinitives` | Infinitivos en función de complemento verbal o como núcleo de una perífrasis (*quiere estudiar*, *empieza a llover*, *puede hacerlo*). |
 | `f_25_present_participle` | Gerundio en función adverbial o de complemento predicativo (*llegando tarde*, *salió corriendo*, *lo vi entrando*). |
@@ -341,7 +341,6 @@ El español presenta un sistema de negación que difiere del inglés en un aspec
 
 Las situaciones descritas a continuación reflejan decisiones de diseño documentadas o comportamientos del modelo `spanish-gsd`. No se trata de errores: el comportamiento observado es el esperado.
 
-- **f_22_that_adj_comp**: el modelo `spanish-gsd` no etiqueta con consistencia el núcleo adjetivo en las construcciones copulativas del tipo *es importante que...*. Este rasgo presenta subdetección derivada de una limitación del analizador sintáctico, no del extractor.
 - **f_26_past_participle** y **f_27_past_participle_whiz**: la relación de dependencia del participio varía según el contexto sintáctico. La detección es correcta cuando el análisis de dependencias acierta, pero puede presentar inconsistencias en construcciones límite.
 - **f_50_discourse_particles**: la implementación actual no aplica filtro posicional, por lo que algunos marcadores monoléxicos (*bueno*, *claro*) pueden contabilizarse fuera de la posición inicial de cláusula. Este comportamiento está autorizado por la especificación.
 - **f_29 y f_30 en cláusulas con sujeto elidido**: cuando el sujeto es nulo y no hay un `nsubj` explícito, la función sintáctica de la relativa no es recuperable; en ese caso se imputa a `f_29_that_subj`.

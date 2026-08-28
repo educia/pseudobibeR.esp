@@ -46,12 +46,23 @@ respecto a este documento (§3) son:
 (infinitivo nominal-sujeto, `csubj`) pero se **revirtió** a su comportamiento
 original de columna siempre-cero.
 
+**f_21/f_22 — corrección de un bug real (no solo un límite)**: "que" (SCONJ,
+mark) siempre tiene como head el verbo de su propia cláusula subordinada, nunca
+el predicado real directamente. La regla original de f_22 comprobaba ese head
+inmediato buscando ADJ — condición que **nunca se cumple estructuralmente**
+(0% recall verificado en 8 construcciones: *es importante que…*, *es probable
+que…*, *estoy seguro de que…*…). Como consecuencia, f_21 (que solo exigía que
+el head inmediato fuera VERBO) absorbía también todos esos casos adjetivales.
+El fix sube un nivel más: se examina el head **del verbo subordinado** (el
+"abuelo" de *que*), que es donde vive el predicado real. f_21 ahora exige que
+ese abuelo sea VERBO/AUX; f_22, que sea ADJ. Verificado sin solapamiento en 5
+casos verbales + 8 adjetivales + 2 relativas de control.
+
 **Reglas no implementadas por límite del modelo** (documentadas, no forzadas):
 f_18 (`obl:agent` no emitido → agente y causa indistinguibles, verificado en 10
-oraciones variadas), f_50 (sin señal `discourse`), f_22 (subdetección del
-parser), f_55/f_57 (desambiguación por modo: *decir* fuera del inventario,
-*sostuvo*→ADJ), f_23 (relativas libres: riesgo con f_29–f_34), f_56 (*esperar*:
-solo documentación).
+oraciones variadas), f_50 (sin señal `discourse`), f_55/f_57 (desambiguación
+por modo: *decir* fuera del inventario, *sostuvo*→ADJ), f_23 (relativas
+libres: riesgo con f_29–f_34), f_56 (*esperar*: solo documentación).
 
 El detalle vigente por rasgo está en `TABLA_RASGOS_ES.md`; la comparación
 antes→después en `TABLA_COMPARATIVA_ES.md`.
@@ -213,7 +224,7 @@ Functions covered by untranslatable English features are absorbed elsewhere in S
 > original**. Las marcadas con ✳️ ya están actualizadas al comportamiento
 > implementado. Para el resto de rasgos que cambiaron (f_06–f_08, f_11, f_29,
 > f_30, f_37, f_38, f_39, f_42, f_46, f_47, f_52, f_58, f_63, f_64, f_67) y los
-> límites del modelo (f_18, f_50, f_22, f_55/f_57, f_23, f_56), consultar la
+> límites del modelo (f_18, f_50, f_55/f_57, f_23, f_56), consultar la
 > sección «Revisión lingüística de Hernán» y `TABLA_RASGOS_ES.md`, que son la
 > referencia vigente por rasgo.
 
@@ -666,46 +677,45 @@ Impersonal forms of *haber*: *hay, había, hubo, habrá, habría, haya, hubiera,
 
 ### H. Subordination
 
-#### f_21_that_verb_comp
+#### f_21_that_verb_comp — ✳️ ACTUALIZADO (revisión de Hernán): corregido el solapamiento con f_22
 
 **Biber (1988)**: *That* complement clauses depending on a verb.
 
 **Spanish equivalent**: *Que* complement clauses depending on a verb.
 
-**Detection method**: dependency-based.
+**Detection method** (implementado): *que* (SCONJ, `mark`) tiene como head **inmediato** el VERBO de su propia cláusula subordinada (V) — esto es estructuralmente siempre así, *que* nunca marca directamente un ADJ o un NOUN. Lo que distingue f_21 de f_22 es el head **de V** (el "abuelo" de *que*): para f_21 ese abuelo debe ser `VERB`/`AUX` (el predicado matriz real).
 
 **Include**:
-- Token *que* with dependency relation `mark`
-- Whose head is a `VERB`
-- And the construction is a complement clause (`ccomp`, `xcomp`, or similar)
+- *que* → V (head inmediato, VERB, `dep_rel` de V distinto de `acl*`)
+- V → predicado matriz (abuelo), con POS `VERB`/`AUX`
+- Ejemplos: *dijo que vendría*, *cree que ganará*, *insistió en que trabajaran* (con preposición)
 
 **Exclude**:
-- *Que* as relative pronoun in `acl:relcl` (those go to f_29/f_30)
-- *Que* in adjective complement (those go to f_22)
-- *Que* in comparatives (*más alto que*) — not a complement clause
-- *Lo que* — relative construction, not a complement (goes to f_30 or f_34)
+- *que* como pronombre relativo en `acl:relcl` (van a f_29/f_30)
+- *que* en complemento adjetival — el abuelo es `ADJ`, no `VERB`/`AUX` (van a f_22)
+- *Lo que* — construcción relativa, no complemento (va a f_30 o f_34)
 
-**Notes**: Spanish *que* is highly polysemous. Strict dependency-based filtering is required. The mode (indicative/subjunctive) of the subordinate verb does NOT affect counting.
+**Notas / historial del bug**: verificado empíricamente que **antes de esta corrección f_21 absorbía también todos los casos de f_22** (*"Es importante que vengas"* contaba en f_21, nunca en f_22), porque la regla original solo comprobaba que el head inmediato de *que* fuera VERBO — condición que se cumple siempre para cualquier complementación con *que* (adjetival o verbal), sin distinguirlas. El fix añade el chequeo del abuelo. Verificado sin solapamiento en 5 casos verbales, 8 adjetivales y 2 relativas de control.
 
 ---
 
-#### f_22_that_adj_comp
+#### f_22_that_adj_comp — ✳️ ACTUALIZADO (revisión de Hernán): corregido, antes 0% de recall
 
 **Biber (1988)**: *That* complement clauses depending on an adjective.
 
 **Spanish equivalent**: *Que* (or *preposition + que*) complement clauses depending on an adjective.
 
-**Detection method**: dependency-based.
+**Detection method** (implementado): mismo primer nivel que f_21 (*que* → V, el verbo de su cláusula). El adjetivo real vive en el head **de V** (el abuelo de *que*), no en el head inmediato de *que*. Se comprueba que ese abuelo sea `ADJ`.
 
 **Include**:
-- Token *que* with `mark`
-- Whose head is an `ADJ` (or a copula construction whose root is `ADJ`)
-- Examples: *es importante que vengas, está seguro de que vendrá, contento de que ganaras*
+- *que* → V → **abuelo con POS `ADJ`**
+- Ejemplos verificados: *es importante que vengas*, *es probable que llueva*, *está claro que tiene razón*, *es feliz de que hayas venido*, *estoy seguro de que ganaremos*, *resulta extraño que no haya venido*, *parece evidente que se equivocó*, *es necesario que todos participen*
 
 **Exclude**:
-- Same false positives as f_21
+- Mismos falsos positivos que f_21 (relativas, *lo que*)
+- Predicado matriz que sea VERB/AUX en vez de ADJ (van a f_21)
 
-**Notes**: The subjunctive is virtually obligatory in this construction. Some adjectives require *de que* (or other prepositions) — include these cases by checking for the preposition + *que* sequence on `mark`. Known UDPipe issue: the head of *que* is not always tagged `ADJ` in copular constructions — this feature has known noise.
+**Notas / historial del bug**: la regla original comprobaba `head_pos(que) == ADJ` — comprobación que **nunca puede cumplirse estructuralmente**, porque *que* siempre marca el VERBO de su propia cláusula, jamás un adjetivo directamente (el adjetivo es la cabeza de ESE verbo, vía `csubj`/`advcl`/`ccomp`). Se verificó empíricamente 0% de recall en 8 construcciones canónicas antes del fix. El fix sube un nivel: examina el head del verbo subordinado, no el head de *que*. Documentado también en `TABLA_RASGOS_ES.md` §f_21/f_22.
 
 ---
 
@@ -1752,6 +1762,6 @@ The following are documented limitations, not bugs:
 
 7. **Frequencies not interlingually comparable**: f_43, f_44, f_29, f_30, f_33, f_67 systematically differ from English values for structural reasons. Use within-language Z-scores for cross-linguistic comparison.
 
-8. **f_22 in copular constructions**: UDPipe does not always tag the head of *que* as `ADJ` in copular constructions (*es importante que vengas*), which causes occasional under-detection. Documented limitation; would require parser-specific patches to resolve.
+8. ~~**f_22 in copular constructions**: UDPipe does not always tag the head of *que* as `ADJ`...~~ **RESUELTO** (revisión de Hernán): el problema no era una limitación del parser sino de la regla — *que* nunca marca el ADJ directamente, siempre marca el verbo de su cláusula; el ADJ vive en el head de ese verbo (el "abuelo" de *que*). Corregido examinando ese segundo nivel. Ver §3 f_21/f_22.
 
 9. **f_50 noise without positional filter**: discourse particles (*bueno, pues*) appearing in non-initial positions are counted, inflating values slightly. The user decision authorizes this tradeoff for higher recall (see §f_50).

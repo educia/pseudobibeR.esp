@@ -35,7 +35,6 @@ test_that("UDPipe spanish examples align with expected feature counts", {
     "f_01_past_tense",
     "f_04_place_adverbials",
     "f_05_time_adverbials",
-    "f_22_that_adj_comp",      # head de "que" no siempre ADJ en UDPipe spanish-gsd
     "f_23_wh_clause",          # lematización quién/cuándo variable con tilde
     "f_26_past_participle",    # participio absoluto: deprel variable según parser
     "f_39_prepositions",       # conteo variable según estructura de la frase

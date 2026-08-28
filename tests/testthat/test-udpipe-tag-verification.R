@@ -115,4 +115,30 @@ test_that("f_57 vs f_55: subjuntivo vs condicional en la subordinada son separab
   expect_true(has_feat(feat_of(cnd, "volvería"), "Mood=Cnd"))
 })
 
+test_that("f_21/f_22: 'que' SIEMPRE tiene como head el verbo de su propia cláusula, nunca el ADJ", {
+  mp <- get_model_or_skip()
+  # El predicado real (verbo matriz o adjetivo) vive en el head DEL VERBO
+  # marcado por 'que' -- el "abuelo" de 'que' -- no en el head inmediato de
+  # 'que'. Esto es lo que distingue f_21 (abuelo VERB/AUX) de f_22 (abuelo ADJ).
+  adj_df  <- annotate_es("Es importante que vengas pronto.")
+  verb_df <- annotate_es("Dijo que vendría mañana.")
+
+  # Caso adjetival: 'que' -> head='vengas' (VERB), 'vengas' -> head='importante' (ADJ)
+  que_adj <- adj_df[tolower(adj_df$token) == "que", , drop = FALSE]
+  expect_identical(que_adj$dep_rel[[1]], "mark")
+  v_adj_id <- que_adj$head_token_id[[1]]
+  v_adj <- adj_df[adj_df$token_id == v_adj_id, , drop = FALSE]
+  expect_identical(v_adj$upos[[1]], "VERB")  # head inmediato de 'que': VERBO, no ADJ
+  gp_adj <- adj_df[adj_df$token_id == v_adj$head_token_id[[1]], , drop = FALSE]
+  expect_identical(gp_adj$upos[[1]], "ADJ")  # el ADJ real está un nivel más arriba
+
+  # Caso verbal: 'que' -> head='vendría' (VERB), 'vendría' -> head='Dijo' (VERB)
+  que_v <- verb_df[tolower(verb_df$token) == "que", , drop = FALSE]
+  v_v_id <- que_v$head_token_id[[1]]
+  v_v <- verb_df[verb_df$token_id == v_v_id, , drop = FALSE]
+  expect_identical(v_v$upos[[1]], "VERB")
+  gp_v <- verb_df[verb_df$token_id == v_v$head_token_id[[1]], , drop = FALSE]
+  expect_identical(gp_v$upos[[1]], "VERB")   # aquí el abuelo también es VERBO
+})
+
 # nolint end

@@ -575,7 +575,30 @@ block_clause_embedding_es <- function(tokens, doc_ids, head_lookup,
       head_dep_rel = .data$dep_rel
     )
 
-  f21 <- tokens %>%
+  # REVISION (verificado empíricamente): "que" (SCONJ, mark) SIEMPRE tiene
+  # como head el VERBO de su propia clausula subordinada (V) -- nunca
+  # directamente el predicado matriz. V es a su vez csubj/advcl/ccomp/xcomp
+  # de ese predicado real (VERBO o ADJETIVO), que es el "abuelo" de "que".
+  # La distincion f_21 (complemento de VERBO) vs f_22 (complemento de ADJ)
+  # depende del POS del ABUELO, no del head inmediato de "que" (que siempre
+  # es VERB y por tanto no distingue nada). Sin este segundo nivel, f_21
+  # absorbia TODOS los casos adjetivales (verificado: "Es importante que
+  # vengas" -> antes contaba en f_21, nunca en f_22) y f_22 quedaba en 0
+  # siempre. Ver TABLA_RASGOS_ES.md §f_21/f_22.
+  grandparent_lookup <- tokens %>%
+    dplyr::transmute(
+      .data$doc_id, .data$sentence_id,
+      v_id  = .data$token_id_int,
+      gp_id = .data$head_token_id_int
+    )
+  gp_pos_lookup <- tokens %>%
+    dplyr::transmute(
+      .data$doc_id, .data$sentence_id,
+      gp_id  = .data$token_id_int,
+      gp_pos = .data$pos
+    )
+
+  que_mark_base <- tokens %>%
     dplyr::filter(
       .data$lemma == "que",
       .data$pos   == "SCONJ",
@@ -590,27 +613,31 @@ block_clause_embedding_es <- function(tokens, doc_ids, head_lookup,
       head_deprel,
       by = c("doc_id", "sentence_id", "head_token_id_int")
     ) %>%
+    dplyr::left_join(
+      grandparent_lookup,
+      by = c("doc_id", "sentence_id", "head_token_id_int" = "v_id")
+    ) %>%
+    dplyr::left_join(
+      gp_pos_lookup,
+      by = c("doc_id", "sentence_id", "gp_id")
+    )
+
+  f21 <- que_mark_base %>%
     dplyr::filter(
       dplyr::coalesce(.data$head_pos, "") %in% c("VERB", "AUX"),
-      !stringr::str_detect(dplyr::coalesce(.data$head_dep_rel, ""), "^acl")
+      !stringr::str_detect(dplyr::coalesce(.data$head_dep_rel, ""), "^acl"),
+      # NUEVO: el abuelo (predicado real) debe ser VERBO/AUX, no ADJETIVO.
+      dplyr::coalesce(.data$gp_pos, "") %in% c("VERB", "AUX")
     ) %>%
     count_feature_traced("f_21_that_verb_comp")
 
   # -- f_22  <<que>> complementizador tras ADJ --------------------------------
-  # El head inmediato de la clausula marcada con <<que>> es un ADJ
-  f22 <- tokens %>%
+  # El adjetivo real vive en el ABUELO de "que" (ver nota arriba), no en su
+  # head inmediato.
+  f22 <- que_mark_base %>%
     dplyr::filter(
-      .data$lemma == "que",
-      .data$pos   == "SCONJ",
-      dplyr::coalesce(.data$dep_rel, "") == "mark",
-      !is.na(.data$head_token_id_int)
-    ) %>%
-    dplyr::left_join(
-      head_lookup,
-      by = c("doc_id", "sentence_id", "head_token_id_int" = "token_id_int")
-    ) %>%
-    dplyr::filter(
-      dplyr::coalesce(.data$head_pos, "") == "ADJ"
+      !stringr::str_detect(dplyr::coalesce(.data$head_dep_rel, ""), "^acl"),
+      dplyr::coalesce(.data$gp_pos, "") == "ADJ"
     ) %>%
     count_feature_traced("f_22_that_adj_comp")
 

@@ -258,7 +258,9 @@
 #' @keywords internal
 #' @noRd
 .udpipe_limited_features <- c(
-  "f_22_that_adj_comp",
+  # f_22 salió de esta lista (revisión de Hernán): no era una limitación del
+  # parser sino un bug de la regla (comprobaba el head inmediato de "que",
+  # que nunca es ADJ). Corregido examinando el head del verbo subordinado.
   "f_26_past_participle",
   # f_27 sufre el mismo problema que f_26: UDPipe spanish-gsd etiqueta el
   # participio postnominal de forma inconsistente (ADJ sin VerbForm en

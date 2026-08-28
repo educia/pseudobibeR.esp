@@ -79,8 +79,8 @@ solo la intención teórica.
 
 | Código | Etiqueta ES | Regla real | Notas / límites |
 |---|---|---|---|
-| `f_21_that_verb_comp` | Completivas con *que* dependientes de un verbo | *que* complementante de un verbo, incl. término de preposición (`insistió en que…`, `se alegró de que…`). | Puede fallar cuando el predicado subordinado es copular (el modelo hace la cabeza un ADJ → f_22). |
-| `f_22_that_adj_comp` | Completivas con *que* dependientes de un predicado adjetival | *que* cuyo head es ADJ (`es probable que…`). | ⚠️ `spanish-gsd` subreporta: no siempre etiqueta ADJ el núcleo copulativo. |
+| `f_21_that_verb_comp` | Completivas con *que* dependientes de un verbo | *que* complementante de un verbo, incl. término de preposición (`insistió en que…`, `se alegró de que…`). Se busca el predicado real en el "abuelo" de *que* (ver f_22), exigiendo que sea VERBO/AUX. | Corregido: antes absorbía también los casos adjetivales de f_22 (ver f_22). |
+| `f_22_that_adj_comp` | Completivas con *que* dependientes de un predicado adjetival | `que` (SCONJ, mark) siempre tiene como head el verbo de su propia cláusula (V); el adjetivo real vive en el head DE ESE VERBO (el "abuelo" de *que*, vía `csubj`/`advcl`). Se comprueba que ese abuelo sea ADJ: `es probable que llueva`, `estoy seguro de que ganaremos`. | Corregido (antes: 0% de recall, siempre daba 0 — la regla comprobaba el head inmediato de *que*, que nunca es un ADJ). Verificado en 8 construcciones distintas. |
 | `f_23_wh_clause` | Interrogativas indirectas | Palabra interrogativa **acentuada** en cláusula subordinada. | ⚠️ Las **relativas libres** (`lo que dijo`, `donde me indiques`) NO se incluyen: separarlas de f_29-f_34 sin coreferencia es de alto riesgo (deferido). |
 | `f_24_infinitives` | Infinitivos (complemento verbal, perífrasis, final) | Todo `VerbForm=Inf`: xcomp, perífrasis, complemento del nombre/adjetivo, finales (incluye el infinitivo-sujeto, ya que f_15 no lo separa). | — |
 | `f_25_present_participle` | Gerundio en función adverbial | Gerundio `advcl/ccomp`; excluye predicativo (`lo vi entrando`) y perifrástico (`está trabajando`). | — |
@@ -187,7 +187,6 @@ extractor. No se fuerzan (§1.2/§10 de las instrucciones):
   se mis-etiqueta ADJ; la desambiguación por modo no se implementó.
 - **Partículas discursivas ambiguas** (f_50): sin señal `discourse`; el filtro
   posicional no es fiable (`Bueno`→ADJ, `Mira`→PROPN).
-- **f_22** (completivas adjetivales): subdetección por el parser.
 - **Encoding**: las locuciones acentuadas de f_39 requieren locale UTF-8.
 
 ## Columnas siempre en cero (8)

@@ -67,10 +67,6 @@ for (cs in fc_cases) {
   feat <- cs[[1]]; pos_t <- cs[[2]]; pos_min <- cs[[3]]; neg_t <- cs[[4]]; neg_max <- cs[[5]]
 
   test_that(paste0(feat, " — cobertura positiva"), {
-    # f_22: limitación UDPipe documentada (biber_espanol_completo.md §f_22):
-    # el head de "que" no se etiqueta ADJ en copulativas. No es bug.
-    if (feat == "f_22_that_adj_comp")
-      skip("Limitación UDPipe documentada §f_22 (head de que no ADJ en copulativa)")
     r <- run_biber(pos_t)
     expect_true(feat %in% names(r), info = paste(feat, "ausente del output"))
     val <- as.numeric(r[[feat]][1])
