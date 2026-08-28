@@ -8,8 +8,8 @@ solo la intención teórica.
 ## Invariantes (no negociables)
 
 1. **La salida son exactamente 67 columnas de rasgos**, con los **nombres
-   idénticos** a `pseudobibeR` en inglés (`f_15_gerunds` aunque cuente
-   infinitivos; `f_31_wh_subj`/`f_32_wh_obj` aunque cuenten *quien*/*el cual*).
+   idénticos** a `pseudobibeR` en inglés (`f_31_wh_subj`/`f_32_wh_obj` aunque
+   cuenten *quien*/*el cual*).
    Los renombrados de esta tabla afectan **solo a la etiqueta y descripción en
    español**, nunca al identificador de columna ni a su orden.
 2. Los subtotales (modo/tiempo/aspecto) se calculan dentro de la función y se
@@ -58,8 +58,8 @@ solo la intención teórica.
 | Código | Etiqueta ES | Regla real | Notas / límites |
 |---|---|---|---|
 | `f_14_nominalizations` | Nominalizaciones derivadas | Sustantivos con sufijos productivos (`-ción`, `-idad`, `-miento`…). | — |
-| `f_15_gerunds` | Infinitivos en función nominal | Infinitivo en función **nominal-sujeto** (`csubj`): `fumar perjudica`, `me gusta nadar`. Deja de ser 0. Exclusión mutua con f_24. | ⚠️ Con determinante (`el fumar`) el modelo re-etiqueta `NOUN` y no se detecta; el objeto nominal sale `xcomp` → f_24. |
-| `f_16_other_nouns` | Otros sustantivos | `NOUN/PROPN` no contabilizados en f_14 ni f_15. | — |
+| `f_15_gerunds` | *(0)* Gerundio nominal | Siempre 0 (revertido a diseño original por decisión del usuario). | El gerundio español (*-ando/-iendo*) no admite función nominal; esa función la cubre el infinitivo (f_24) o una nominalización derivada (f_14). Un intento de activarlo vía infinitivo-sujeto (`csubj`) se probó en la revisión y se revirtió. |
+| `f_16_other_nouns` | Otros sustantivos | `NOUN/PROPN` no contabilizados en f_14. | — |
 
 ## F. Pasivas
 
@@ -82,7 +82,7 @@ solo la intención teórica.
 | `f_21_that_verb_comp` | Completivas con *que* dependientes de un verbo | *que* complementante de un verbo, incl. término de preposición (`insistió en que…`, `se alegró de que…`). | Puede fallar cuando el predicado subordinado es copular (el modelo hace la cabeza un ADJ → f_22). |
 | `f_22_that_adj_comp` | Completivas con *que* dependientes de un predicado adjetival | *que* cuyo head es ADJ (`es probable que…`). | ⚠️ `spanish-gsd` subreporta: no siempre etiqueta ADJ el núcleo copulativo. |
 | `f_23_wh_clause` | Interrogativas indirectas | Palabra interrogativa **acentuada** en cláusula subordinada. | ⚠️ Las **relativas libres** (`lo que dijo`, `donde me indiques`) NO se incluyen: separarlas de f_29-f_34 sin coreferencia es de alto riesgo (deferido). |
-| `f_24_infinitives` | Infinitivos (complemento verbal, perífrasis, final) | `VerbForm=Inf` no nominal (excluye `csubj` → f_15): xcomp, perífrasis, complemento del nombre/adjetivo, finales. | — |
+| `f_24_infinitives` | Infinitivos (complemento verbal, perífrasis, final) | Todo `VerbForm=Inf`: xcomp, perífrasis, complemento del nombre/adjetivo, finales (incluye el infinitivo-sujeto, ya que f_15 no lo separa). | — |
 | `f_25_present_participle` | Gerundio en función adverbial | Gerundio `advcl/ccomp`; excluye predicativo (`lo vi entrando`) y perifrástico (`está trabajando`). | — |
 | `f_26_past_participle` | Participio absoluto o adverbial | Participio `advcl/acl` no pasivo (`terminada la reunión…`). | ⚠️ Detección variable según el análisis de dependencias. |
 | `f_27_past_participle_whiz` | Participio postnominal (relativa reducida) | Participio `acl` con head NOUN (`el artículo publicado ayer`). | — |
@@ -182,7 +182,6 @@ extractor. No se fuerzan (§1.2/§10 de las instrucciones):
 - **Relativas con pro-drop** (f_29–f_32): sin sujeto explícito, el objeto-relativa
   se etiqueta `nsubj` y cae en f_29/f_31; f_32 es casi siempre 0.
 - **Relativas libres** (f_23): no separables de f_29–f_34 sin coreferencia (deferido).
-- **Infinitivo con determinante** (f_15): el modelo lo re-etiqueta `NOUN`.
 - **Imperfectos en `-ía`** (f_01): a veces mal etiquetados `Mood=Cnd`.
 - **Verbos polisémicos** (f_55/f_57): `decir` no está en el inventario y `sostuvo`
   se mis-etiqueta ADJ; la desambiguación por modo no se implementó.
@@ -191,7 +190,8 @@ extractor. No se fuerzan (§1.2/§10 de las instrucciones):
 - **f_22** (completivas adjetivales): subdetección por el parser.
 - **Encoding**: las locuciones acentuadas de f_39 requieren locale UTF-8.
 
-## Columnas siempre en cero (7)
+## Columnas siempre en cero (8)
 
-`f_09`, `f_12`, `f_28`, `f_59`, `f_60`, `f_61`, `f_62` — justificadas
-lingüísticamente arriba. (Bajaron de 10 a 7 al implementarse f_15, f_31 y f_32.)
+`f_09`, `f_12`, `f_15`, `f_28`, `f_59`, `f_60`, `f_61`, `f_62` — justificadas
+lingüísticamente arriba. (Bajaron de 10 a 8 al implementarse f_31 y f_32; `f_15`
+se activó en la Fase 3 y se revirtió por decisión del usuario.)

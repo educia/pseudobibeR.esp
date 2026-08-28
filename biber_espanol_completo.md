@@ -28,7 +28,6 @@ respecto a este documento (§3) son:
   rescate del voseo; el `se` reflexivo argumental sigue sin contarse.
 - **f_11** — control sintáctico: solo función pronominal (excluye el uso
   determinante *todo el día*).
-- **f_15** — deja de valer 0: **infinitivo en función nominal-sujeto** (`csubj`).
 - **f_17** — excluye la **impersonal con se** (solo pasiva refleja, con sujeto
   paciente `nsubj`).
 - **f_29/f_30** — solo relativas con *que*; **f_31/f_32** dejan de valer 0 y
@@ -43,11 +42,16 @@ respecto a este documento (§3) son:
 - **f_64** — cubre la coordinación de verbos.
 - **f_67** — *no* de foco sobre constituyentes no verbales.
 
+**Reglas revertidas por decisión del usuario:** f_15 se activó en la Fase 3
+(infinitivo nominal-sujeto, `csubj`) pero se **revirtió** a su comportamiento
+original de columna siempre-cero.
+
 **Reglas no implementadas por límite del modelo** (documentadas, no forzadas):
-f_18 (`obl:agent` no emitido → agente y causa indistinguibles), f_50 (sin señal
-`discourse`), f_22 (subdetección del parser), f_55/f_57 (desambiguación por modo:
-*decir* fuera del inventario, *sostuvo*→ADJ), f_23 (relativas libres: riesgo con
-f_29–f_34), f_56 (*esperar*: solo documentación).
+f_18 (`obl:agent` no emitido → agente y causa indistinguibles, verificado en 10
+oraciones variadas), f_50 (sin señal `discourse`), f_22 (subdetección del
+parser), f_55/f_57 (desambiguación por modo: *decir* fuera del inventario,
+*sostuvo*→ADJ), f_23 (relativas libres: riesgo con f_29–f_34), f_56 (*esperar*:
+solo documentación).
 
 El detalle vigente por rasgo está en `TABLA_RASGOS_ES.md`; la comparación
 antes→después en `TABLA_COMPARATIVA_ES.md`.
@@ -69,31 +73,33 @@ Of these 67 columns:
 
 ```
 67 output columns total
-= 60 features with real linguistic detection
-+  7 zero-output columns (surface-parity scars)
+= 59 features with real linguistic detection
++  8 zero-output columns (surface-parity scars)
 ```
 
 **Critical distinction**:
 
-- **60 features with real linguistic detection** — validated against `tests/testthat/`, documented per-feature in §3. Tras la revisión, `f_15` (infinitivo nominal), `f_31` y `f_32` (relativas con *quien*/*el cual*) dejaron de valer cero y tienen detección propia; `f_29`/`f_30` quedan reservados a las relativas con *que*.
-- **7 zero-output columns** — exist in the output for surface-level interface parity with `pseudobibeR.fr`. They always return **0**, regardless of input. They are **not bugs**; they are an explicit design contract. Pipelines that filter for `column > 0` will naturally ignore them.
+- **59 features with real linguistic detection** — validated against `tests/testthat/`, documented per-feature in §3. Tras la revisión, `f_31` y `f_32` (relativas con *quien*/*el cual*) dejaron de valer cero y tienen detección propia; `f_29`/`f_30` quedan reservados a las relativas con *que*.
+- **8 zero-output columns** — exist in the output for surface-level interface parity with `pseudobibeR.fr`. They always return **0**, regardless of input. They are **not bugs**; they are an explicit design contract. Pipelines that filter for `column > 0` will naturally ignore them.
 
 ### Zero-output columns
 
-These 7 columns appear in the output but always return 0 — all are untranslatable features (no Spanish equivalent exists or is intelligible):
+These 8 columns appear in the output but always return 0 — all are untranslatable features (no Spanish equivalent exists or is intelligible):
 
 | Column | Reason |
 |--------|--------|
 | `f_09_pronoun_it` | Spanish is pro-drop; no expletive pronoun equivalent exists |
 | `f_12_proverb_do` | Spanish resolves verbal anaphora via ellipsis; no grammaticalized pro-verb |
+| `f_15_gerunds` | Spanish gerund (*-ando/-iendo*) has no nominal function; structurally non-transferable. (La revisión de Hernán activó una detección vía infinitivo-sujeto en la Fase 3; se **revirtió** por decisión del usuario.) |
 | `f_28_present_participle_whiz` | Spanish gerund cannot function as post-nominal modifier |
 | `f_59_contractions` | No grammaticalized verbal/negative contractions in standard Spanish (*al/del* **are** contractions per RAE, but not the informality markers Biber measures) |
 | `f_60_that_deletion` | The complementizer *que* is virtually obligatory in Spanish (design decision) |
 | `f_61_stranded_preposition` | Stranded prepositions are ungrammatical in standard Spanish (function absorbed by `f_33`) |
 | `f_62_split_infinitive` | No preverbal infinitive marker (*to*) exists to be split |
 
-> **Nota:** en la versión previa esta lista tenía 10 columnas. `f_15`, `f_31` y
-> `f_32` salieron de aquí al implementarse su detección en la revisión de Hernán.
+> **Nota:** en la versión previa esta lista tenía 10 columnas. `f_31` y `f_32`
+> salieron de aquí al implementarse su detección en la revisión de Hernán;
+> `f_15` salió temporalmente (Fase 3) y **volvió a esta lista** por revert.
 
 ### Feature categories (67-column layout)
 
@@ -103,7 +109,7 @@ These 7 columns appear in the output but always return 0 — all are untranslata
 | B. Place and time adverbials | f_04–f_05 | 2 | — |
 | C. Pronouns | f_06–f_12 | 5 | f_09, f_12 |
 | D. Questions | f_13 | 1 | — |
-| E. Nominal forms | f_14–f_16 | 3 | — |
+| E. Nominal forms | f_14–f_16 | 2 | f_15 |
 | F. Passives | f_17–f_18 | 2 | — |
 | G. Stative forms | f_19–f_20 | 2 | — |
 | H. Subordination | f_21–f_38 | 17 | f_28 |
@@ -116,7 +122,7 @@ These 7 columns appear in the output but always return 0 — all are untranslata
 | N. Reduced forms | f_59–f_63 | 1 | f_59, f_60, f_61, f_62 |
 | O. Coordination | f_64–f_65 | 2 | — |
 | P. Negation | f_66–f_67 | 2 | — |
-| **Total** | **67 columns** | **60 with detection** | **7 zero-output** |
+| **Total** | **67 columns** | **59 with detection** | **8 zero-output** |
 
 ---
 
@@ -189,13 +195,13 @@ Functions covered by untranslatable English features are absorbed elsewhere in S
 |----------------|--------------------------------|
 | f_09 *it* | Null subject (not detectable as feature) and impersonal constructions |
 | f_12 pro-verb *do* | Verbal ellipsis (not detectable) |
+| f_15 nominal gerunds | f_14 (nominalizations) and f_24 (substantivized infinitives) |
 | f_28 present participial WHIZ | f_29 active relative clauses (raises f_29 frequency) |
 | f_61 stranded prepositions | f_33 pied-piping (raises f_33 frequency) |
 
-**On the surface-parity contract**: although these features have no real Spanish detection, their column slots (`f_09_pronoun_it`, `f_12_proverb_do`, `f_28_present_participle_whiz`, `f_61_stranded_preposition`) are preserved in the output as constant-zero columns. This is intentional and documented in §1. Tools that consume both `pseudobibeR.es` and `pseudobibeR.fr` output can rely on identical column layouts.
+**On the surface-parity contract**: although these features have no real Spanish detection, their column slots (`f_09_pronoun_it`, `f_12_proverb_do`, `f_15_gerunds`, `f_28_present_participle_whiz`, `f_61_stranded_preposition`) are preserved in the output as constant-zero columns. This is intentional and documented in §1. Tools that consume both `pseudobibeR.es` and `pseudobibeR.fr` output can rely on identical column layouts.
 
-> **Actualización (revisión de Hernán):** `f_15` ya **no** se absorbe: cuenta el
-> infinitivo en función nominal-sujeto. `f_31`/`f_32` tampoco se fusionan en
+> **Actualización (revisión de Hernán):** `f_31`/`f_32` no se fusionan en
 > `f_29`/`f_30`: recogen las relativas con *quien*/*el cual*. Ver la sección
 > «Revisión lingüística de Hernán».
 
@@ -505,21 +511,26 @@ None of these constructions is gramaticalized enough to count as the equivalent 
 
 ---
 
-#### f_15_gerunds — ✳️ ACTUALIZADO (revisión de Hernán): ya NO es zero-output
+#### f_15_gerunds ⚠️ ZERO-OUTPUT
 
 **Biber (1988)**: *-ing* forms functioning as nouns — participial forms in nominal position (*Swimming is good exercise*, *I enjoy reading*).
 
-**Spanish equivalent**: **infinitivo en función nominal** (la función que el inglés expresa con el gerundio la expresa el español con infinitivo: *Nadar es saludable*).
+**Spanish equivalent**: **None — structurally non-transferable.**
 
-**Detection method** (implementado): infinitivo (`VerbForm=Inf`, `VERB`) en función **nominal-sujeto** — `dep_rel ∈ {csubj, csubj:pass}`. Exclusión mutua con f_24 (que descarta esos casos).
+**Detection method**: column always emits `0`.
 
-**Include**: *Fumar perjudica la salud*, *Me gusta nadar*.
+**Why zero-output**: the Spanish gerund (*-ando/-iendo*) is functionally restricted to adverbial use (captured by `f_25_present_participle`). The English *-ing* nominal function maps in Spanish to:
+- Substantivized infinitives (*el correr es sano, nadar es bueno*) — argumentally captured by f_24
+- Nominalizations with derivational suffixes (*la enseñanza, el estudio*) — captured by f_14
 
-**Límites del modelo (documentados)**: con determinante (*el fumar*) `spanish-gsd` re-etiqueta el infinitivo como `NOUN` y no se detecta; el objeto nominal sale `xcomp` (indistinguible del complemento verbal → f_24). Solo el sujeto-infinitivo (`csubj`) es fiable.
+Per the user decision (`Decisiones_rasgos_biber.md`), this feature is "intermediate" — not as categorically non-transferable as f_09 or f_12, but its function is already absorbed into existing features. For now, treat as zero-output and document the absorption.
 
-> **Diseño original (obsoleto):** esta columna era zero-output; la función se
-> consideraba absorbida por f_14 (nominalizaciones) y f_24 (infinitivos
-> argumentales). La revisión la activó para el infinitivo-sujeto.
+**Output contract**: this column appears in `biber_es()` output and always returns `0`. The function it would track is already counted under `f_14` and `f_24`.
+
+> **Historial:** la revisión de Hernán (Fase 3) activó brevemente esta columna
+> para contar el infinitivo en función nominal-sujeto (`dep_rel ∈ {csubj,
+> csubj:pass}`: *Fumar perjudica*, *Me gusta nadar*). El usuario pidió **revertir**
+> ese cambio; f_15 vuelve al comportamiento constante-cero de diseño original.
 
 ---
 
@@ -541,13 +552,9 @@ f_16 = (total tokens with POS=NOUN) − f_14_nominalizations
 f_16 = (total tokens with POS=NOUN) − f_14 − f_15
 ```
 
-La fórmula no cambia con la revisión de Hernán: aunque f_15 ya se detecta, sus
-tokens son **infinitivos** (`VERB`, `VerbForm=Inf` en función `csubj`), no `NOUN`,
-así que no entran en el conteo de f_16. El subtrahendo f_15 sobre `NOUN` sigue
-siendo efectivamente cero.
+In Spanish, the f_15 subtrahend collapses to zero. The Spanish f_16 therefore absorbs slightly more material than its English counterpart — specifically, the nouns that in English would have been routed to f_15 nominal gerunds. Document this absorption in the function's comments.
 
-**Notes**: f_16 cuenta los `NOUN` residuales tras restar f_14. Los infinitivos
-nominales de f_15 no son `NOUN` y no afectan a f_16.
+**Notes**: Since f_15 is zero-output in Spanish, f_16 absorbs slightly more than its English equivalent. This is a deliberate consequence of f_15 being structurally untranslatable, not a bug.
 
 ---
 
@@ -1691,7 +1698,7 @@ After implementation, verify with the validation corpus that:
 
 - [ ] `biber_es()` returns exactly **67 columns** with `f_` prefix
 - [ ] No feature numbered above f_67 exists in output (no f_68, f_69, f_70, etc.)
-- [ ] The 7 zero-output columns exist and **always return 0**: `f_09_pronoun_it`, `f_12_proverb_do`, `f_28_present_participle_whiz`, `f_59_contractions`, `f_60_that_deletion`, `f_61_stranded_preposition`, `f_62_split_infinitive` (tras la revisión de Hernán, `f_15`, `f_31` y `f_32` ya **no** son cero)
+- [ ] The 8 zero-output columns exist and **always return 0**: `f_09_pronoun_it`, `f_12_proverb_do`, `f_15_gerunds`, `f_28_present_participle_whiz`, `f_59_contractions`, `f_60_that_deletion`, `f_61_stranded_preposition`, `f_62_split_infinitive` (tras la revisión de Hernán, `f_31` y `f_32` ya **no** son cero; `f_15` se activó en la Fase 3 y luego se **revirtió** a cero)
 - [ ] No duplicate columns with `_rate`, `_count`, or `_raw` suffix
 - [ ] Column order matches `pseudobibeR.fr` output for cross-language compatibility
 
@@ -1726,7 +1733,7 @@ After implementation, verify with the validation corpus that:
 
 The following are documented limitations, not bugs:
 
-1. **Zero-output columns are by design, not bugs** (see §1 and §2.6): the 7 columns `f_09, f_12, f_28, f_59, f_60, f_61, f_62` always return 0 because they represent untranslatable features. They exist for surface-parity with `pseudobibeR.fr`. Their consistent zero values are the correct output. (Tras la revisión de Hernán, `f_15`, `f_31` y `f_32` dejaron de ser cero.)
+1. **Zero-output columns are by design, not bugs** (see §1 and §2.6): the 8 columns `f_09, f_12, f_15, f_28, f_59, f_60, f_61, f_62` always return 0 because they represent untranslatable features. They exist for surface-parity with `pseudobibeR.fr`. Their consistent zero values are the correct output. (Tras la revisión de Hernán, `f_31` y `f_32` dejaron de ser cero; `f_15` se activó y luego se revirtió.)
 
 2. **Subject-null underestimates pronouns** (f_06–f_08): Spanish allows omitting subject pronouns; count is structurally low. Cross-linguistic comparison of raw pronoun counts is not meaningful.
 

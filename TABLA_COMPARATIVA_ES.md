@@ -50,8 +50,8 @@ no solo la intención teórica.
 | Código | Nombre antes | Nombre nuevo | Descripción antes | Descripción nueva | Ejemplo |
 |---|---|---|---|---|---|
 | `f_14` | Nominalizaciones derivadas | Nominalizaciones derivadas | Sufijos productivos | Igual | *producción, evaluación* |
-| `f_15` ✳️ | *(0)* Gerundio nominal | Infinitivos en función nominal | Siempre 0 | **Deja de ser 0**: infinitivo sujeto (`csubj`). ⚠️ con determinante (`el fumar`) el modelo lo hace NOUN y no se detecta | *fumar perjudica* |
-| `f_16` | Otros sustantivos | Otros sustantivos | NOUN/PROPN no en f_14 | + no en f_15 | *perro, mesa* |
+| `f_15` | *(0)* Gerundio nominal | *(0)* Gerundio nominal | Siempre 0 | Sin cambio final: la revisión lo activó vía infinitivo-sujeto (`csubj`), pero se **revirtió** a pedido del usuario. Sigue siempre 0 | — |
+| `f_16` | Otros sustantivos | Otros sustantivos | NOUN/PROPN no en f_14 | Igual | *perro, mesa* |
 
 ## F. Pasivas
 
@@ -74,7 +74,7 @@ no solo la intención teórica.
 | `f_21` | Completivas con *que* (CD de verbo) | Completivas con *que* dependientes de un verbo | *que* como CD de verbo | + término de preposición (`insistió en que…`) | *cree que…, insistió en que…* |
 | `f_22` ⚠️ | Completivas con *que* (de adjetivo) | Completivas con *que* dependientes de un predicado adjetival | ADJ + que | Igual. ⚠️ subdetección del parser | *es probable que…* |
 | `f_23` ⚠️ | Interrogativas indirectas | Interrogativas indirectas | Palabra interrogativa subordinada | Igual. ⚠️ las **relativas libres** (`lo que dijo`) NO se incluyen (riesgo con f_29-f_34) | *no sé quién vino* |
-| `f_24` | Infinitivos (complemento/perífrasis) | Infinitivos (complemento verbal, perífrasis, final) | Complemento verbal, perífrasis | Igual; exclusión mutua con f_15 (excluye `csubj`) | *quiere estudiar* |
+| `f_24` | Infinitivos (complemento/perífrasis) | Infinitivos (complemento verbal, perífrasis, final) | Complemento verbal, perífrasis | Sin cambio final: la revisión probó excluir `csubj` (exclusión mutua con f_15), pero al revertir f_15 esa exclusión también se deshizo | *quiere estudiar* |
 | `f_25` | Gerundio adverbial/predicativo | Gerundio en función adverbial | Adverbial o predicativo | Solo adjunto (`advcl/ccomp`); excluye predicativo y perifrástico | *llegando tarde, salió* |
 | `f_26` ⚠️ | Participio absoluto/adverbial | Participio absoluto o adverbial | `advcl/acl` no pasivo | Igual. ⚠️ detección variable | *terminado el examen…* |
 | `f_27` | Participio postnominal | Participio postnominal (relativa reducida) | Reduce relativa de objeto | Igual; admite inacusativos | *el artículo publicado ayer* |
@@ -164,10 +164,15 @@ no solo la intención teórica.
 ## Resumen de cambios de comportamiento (✳️)
 
 Rasgos cuyo **conteo** cambió (no solo la etiqueta): **f_01, f_04, f_05, f_06,
-f_07, f_08, f_11, f_15, f_17, f_29, f_30, f_31, f_32, f_37, f_38, f_39, f_42,
+f_07, f_08, f_11, f_17, f_29, f_30, f_31, f_32, f_37, f_38, f_39, f_42,
 f_46, f_47, f_52, f_58, f_63, f_64, f_67**.
 
 Rasgos que quedaron como estaban por **límite del modelo** (⚠️), documentado y no
 forzado: **f_18** (obl:agent), **f_50** (sin señal discourse), **f_22**
 (subdetección), **f_55/f_57** (desambiguación por modo), **f_23** (relativas
 libres), **f_56** (esperar). Ver `TABLA_RASGOS_ES.md` para el detalle.
+
+**Rasgo revertido por decisión del usuario:** **f_15** se activó en la Fase 3
+(infinitivo nominal-sujeto) pero se revirtió a su comportamiento original de
+columna siempre-cero; f_24 recuperó en consecuencia su regla original (sin
+excluir `csubj`).

@@ -22,8 +22,8 @@ El español presenta propiedades gramaticales que han condicionado el diseño de
 
 La función principal devuelve siempre **67 columnas de rasgo**, organizadas en las 16 categorías de Biber (A–P). La cifra corresponde al marco original; en español no todas son aplicables:
 
-- **60 columnas** registran rasgos con detección activa. Tras la revisión de Hernán, `f_15` (infinitivo nominal), `f_31` y `f_32` (relativas con *quien*/*el cual*) dejaron de valer cero y pasaron a tener detección propia; `f_29`/`f_30` quedan reservados a las relativas con *que*.
-- **7 columnas** valen siempre cero porque los rasgos que representan no existen en español o son ajenos al estándar escrito normativo: `f_09` (*it* expletivo), `f_12` (proverbo *do*), `f_28` (gerundio postnominal), `f_59` (contracciones ortográficas), `f_60` (omisión del complementante *que*), `f_61` (preposición varada) y `f_62` (infinitivo escindido). Estas columnas se conservan para garantizar la compatibilidad con `pseudobibeR` y `pseudobibeR.fr` y permitir su sustitución directa en flujos de análisis preexistentes.
+- **59 columnas** registran rasgos con detección activa. Tras la revisión de Hernán, `f_31` y `f_32` (relativas con *quien*/*el cual*) dejaron de valer cero y pasaron a tener detección propia; `f_29`/`f_30` quedan reservados a las relativas con *que*. `f_15` se evaluó como candidato a detección (infinitivo nominal-sujeto) pero se revirtió a su comportamiento original por decisión del usuario.
+- **8 columnas** valen siempre cero porque los rasgos que representan no existen en español o son ajenos al estándar escrito normativo: `f_09` (*it* expletivo), `f_12` (proverbo *do*), `f_15` (gerundio nominal), `f_28` (gerundio postnominal), `f_59` (contracciones ortográficas), `f_60` (omisión del complementante *que*), `f_61` (preposición varada) y `f_62` (infinitivo escindido). Estas columnas se conservan para garantizar la compatibilidad con `pseudobibeR` y `pseudobibeR.fr` y permitir su sustitución directa en flujos de análisis preexistentes.
 
 > **Nota (revisión de Hernán):** el comportamiento real de cada rasgo sobre el
 > modelo `spanish-gsd`, con sus etiquetas nuevas y limitaciones documentadas,
@@ -97,7 +97,7 @@ print(features)
 
 ## Características principales
 
-- **67 columnas de rasgo** en 16 categorías (A–P): 57 con detección activa y 10 siempre en cero, conservadas para mantener la compatibilidad con `pseudobibeR` y `pseudobibeR.fr`.
+- **67 columnas de rasgo** en 16 categorías (A–P): 59 con detección activa y 8 siempre en cero, conservadas para mantener la compatibilidad con `pseudobibeR` y `pseudobibeR.fr`.
 - **Normalización opcional** a frecuencias por 1 000 tokens léxicos.
 - **Cuatro medidas de diversidad léxica** para `f_43`: `MATTR`, `TTR`, `CTTR` y `MSTTR`.
 - **Integración con UDPipe** mediante la interfaz nativa de R.
@@ -150,7 +150,7 @@ features <- biber_es(parsed_data,
 Un `data.frame` con una fila por documento y las siguientes columnas:
 
 - `doc_id`: identificador del documento, heredado de la anotación.
-- `f_01_past_tense` a `f_67_neg_analytic`: 67 columnas con los recuentos (o frecuencias normalizadas) de los rasgos. Las 7 columnas sin equivalente en español presentan siempre el valor cero.
+- `f_01_past_tense` a `f_67_neg_analytic`: 67 columnas con los recuentos (o frecuencias normalizadas) de los rasgos. Las 8 columnas sin equivalente en español presentan siempre el valor cero.
 - `n_tokens`: número total de tokens, excluida la puntuación.
 - `n_lex_tokens`: número de tokens léxicos (NOUN, VERB, ADJ, ADV, PROPN).
 
@@ -206,7 +206,7 @@ Este grupo reúne construcciones nominales que compactan información en el text
 | Código | Descripción |
 |--------|-------------|
 | `f_14_nominalizations` | Nominalizaciones derivadas: sustantivos formados a partir de verbos o adjetivos mediante sufijos productivos (*-ción*, *-sión*, *-idad*, *-miento*, *-eza*, *-ura*...). Son el principal indicador de densidad nominal en el análisis multidimensional. |
-| `f_15_gerunds` | Infinitivos en función nominal. La función que el inglés expresa con el gerundio (*Swimming is healthy*) el español la expresa con infinitivo (*Nadar es saludable*). Se detecta el infinitivo en función de sujeto (`csubj`). Con determinante (*el fumar*) el modelo lo re-etiqueta como sustantivo y no se capta. |
+| `f_15_gerunds` &nbsp;0️⃣ | En inglés, el gerundio (*-ing*) puede funcionar como sustantivo (*Swimming is healthy*). El gerundio español (*nadando*) no admite esta función: el equivalente sería el infinitivo (*nadar*) o una nominalización (*la natación*). Esta columna siempre devuelve cero. |
 | `f_16_other_nouns` | Sustantivos comunes y propios (NOUN y PROPN) que no constituyen nominalizaciones derivadas; es decir, los no contabilizados en `f_14`. |
 
 ### F. Pasivas
@@ -241,8 +241,8 @@ Estos rasgos identifican los distintos mecanismos de subordinación del español
 | `f_26_past_participle` | Participio en construcción absoluta o adverbial (*terminado el examen*, *publicados los resultados*, *aprobada la ley*). |
 | `f_27_past_participle_whiz` | Participio postnominal que reduce una cláusula relativa de objeto (*el artículo publicado ayer*, *los datos analizados previamente*). |
 | `f_28_present_participle_whiz` &nbsp;0️⃣ | En inglés, el gerundio puede ocupar posición postnominal como modificador (*the man running in the park*). Esta construcción es agramatical en el español normativo escrito. La columna siempre devuelve cero. |
-| `f_29_that_subj` | Cláusulas relativas introducidas por *que* en función de sujeto o complemento directo (*el libro que está en la mesa*, *la novela que leí*). En esta implementación, `f_29` absorbe también los casos que el marco original asigna a `f_31`, dado que en español ambos tipos de relativa se introducen con *que*. |
-| `f_30_that_obj` | Cláusulas relativas encabezadas por *quien* o *cual* en posición oblicua (*la autora con quien colaboré*, *el método por el cual se analizaron los datos*). Absorbe los casos del `f_32` original. |
+| `f_29_that_subj` | Cláusulas relativas introducidas por *que* en función de sujeto (*el libro que está en la mesa*). En pro-drop puro, cuando la relativa no tiene sujeto explícito, el objeto-relativa también se imputa aquí (limitación documentada). |
+| `f_30_that_obj` | Cláusulas relativas introducidas por *que* en función de complemento directo, cuando la relativa tiene un sujeto explícito que revela el hueco de objeto (*el libro que María escribió*). |
 | `f_31_wh_subj` | Relativas introducidas por *quien*/*el cual* en función de sujeto (*la autora, quien presentó el proyecto*). Tras la revisión de Hernán dejan de integrarse en `f_29` y tienen columna propia. |
 | `f_32_wh_obj` | Relativas introducidas por *quien*/*el cual* en función de complemento directo. Casi siempre cero: `spanish-gsd` etiqueta *cual* objeto como sujeto, y los casos con preposición (*a quien*) van a `f_33`. |
 | `f_33_pied_piping` | Relativas en que la preposición precede al pronombre relativo: *del que*, *con el cual*, *para quien*, *a la que*... |
@@ -345,7 +345,7 @@ Las situaciones descritas a continuación reflejan decisiones de diseño documen
 - **f_26_past_participle** y **f_27_past_participle_whiz**: la relación de dependencia del participio varía según el contexto sintáctico. La detección es correcta cuando el análisis de dependencias acierta, pero puede presentar inconsistencias en construcciones límite.
 - **f_50_discourse_particles**: la implementación actual no aplica filtro posicional, por lo que algunos marcadores monoléxicos (*bueno*, *claro*) pueden contabilizarse fuera de la posición inicial de cláusula. Este comportamiento está autorizado por la especificación.
 - **f_29 y f_30 en cláusulas con sujeto elidido**: cuando el sujeto es nulo y no hay un `nsubj` explícito, la función sintáctica de la relativa no es recuperable; en ese caso se imputa a `f_29_that_subj`.
-- **Rasgos sin equivalente en español**: las 10 columnas que siempre devuelven cero (f_09, f_12, f_15, f_28, f_31, f_32, f_59, f_60, f_61, f_62) están justificadas lingüísticamente en la tabla de rasgos de la sección anterior.
+- **Rasgos sin equivalente en español**: las 8 columnas que siempre devuelven cero (f_09, f_12, f_15, f_28, f_59, f_60, f_61, f_62) están justificadas lingüísticamente en la tabla de rasgos de la sección anterior.
 
 ## Funciones complementarias
 
@@ -489,7 +489,7 @@ No todos los rasgos generan filas de evidencia. La siguiente tabla resume el com
 | Rasgos de detección directa | Una fila por token detectado. Se cumple la igualdad `count == nrow(evidence)`. | f_01–f_03, f_13, f_14, f_16, f_17–f_20, f_21, f_23–f_27, f_29, f_30, f_33–f_42, f_52, f_54, f_63–f_67. |
 | Rasgos con apoyo de suplementos léxicos | Número variable de filas, acotado superiormente por el recuento (`1 ≤ nrow(evidence) ≤ count`). | f_06, f_07, f_08, f_10, f_11, f_51, f_53, f_55–f_58. |
 | Métricas continuas | No producen filas de evidencia. El valor se encuentra exclusivamente en `counts`. | f_43 (diversidad léxica), f_44 (longitud media). |
-| Rasgos sin equivalente en español | No producen filas de evidencia. La columna en `counts` siempre vale cero. | f_09, f_12, f_15, f_28, f_31, f_32, f_59–f_62. |
+| Rasgos sin equivalente en español | No producen filas de evidencia. La columna en `counts` siempre vale cero. | f_09, f_12, f_15, f_28, f_59–f_62. |
 
 Para los rasgos de la categoría K (f_45–f_50), cuya detección se realiza por búsqueda en diccionario, la evidencia token a token no se produce en la versión actual. Para recuperarla manualmente:
 

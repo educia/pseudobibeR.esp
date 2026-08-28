@@ -11,6 +11,13 @@ medias por rasgo, y verificar que **toda variación grande caiga en un rasgo
 listado como cambiado** — cualquier cambio grande en un rasgo no listado es
 indicio de error de implementación e investigarse antes de cerrar la fase.
 
+> **⚠️ Nota de vigencia (posterior a esta corrida):** por decisión del usuario,
+> el cambio de `f_15` de la Fase 3 se **revirtió** después de generarse este
+> informe. Las filas de `f_15_gerunds` y `f_24_infinitives` de abajo reflejan
+> el commit `7f2fe91` (con f_15 activo), **no** el estado actual del código, en
+> el que ambos rasgos volvieron a su regla original (f_15 siempre 0, f_24 sin
+> exclusión de `csubj`). El resto de la tabla y el veredicto siguen vigentes.
+
 ---
 
 ## Cambios grandes (|Δmedia| > 0.5 por 1000 tokens)
