@@ -139,7 +139,7 @@ supplement_pronouns_morphological_fr <- function(tokens, doc_ids) {
   # Extract pronouns using morphological Person feature as fallback.
   # Accept tokens that are tagged as PRON with Person feature, even if not
   # in dictionary. Para español: excluir "se" (Reflex=Yes y dep_rel
-  # reflexivo/impersonal) ya que UDPipe Spanish-GSD lo lematiza como "él"
+  # reflexivo/impersonal) ya que UDPipe Spanish-GSD lo lematiza como "\u00e9l"
   # con Person=3, pero no es pronombre referencial de 3ª persona en el
   # sentido de Biber (es marca de pasiva refleja, impersonal o reflexivo).
   reflexive_deps <- c("expl:pv", "expl:impers", "expl",
@@ -154,12 +154,12 @@ supplement_pronouns_morphological_fr <- function(tokens, doc_ids) {
   known_pronoun_forms <- c(
     # 1a persona
     "yo", "nosotros", "nosotras", "me", "nos",
-    "mí", "mi", "conmigo",
+    "m\u00ed", "mi", "conmigo",
     # 2a persona
-    "tú", "tu", "vos", "vosotros", "vosotras",
+    "t\u00fa", "tu", "vos", "vosotros", "vosotras",
     "usted", "ustedes", "te", "ti", "contigo", "os",
     # 3a persona
-    "él", "ella", "ello", "ellos", "ellas",
+    "\u00e9l", "ella", "ello", "ellos", "ellas",
     "le", "lo", "la", "les", "los", "las", "consigo"
   )
 
