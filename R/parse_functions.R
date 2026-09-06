@@ -525,12 +525,26 @@ parse_biber_features <- function(tokens, measure, normalize,
   # resolved. Fix: if f_43_type_token already exists from block_lexical_
   # complexity_es, replace it in-place with the textstat_lexdiv value (which
   # uses the user-chosen measure); otherwise join as before.
+  #
+  # REVISION HERNAN v2 (8.3, confirmado): Biber (1988) define f_43 como
+  # "Type-token ratio, INCLUDING PUNCTUATION". textstat_lexdiv() tiene
+  # remove_punct/remove_numbers/remove_symbols = TRUE POR DEFECTO -- esta
+  # llamada nunca los sobreescribia, asi que la puntuacion jamas entraba al
+  # calculo pese a que biber_tks (linea ~218, tokens(..., remove_punct =
+  # FALSE)) SI la retiene. Verificado empiricamente: con remove_punct=TRUE
+  # (default), agregar puntuacion repetida a un texto no cambia el MATTR en
+  # absoluto (0.08 -> 0.08); con remove_punct=FALSE si cambia (0.08 -> 0.16),
+  # confirmando que la puntuacion ahora entra al calculo. Fix: pasar los tres
+  # flags en FALSE para que el conteo de tipos/tokens sea sobre TODOS los
+  # tokens, fiel a la definicion original.
   if (measure != "none") {
     if (min(quanteda::ntoken(biber_tks)) < 200) {
       message("Setting type-to-token ratio to TTR")
       measure <- "TTR"
     }
-    f_43_new <- quanteda.textstats::textstat_lexdiv(biber_tks, measure = measure) %>%
+    f_43_new <- quanteda.textstats::textstat_lexdiv(
+      biber_tks, measure = measure,
+      remove_punct = FALSE, remove_numbers = FALSE, remove_symbols = FALSE) %>%
       dplyr::rename(doc_id = "document", f_43_type_token := !!measure)
     if ("f_43_type_token" %in% colnames(biber_counts)) {
       # Update in-place: drop the block-computed column and join the lexdiv one
