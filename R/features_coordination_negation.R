@@ -164,7 +164,7 @@ block_split_coordination_es <- function(tokens, doc_ids, token_lookup,
   # compartido, p. ej. 'lee y escribe'). El guard !has_subject separa la
   # coordinación sintagmática (SV compartido) de la clausal (f_65, sujetos
   # propios), evitando el doble conteo.
-  f64 <- cc_tokens %>%
+  f64_std <- cc_tokens %>%
     dplyr::filter(
       dplyr::coalesce(.data$conj_dep_rel, "") == "conj",
       dplyr::coalesce(.data$conj_pos,     "") %in%
@@ -172,7 +172,37 @@ block_split_coordination_es <- function(tokens, doc_ids, token_lookup,
       !is.na(.data$first_conj_pos),
       .data$first_conj_pos == .data$conj_pos,
       !.data$has_subject
+    )
+
+  # REVISION HERNAN v2 (hallazgo 8.5.D): cuando el primer adjetivo es amod de
+  # un sustantivo, UDPipe a veces cuelga el SEGUNDO adjetivo directamente del
+  # sustantivo (no del primer adjetivo): "Un procedimiento rápido, pero
+  # eficaz." -> eficaz(conj) cuelga de procedimiento(NOUN), no de rápido(ADJ).
+  # El chequeo first_conj_pos==conj_pos falla (NOUN vs ADJ) y el caso se
+  # pierde. Rama adicional: si el "head del head" es un NOUN con un hijo amod
+  # cuyo POS coincide con el del segundo conjunto, tratar ese amod como el
+  # primer conjunto real.
+  amod_children <- tokens %>%
+    dplyr::filter(dplyr::coalesce(.data$dep_rel, "") == "amod") %>%
+    dplyr::transmute(.data$doc_id, .data$sentence_id,
+                     noun_id  = .data$head_token_id_int,
+                     amod_pos = .data$pos) %>%
+    dplyr::distinct()
+
+  f64_amod_anchor <- cc_tokens %>%
+    dplyr::filter(
+      dplyr::coalesce(.data$conj_dep_rel, "") == "conj",
+      dplyr::coalesce(.data$conj_pos,     "") == "ADJ",
+      dplyr::coalesce(.data$first_conj_pos, "") == "NOUN",
+      !.data$has_subject
     ) %>%
+    dplyr::inner_join(
+      amod_children,
+      by = c("doc_id", "sentence_id", "conj_head_id" = "noun_id")
+    ) %>%
+    dplyr::filter(.data$amod_pos == "ADJ")
+
+  f64 <- dplyr::bind_rows(f64_std, f64_amod_anchor) %>%
     count_feature_traced("f_64_phrasal_coordination")
 
   # f_65  Coordinacion clausal
@@ -239,12 +269,12 @@ block_negation_es <- function(tokens, doc_ids,
                                negation_part_lemmas,
                                negation_adverbs = NULL) {
 
-  # En español, los adverbios "nunca", "jamás", "tampoco" son negación
+  # En español, los adverbios "nunca", "jam\u00e1s", "tampoco" son negación
   # SINTÉTICA según Biber (1985) y biber_espanol_completo.md F_66, no
   # analítica. Los unimos a la lista para detectarlos en f_66.
   neg_synthetic_terms <- unique(c(
     neg_synthetic_terms,
-    "nunca", "jamás", "jamas", "tampoco"
+    "nunca", "jam\u00e1s", "jamas", "tampoco"
   ))
 
   # -- Tabla auxiliar de heads negados analiticamente ------------------------
