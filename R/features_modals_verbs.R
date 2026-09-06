@@ -147,12 +147,20 @@ block_adj_prep_adv_es <- function(tokens, doc_ids, dict_lookup,
   # estructuralmente (cada ADP es 'case' de su propio núcleo), así que se
   # detectan por secuencia léxica y se resta el exceso (cada locución de 2 ADP
   # debe contar 1, no 2). 'al'/'del' (contracciones) SÍ cuentan una cada una.
+  # NOTA critica de encoding: los literales acentuados se escriben con
+  # escapes \uXXXX, NUNCA como caracter literal directo. Verificado
+  # empiricamente (hallazgo 8.5.A extendido): devtools::load_all() bajo
+  # locale C corrompe caracteres acentuados literales en archivos .R,
+  # convirtiendolos en el TEXTO ASCII "<U+00E9>" (8 caracteres reales, no
+  # un simple artefacto de impresion) en vez del caracter correcto. Los
+  # escapes \uXXXX son inmunes a este problema (el parser de R los
+  # interpreta identico sin importar el locale).
   prep_locutions <- c(
-    "a causa de", "a través de", "a partir de", "a pesar de", "a fin de",
-    "a lo largo de", "a favor de", "a raíz de", "a base de", "a fuerza de",
-    "en relación con", "en relación a", "en cuanto a", "en función de",
+    "a causa de", "a trav\u00e9s de", "a partir de", "a pesar de", "a fin de",
+    "a lo largo de", "a favor de", "a ra\u00edz de", "a base de", "a fuerza de",
+    "en relaci\u00f3n con", "en relaci\u00f3n a", "en cuanto a", "en funci\u00f3n de",
     "en contra de", "en medio de", "en virtud de", "en torno a",
-    "con respecto a", "con relación a", "de acuerdo con", "por medio de",
+    "con respecto a", "con relaci\u00f3n a", "de acuerdo con", "por medio de",
     "por causa de"
   )
   # Desacentuar ambos lados del match para ser robustos al locale (en locale C
@@ -163,7 +171,18 @@ block_adj_prep_adv_es <- function(tokens, doc_ids, dict_lookup,
       stringi::stri_enc_toutf8(x, validate = TRUE), "Latin-ASCII")
   }
   loc_patterns <- deaccent(paste0(" ", prep_locutions, " "))
+  # REVISION HERNAN v2 (hallazgo 8.5.A): excluir la fila "fantasma" de las
+  # contracciones al/del (token_id tipo "4-5", token_id_int == NA), que el
+  # pipeline retiene a propósito (ver parse_functions.R) para no perder esas
+  # contracciones en otros rasgos. Esa fila fantasma se colaba en el texto
+  # reconstruido para la búsqueda de locuciones y, al ordenar con NA al final
+  # (comportamiento por defecto de dplyr::arrange), duplicaba la superficie
+  # ("del") tras "de"+"el", rompiendo el emparejamiento exacto de cadena
+  # ("a través del país" contaba 2 en vez de 1). Los sub-tokens "de"/"el" ya
+  # están presentes con su propio token_id_int válido, así que excluir solo
+  # la fila fantasma no pierde información.
   doc_text <- tokens %>%
+    dplyr::filter(!is.na(.data$token_id_int)) %>%
     dplyr::group_by(.data$doc_id) %>%
     dplyr::arrange(.data$sentence_id, .data$token_id_int, .by_group = TRUE) %>%
     dplyr::summarise(
@@ -212,11 +231,13 @@ block_adj_prep_adv_es <- function(tokens, doc_ids, dict_lookup,
       count_feature_traced("f_40_adj_attr")
   }
 
-  # f_41  Adjetivo predicativo
-  # Lista de verbos copulativos/pseudocopulativos segun biber_espanol_completo.md:
+  # f_41  Adjetivo predicativo (REVISION HERNAN v2: ampliado a complementos
+  # predicativos, a pedido del usuario — antes el spec original excluia estos
+  # casos explicitamente).
+  #
+  # Lista de verbos copulativos "canonicos" segun biber_espanol_completo.md
+  # (se conserva solo como referencia/documentacion, YA NO se usa como filtro):
   # ser, estar, parecer, volverse, quedarse, ponerse, resultar, permanecer.
-  # En UD el lema de "quedarse" es "quedar"; de "volverse" puede ser "volver".
-  # Se excluyen "hacerse" y "tornarse" (no mencionados en el documento).
   linking_verbs <- c("ser", "estar", "parecer", "resultar",
                      "quedar",       # quedarse
                      "volver",       # volverse
@@ -229,16 +250,24 @@ block_adj_prep_adv_es <- function(tokens, doc_ids, dict_lookup,
       dplyr::coalesce(.data$dep_rel, "") %in% c("xcomp", "acomp")
     )
 
-  # ADJ que tiene como dependiente un verbo copulativo (cop):
-  # "es positivo" → "positivo" es root con cop=ser.
-  # En UD espanol el ADJ predicativo es el HEAD de la oracion copulativa.
+  # ADJ que tiene como dependiente un verbo etiquetado "cop" (root de la
+  # oracion), SIN restriccion de lema. Verificado empiricamente: cuando el
+  # sujeto es tacito o pospuesto, UDPipe reanaliza construcciones con verbo
+  # pleno + complemento predicativo COMO SI fueran copulativas -- el ADJ pasa
+  # a ser root y el verbo real (llegar, encontrar, considerar...) pasa a ser
+  # su "cop" -- con el lema del verbo real, no uno de linking_verbs. Si UDPipe
+  # ya etiqueto dep_rel="cop", esta afirmando estructuralmente que ese verbo
+  # funciona como copula en esa oracion; la restriccion de lema era una
+  # salvaguarda innecesaria una vez que se decide incluir predicativos:
+  #   "Llegó cansada del trabajo."     -> Llegó=cop de cansada (root, ADJ)
+  #   "Encontraron abierta la puerta." -> Encontraron=cop de abierta (root)
+  #   "Se considera relevante el tema."-> considera=cop de relevante (root)
   f41_cop_head <- tokens %>%
     dplyr::filter(.data$pos == "ADJ") %>%
     dplyr::inner_join(
       tokens %>%
         dplyr::filter(
-          dplyr::coalesce(.data$dep_rel, "") == "cop",
-          .data$lemma %in% linking_verbs
+          dplyr::coalesce(.data$dep_rel, "") == "cop"
         ) %>%
         dplyr::transmute(
           .data$doc_id, .data$sentence_id,
@@ -247,7 +276,11 @@ block_adj_prep_adv_es <- function(tokens, doc_ids, dict_lookup,
       by = c("doc_id", "sentence_id", "token_id_int")
     )
 
-  # ADJ dependiente de verbo copulativo (patrón alternativo menos frecuente)
+  # ADJ dependiente de verbo copulativo (patrón alternativo menos frecuente).
+  # NOTA: se mantiene restringido a linking_verbs (a diferencia de
+  # f41_cop_head) porque ningún caso de prueba verificado ejercita esta rama;
+  # ampliarla sin evidencia empírica arriesgaría introducir comportamiento no
+  # verificado en un patrón ya de por sí infrecuente.
   f41_cop_dep <- tokens %>%
     dplyr::filter(
       .data$pos == "ADJ",
@@ -483,6 +516,17 @@ block_specialized_verbs_es <- function(tokens, doc_ids, dict_lookup) {
     dictionary_to_lemmas(dict_lookup, "f_58_verb_seem")
   )
   f56 <- count_verb_class(private_lemmas, "f_56_verb_private")
+  # LIMITE del modelo (hallazgo 8.5.C, investigado y NO parcheado): UDPipe
+  # spanish-gsd lematiza mal varias formas conjugadas de "recomendar"
+  # (verbo con diptongacion e->ie): "recomienda"->"recomienda" (no reduce),
+  # "recomiendan"->"recomiendar", "recomiendo"->"recomir" -- cada forma
+  # produce un lema distinto e impredecible, sin patron parcheable de forma
+  # limpia via lista de formas de superficie. Se probo en 13 verbos con
+  # diptongacion del inventario f_52/f_53/f_57: solo "recomendar" (y
+  # "perder", irrelevante aqui) fallan; el resto lematiza correctamente.
+  # Documentado como limitacion del modelo, no de la regla; "recomendar"
+  # solo cuenta en f_57 en las formas que SI lematizan bien (recomendó,
+  # recomendando, recomendado...).
   f57 <- count_verb_class(
     dictionary_to_lemmas(dict_lookup, "f_57_verb_suasive"), "f_57_verb_suasive")
   # REVISION HERNAN (Fase 5): 'resultar' solo en usos de apariencia/evaluación
