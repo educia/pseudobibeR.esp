@@ -1,7 +1,7 @@
 # Tabla de rasgos de pseudobibeR.es (etiquetas en español)
 
-Documentación de los 67 rasgos de Biber (1988) adaptados al español, tras la
-revisión lingüística de Hernán (rama `feat/revision-hernan`). Refleja el
+Documentación de los 67 rasgos de Biber (1988) adaptados al español, tras una
+revisión lingüística del paquete. Refleja el
 **comportamiento real** del extractor sobre el modelo UDPipe `spanish-gsd`, no
 solo la intención teórica.
 

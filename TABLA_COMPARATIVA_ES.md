@@ -1,7 +1,7 @@
-# Comparativa de rasgos: antes → nuevo (para revisión de Hernán)
+# Comparativa de rasgos: antes → nuevo
 
 Comparación de los 67 rasgos de `pseudobibeR.es` **antes** de la revisión (tabla
-original) y **después** de implementarla (rama `feat/revision-hernan`). El
+original) y **después** de implementarla. El
 "nuevo" refleja el **comportamiento real** verificado sobre UDPipe `spanish-gsd`,
 no solo la intención teórica.
 

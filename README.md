@@ -25,7 +25,7 @@ La función principal devuelve siempre **67 columnas de rasgo**, organizadas en 
 - **57 columnas** registran rasgos con detección activa. Las relativas con *quien*/*el cual* se cuentan integradas en `f_29`/`f_30` (relativas con *que*, en función de sujeto y de complemento directo respectivamente): `f_31` y `f_32` se mantienen como columnas siempre-cero, reservadas por compatibilidad de esquema. `f_15` se evaluó como candidato a detección (infinitivo nominal-sujeto) pero se revirtió a su comportamiento original por decisión del usuario.
 - **10 columnas** valen siempre cero porque los rasgos que representan no existen en español o son ajenos al estándar escrito normativo: `f_09` (*it* expletivo), `f_12` (proverbo *do*), `f_15` (gerundio nominal), `f_28` (gerundio postnominal), `f_31` (relativas con *quien*/*el cual* en función de sujeto, integradas en `f_29`), `f_32` (íd. en función de complemento directo, integradas en `f_30`), `f_59` (contracciones ortográficas), `f_60` (omisión del complementante *que*), `f_61` (preposición varada) y `f_62` (infinitivo escindido). Estas columnas se conservan para garantizar la compatibilidad con `pseudobibeR` y `pseudobibeR.fr` y permitir su sustitución directa en flujos de análisis preexistentes.
 
-> **Nota (revisión de Hernán):** el comportamiento real de cada rasgo sobre el
+> **Nota:** el comportamiento real de cada rasgo sobre el
 > modelo `spanish-gsd`, con sus etiquetas nuevas y limitaciones documentadas,
 > está en [`TABLA_RASGOS_ES.md`](TABLA_RASGOS_ES.md); la comparación
 > antes/después, en [`TABLA_COMPARATIVA_ES.md`](TABLA_COMPARATIVA_ES.md).

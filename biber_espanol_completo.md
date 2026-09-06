@@ -10,15 +10,15 @@ This document specifies how each of the 67 lexico-grammatical features from Bibe
 - `README.md` — user-facing documentation of the package
 - `biber_espanol_completo.md` (this document) — implementation reference with feature-by-feature decisions
 - `TABLA_RASGOS_ES.md` — comportamiento real por rasgo (etiquetas ES + límites), post-revisión
-- `TABLA_COMPARATIVA_ES.md` — comparación antes→después de la revisión de Hernán
+- `TABLA_COMPARATIVA_ES.md` — comparación antes→después de la revisión lingüística
 - `validation/test_corpus.yaml` — empirical test cases for each feature
 
 ---
 
-## Revisión lingüística de Hernán (2026)
+## Revisión lingüística (2026)
 
-Esta especificación recoge el **diseño original**. La revisión rasgo por rasgo
-de Hernán (rama `feat/revision-hernan`) ajustó varias reglas al comportamiento
+Esta especificación recoge el **diseño original**. Una revisión rasgo por rasgo
+(rama `feat/revision-hernan`) ajustó varias reglas al comportamiento
 real de UDPipe `spanish-gsd`, verificado empíricamente. Los cambios de conteo
 respecto a este documento (§3) son:
 
@@ -109,8 +109,8 @@ antes→después en `TABLA_COMPARATIVA_ES.md`.
 
 `pseudobibeR.es` exposes **67 output columns**, matching the `pseudobibeR.fr` interface for side-by-side comparison and drop-in compatibility with scripts that expect Biber's 67-feature names.
 
-> **Actualizado tras la revisión de Hernán (2026).** Ver la sección
-> «Revisión lingüística de Hernán» más abajo, y las tablas
+> **Actualizado tras la revisión lingüística (2026).** Ver la sección
+> «Revisión lingüística» más abajo, y las tablas
 > `TABLA_RASGOS_ES.md` (comportamiento real por rasgo) y
 > `TABLA_COMPARATIVA_ES.md` (antes→después) para el detalle vigente.
 
@@ -135,7 +135,7 @@ These 10 columns appear in the output but always return 0 — all are untranslat
 |--------|--------|
 | `f_09_pronoun_it` | Spanish is pro-drop; no expletive pronoun equivalent exists |
 | `f_12_proverb_do` | Spanish resolves verbal anaphora via ellipsis; no grammaticalized pro-verb |
-| `f_15_gerunds` | Spanish gerund (*-ando/-iendo*) has no nominal function; structurally non-transferable. (La revisión de Hernán activó una detección vía infinitivo-sujeto en la Fase 3; se **revirtió** por decisión del usuario.) |
+| `f_15_gerunds` | Spanish gerund (*-ando/-iendo*) has no nominal function; structurally non-transferable. (La revisión activó una detección vía infinitivo-sujeto en la Fase 3; se **revirtió** por decisión del usuario.) |
 | `f_28_present_participle_whiz` | Spanish gerund cannot function as post-nominal modifier |
 | `f_31_wh_subj` | Fusionado en `f_29` (relativas con *quien*/*el cual* en función de sujeto). Se des-fusionó brevemente en una primera ronda de la revisión; el usuario **revirtió** esa des-fusión en la segunda ronda (v2). |
 | `f_32_wh_obj` | Fusionado en `f_30` (íd. en función de complemento directo). Mismo revert que `f_31`. |
@@ -145,7 +145,7 @@ These 10 columns appear in the output but always return 0 — all are untranslat
 | `f_62_split_infinitive` | No preverbal infinitive marker (*to*) exists to be split |
 
 > **Nota:** esta lista tuvo 10 columnas en el diseño original, bajó a 8 cuando
-> una primera ronda de la revisión de Hernán separó `f_31`/`f_32` a detección
+> una primera ronda de la revisión separó `f_31`/`f_32` a detección
 > propia, y **volvió a 10** cuando el usuario revirtió esa des-fusión en la
 > segunda ronda (v2). `f_15` salió temporalmente (Fase 3) y volvió a esta
 > lista por revert, sin afectar el conteo total.
@@ -250,22 +250,22 @@ Functions covered by untranslatable English features are absorbed elsewhere in S
 
 **On the surface-parity contract**: although these features have no real Spanish detection, their column slots (`f_09_pronoun_it`, `f_12_proverb_do`, `f_15_gerunds`, `f_28_present_participle_whiz`, `f_61_stranded_preposition`) are preserved in the output as constant-zero columns. This is intentional and documented in §1. Tools that consume both `pseudobibeR.es` and `pseudobibeR.fr` output can rely on identical column layouts.
 
-> **Actualización (revisión de Hernán, v2):** `f_31`/`f_32` sí se fusionan en
+> **Actualización (revisión v2):** `f_31`/`f_32` sí se fusionan en
 > `f_29`/`f_30` (como en la fila de arriba): las relativas con *quien*/*el
 > cual* se cuentan integradas en f_29/f_30, no en columna propia. Una primera
 > ronda de la revisión las había separado; el usuario revirtió esa des-fusión
-> en la segunda ronda. Ver la sección «Revisión lingüística de Hernán».
+> en la segunda ronda. Ver la sección «Revisión lingüística».
 
 ---
 
 ## 3. Feature-by-feature specification
 
-> **Aviso (revisión de Hernán):** las entradas de abajo son el **diseño
+> **Aviso:** las entradas de abajo son el **diseño
 > original**. Las marcadas con ✳️ ya están actualizadas al comportamiento
 > implementado. Para el resto de rasgos que cambiaron (f_06–f_08, f_11, f_29,
 > f_30, f_37, f_38, f_39, f_42, f_46, f_47, f_52, f_58, f_63, f_64, f_67) y los
 > límites del modelo (f_18, f_50, f_55/f_57, f_23, f_56), consultar la
-> sección «Revisión lingüística de Hernán» y `TABLA_RASGOS_ES.md`, que son la
+> sección «Revisión lingüística» y `TABLA_RASGOS_ES.md`, que son la
 > referencia vigente por rasgo.
 
 For each feature, the structure is:
@@ -284,7 +284,7 @@ For each feature, the structure is:
 
 **Biber (1988)**: Verbs in simple past tense.
 
-**Spanish equivalent** (✳️ revisión de Hernán): **tiempos de pasado de indicativo y subjuntivo** (perfecto simple, imperfecto, e imperfecto de subjuntivo). El *past tense* inglés se fragmenta en varios tiempos del español.
+**Spanish equivalent** (✳️ revisión lingüística): **tiempos de pasado de indicativo y subjuntivo** (perfecto simple, imperfecto, e imperfecto de subjuntivo). El *past tense* inglés se fragmenta en varios tiempos del español.
 
 **Detection method**: morphological filter.
 
@@ -578,7 +578,7 @@ Per the user decision (`Decisiones_rasgos_biber.md`), this feature is "intermedi
 
 **Output contract**: this column appears in `biber_es()` output and always returns `0`. The function it would track is already counted under `f_14` and `f_24`.
 
-> **Historial:** la revisión de Hernán (Fase 3) activó brevemente esta columna
+> **Historial:** la revisión (Fase 3) activó brevemente esta columna
 > para contar el infinitivo en función nominal-sujeto (`dep_rel ∈ {csubj,
 > csubj:pass}`: *Fumar perjudica*, *Me gusta nadar*). El usuario pidió **revertir**
 > ese cambio; f_15 vuelve al comportamiento constante-cero de diseño original.
@@ -628,7 +628,7 @@ In Spanish, the f_15 subtrahend collapses to zero. The Spanish f_16 therefore ab
 **Include — periphrastic passive**:
 - Lemma `ser`/`estar` como `aux:pass` + participio, sin frase *por* de agente.
 
-**Include — se-passive (✳️ revisión de Hernán)**:
+**Include — se-passive (✳️ revisión lingüística)**:
 - Token *se* (`PRON`) cuyo head es un verbo finito de 3ª persona **que tiene un
   sujeto paciente** (`nsubj`/`nsubj:pass`). Ese `nsubj` es lo que distingue la
   pasiva refleja (*se publicaron **los informes***) de la impersonal.
@@ -670,7 +670,7 @@ por ese sujeto paciente.
 
 **Notes**: Cleaner detection than f_17 because the agent phrase is the discriminator. This feature should have lower frequencies than f_17 in most corpora.
 
-**Límite del modelo (confirmado, revisión de Hernán)**: `spanish-gsd` no emite `obl:agent`; el agente (*por el comité*) y la causa (*por incumplimiento*) son ambos etiquetados `obl` de forma indistinguible. El rasgo puede incluir falsos positivos causales.
+**Límite del modelo (confirmado)**: `spanish-gsd` no emite `obl:agent`; el agente (*por el comité*) y la causa (*por incumplimiento*) son ambos etiquetados `obl` de forma indistinguible. El rasgo puede incluir falsos positivos causales.
 
 **Heurística evaluada y descartada**: se propuso filtrar por concordancia de número entre el sujeto pasivo y el sintagma con *por* (asumiendo que un agente real concordaría en número con el sujeto). Verificado empíricamente en 6 oraciones y descartado por fallar en casos legítimos y comunes:
 - *"Los proyectos fueron aprobados por el comité."* — agente colectivo singular, sujeto plural: la regla excluiría un agente real.
@@ -730,7 +730,7 @@ Impersonal forms of *haber*: *hay, había, hubo, habrá, habría, haya, hubiera,
 
 ### H. Subordination
 
-#### f_21_that_verb_comp — ✳️ ACTUALIZADO (revisión de Hernán): corregido el solapamiento con f_22
+#### f_21_that_verb_comp — ✳️ ACTUALIZADO: corregido el solapamiento con f_22
 
 **Biber (1988)**: *That* complement clauses depending on a verb.
 
@@ -752,7 +752,7 @@ Impersonal forms of *haber*: *hay, había, hubo, habrá, habría, haya, hubiera,
 
 ---
 
-#### f_22_that_adj_comp — ✳️ ACTUALIZADO (revisión de Hernán): corregido, antes 0% de recall
+#### f_22_that_adj_comp — ✳️ ACTUALIZADO: corregido, antes 0% de recall
 
 **Biber (1988)**: *That* complement clauses depending on an adjective.
 
@@ -918,7 +918,7 @@ This means the function distributed in English between f_28 and the full relativ
 - Both English subject relatives (f_29 + f_31)
 - Functions covered by present participial WHIZ (f_28, intranslatable in Spanish)
 
-> **Historial de revisión:** durante la revisión de Hernán se probó separar
+> **Historial de revisión:** durante la revisión se probó separar
 > *quien*/*el cual* a una columna propia (f_31, ver abajo), ya que
 > `spanish-gsd` sí los etiqueta como `PRON PronType=Rel` (distinto de *que*).
 > El usuario decidió **revertir** esa des-fusión en una segunda ronda de la
@@ -964,8 +964,7 @@ This means the function distributed in English between f_28 and the full relativ
 
 **Estado actual (v2, definitivo): siempre 0.** El conteo de *quien*/*cual* en función de sujeto vive en `f_29_that_subj` (fusionado). Esta columna se conserva únicamente por compatibilidad de esquema (67 columnas fijas, identificadores nunca cambian).
 
-> **Historial de revisión:** durante una primera ronda de la revisión de
-> Hernán se implementó la des-fusión (token `quien`/`cual` con `PronType=Rel`
+> **Historial de revisión:** durante una primera ronda de la revisión se implementó la des-fusión (token `quien`/`cual` con `PronType=Rel`
 > y rol `nsubj`/`nsubj:pass`, separado de f_29). En una segunda ronda (v2), el
 > usuario decidió **revertir** esa des-fusión: no fue un artefacto ni un
 > error, sino una decisión explícita de volver al diseño original fusionado.
@@ -1091,7 +1090,7 @@ Only *aunque*.
 
 **Notes**: The exclusion of indirect interrogative *si* is critical. If detection over-fires on *si*, the indirect-question filter is missing or weak.
 
-**Aclaración de redacción (revisión de Hernán, sin cambio de detección)**: el condicional en la oración principal (`Mood=Cnd`, f_54) suele acompañar a la subordinada introducida por *si*. Esto no se implementa como un patrón conjunto — es solo una nota descriptiva sobre el registro típico en que aparece f_37, no un requisito para contarlo.
+**Aclaración de redacción (sin cambio de detección)**: el condicional en la oración principal (`Mood=Cnd`, f_54) suele acompañar a la subordinada introducida por *si*. Esto no se implementa como un patrón conjunto — es solo una nota descriptiva sobre el registro típico en que aparece f_37, no un requisito para contarlo.
 
 ---
 
@@ -1129,7 +1128,7 @@ Only *aunque*.
 - Prepositional locutions (*a través de, en cuanto a, a pesar de*) are tagged variably by UDPipe. Accept the noise — Biber does not distinguish simple prepositions from locutions in English either. Multi-token locutions in the fixed inventory are compacted and counted **once**, not once per component preposition.
 - Known UDPipe issue: counts vary slightly depending on noun phrase structure.
 
-**Fix (revisión de Hernán, v2)**: the once-per-locution dedup logic failed specifically when a locution contained the contraction *al*/*del* (e.g. *"viajó a través del país"* counted 2 instead of 1). Root cause: UDPipe emits a "ghost" multi-word-token row for the contraction (`token_id` like `4-5`, `pos=NA`) that the pipeline deliberately retains elsewhere (to not lose the contraction), but that ghost row was breaking the exact-string match used to find locutions in the reconstructed sentence text. Fixed by excluding those ghost rows specifically when reconstructing text for locution search.
+**Fix (revisión v2)**: the once-per-locution dedup logic failed specifically when a locution contained the contraction *al*/*del* (e.g. *"viajó a través del país"* counted 2 instead of 1). Root cause: UDPipe emits a "ghost" multi-word-token row for the contraction (`token_id` like `4-5`, `pos=NA`) that the pipeline deliberately retains elsewhere (to not lose the contraction), but that ghost row was breaking the exact-string match used to find locutions in the reconstructed sentence text. Fixed by excluding those ghost rows specifically when reconstructing text for locution search.
 
 ---
 
@@ -1173,7 +1172,7 @@ Only *aunque*.
 
 **Notes**: Pseudo-copulative verbs are a Spanish-specific expansion (English only has *be, seem, become*). All must be included. Spanish grammatical agreement (gender/number) does not affect detection.
 
-**Ampliado (revisión de Hernán, v2): incluye complementos predicativos, no solo atributos copulativos.** Root cause found: with a tacit or postposed subject, UDPipe re-analyzes the sentence with the ADJ as `root` and the real verb hanging off it as `cop` — but with the lemma of the *actual* verb (*llegar*, *encontrar*, *considerar*), not one of the fixed pseudo-copulative lemmas. The original implementation additionally required `lemma %in% linking_verbs` on that `cop`-inverted branch, which excluded these cases even though `dep_rel == "cop"` was already present:
+**Ampliado (revisión v2): incluye complementos predicativos, no solo atributos copulativos.** Root cause found: with a tacit or postposed subject, UDPipe re-analyzes the sentence with the ADJ as `root` and the real verb hanging off it as `cop` — but with the lemma of the *actual* verb (*llegar*, *encontrar*, *considerar*), not one of the fixed pseudo-copulative lemmas. The original implementation additionally required `lemma %in% linking_verbs` on that `cop`-inverted branch, which excluded these cases even though `dep_rel == "cop"` was already present:
 - *"Llegó cansada del trabajo."* → `Llegó` is `cop` of `cansada` (root, ADJ) — used to count 0.
 - *"Encontraron abierta la puerta."* → `Encontraron` is `cop` of `abierta` (root) — used to count 0.
 - *"Se considera relevante el tema."* → `considera` is `cop` of `relevante` (root) — used to count 0.
@@ -1229,7 +1228,7 @@ f_42 = total ADV tokens
 
 **Notes**: Spanish TTRs will be systematically lower than English due to richer inflectional morphology (more forms per lemma). This is expected. Values are not interlinguistically comparable. Default measure: MATTR with window size 50.
 
-**Fix (revisión de Hernán, v2): la implementación no cumplía el "incluyendo puntuación" de este mismo spec hasta ahora.** `quanteda.textstats::textstat_lexdiv()` tiene `remove_punct`/`remove_numbers`/`remove_symbols` en `TRUE` por defecto, y la llamada nunca los sobreescribía — la puntuación se descartaba internamente antes de calcular pese a que la tokenización previa (`quanteda::tokens(..., remove_punct = FALSE)`) sí la retenía. Confirmado empíricamente: con los defaults, agregar puntuación repetida a un texto de prueba no cambiaba el MATTR en absoluto (0.08 → 0.08); pasando `remove_punct = FALSE` (y las otras dos en `FALSE`), sí cambiaba (0.08 → 0.1595025). Fix: pasar los tres flags en `FALSE` en la llamada a `textstat_lexdiv()`.
+**Fix (revisión v2): la implementación no cumplía el "incluyendo puntuación" de este mismo spec hasta ahora.** `quanteda.textstats::textstat_lexdiv()` tiene `remove_punct`/`remove_numbers`/`remove_symbols` en `TRUE` por defecto, y la llamada nunca los sobreescribía — la puntuación se descartaba internamente antes de calcular pese a que la tokenización previa (`quanteda::tokens(..., remove_punct = FALSE)`) sí la retenía. Confirmado empíricamente: con los defaults, agregar puntuación repetida a un texto de prueba no cambiaba el MATTR en absoluto (0.08 → 0.08); pasando `remove_punct = FALSE` (y las otras dos en `FALSE`), sí cambiaba (0.08 → 0.1595025). Fix: pasar los tres flags en `FALSE` en la llamada a `textstat_lexdiv()`.
 
 ---
 
@@ -1522,7 +1521,7 @@ If `biber_es()` returns 7.6 or 8.75 for this sentence, the implementation is fil
 - *Decir* will dominate frequencies (super-coordinator)
 - *Sugerir* is also in f_57 (suasive) — Biber double-lists in English too, mirror this
 
-**Fix (revisión de Hernán, v2)**: `decir` estaba especificado en este mismo spec desde el inicio pero faltaba en `dict.yaml`'s `f_55_verb_public` — confirmado empíricamente (*"El testigo dijo que todo era cierto."* daba 0). Se agregó al diccionario. La desambiguación por modo (`decir`+subjuntivo → suasivo/f_57 vs. `decir`+condicional → f_55) sigue sin implementarse: el modelo mis-etiqueta otros verbos polisémicos de este inventario (`sostuvo`→ADJ en ciertos contextos), lo que hace ese tipo de desambiguación poco confiable en general.
+**Fix (revisión v2)**: `decir` estaba especificado en este mismo spec desde el inicio pero faltaba en `dict.yaml`'s `f_55_verb_public` — confirmado empíricamente (*"El testigo dijo que todo era cierto."* daba 0). Se agregó al diccionario. La desambiguación por modo (`decir`+subjuntivo → suasivo/f_57 vs. `decir`+condicional → f_55) sigue sin implementarse: el modelo mis-etiqueta otros verbos polisémicos de este inventario (`sostuvo`→ADJ en ciertos contextos), lo que hace ese tipo de desambiguación poco confiable en general.
 
 ---
 
@@ -1564,7 +1563,7 @@ Plus multi-token: *darse_cuenta, tener_en_cuenta*
 - *Sugerir* also in f_55 — count in both
 - Subjunctive is virtually obligatory after these verbs in Spanish, generating a systematic correlation with f_21
 
-**Límite de lematización confirmado (revisión de Hernán, v2)**: *"El jefe recomienda que trabajen más."* daba 0 pese a que `recomendar` sí está en `dict.yaml`. Causa raíz: UDPipe lematiza las formas diptongadas de `recomendar` (e→ie) de forma irregular e impredecible, no al infinitivo (`recomienda`→`recomienda`, `recomiendan`→`recomiendar`, `recomiendo`→`recomir`, `recomendó`→`recomendó`, variable según la forma). Se evaluó respaldar por lista de formas de superficie, pero el patrón resultó demasiado impredecible para parchear caso por caso (cada forma conjugada produce un lema distinto e inconsistente). Documentado como límite del modelo, no del extractor.
+**Límite de lematización confirmado (revisión v2)**: *"El jefe recomienda que trabajen más."* daba 0 pese a que `recomendar` sí está en `dict.yaml`. Causa raíz: UDPipe lematiza las formas diptongadas de `recomendar` (e→ie) de forma irregular e impredecible, no al infinitivo (`recomienda`→`recomienda`, `recomiendan`→`recomiendar`, `recomiendo`→`recomir`, `recomendó`→`recomendó`, variable según la forma). Se evaluó respaldar por lista de formas de superficie, pero el patrón resultó demasiado impredecible para parchear caso por caso (cada forma conjugada produce un lema distinto e inconsistente). Documentado como límite del modelo, no del extractor.
 
 ---
 
@@ -1692,7 +1691,7 @@ Plus multi-token: *darse_cuenta, tener_en_cuenta*
 **Notes**: *Y* vs *e* are allomorphs of the same coordinator (*e* before words starting with i-/hi-). Both must be included. In multi-element coordinations (*A, B y C*), *y* appears only before the last element — UDPipe usually marks it correctly.
 
 > **Discrepancia preexistente spec/implementación (detectada al reconciliar
-> documentación en la revisión de Hernán, no introducida por ella)**: la
+> documentación en esta revisión, no introducida por ella)**: la
 > implementación ya shippeada, de antes de esta revisión, sí cuenta
 > coordinación ADJ + *pero* + ADJ como f_64 (`f_64` incluye una rama para
 > `cc_tokens` con adjetivos coordinados por *pero*), contradiciendo la
@@ -1701,7 +1700,7 @@ Plus multi-token: *darse_cuenta, tener_en_cuenta*
 > confirmados con el usuario); en su lugar, se corrigió un bug real en esa
 > misma rama existente — ver más abajo.
 
-**Fix (revisión de Hernán, v2)**: *"Un procedimiento rápido, pero eficaz."* daba 0, debía dar 1. Causa raíz (verificada con `udpipe_annotate`): cuando el primer ADJ (*rápido*) es `amod` de un sustantivo (*procedimiento*), UDPipe cuelga el **segundo** ADJ (*eficaz*) directamente del sustantivo (`conj`, head=*procedimiento*), no del primer ADJ. La regla original exigía que el POS del "head del head" del CCONJ coincidiera con el POS del segundo conjunto (`first_conj_pos == conj_pos`); aquí comparaba NOUN vs. ADJ y descartaba el caso. Fix: cuando el head del segundo conjunto es un NOUN que tiene un `amod` propio, se usa ese `amod` como "primer conjunto" real para la comparación de POS, en vez de usar ciegamente el head-del-head.
+**Fix (revisión v2)**: *"Un procedimiento rápido, pero eficaz."* daba 0, debía dar 1. Causa raíz (verificada con `udpipe_annotate`): cuando el primer ADJ (*rápido*) es `amod` de un sustantivo (*procedimiento*), UDPipe cuelga el **segundo** ADJ (*eficaz*) directamente del sustantivo (`conj`, head=*procedimiento*), no del primer ADJ. La regla original exigía que el POS del "head del head" del CCONJ coincidiera con el POS del segundo conjunto (`first_conj_pos == conj_pos`); aquí comparaba NOUN vs. ADJ y descartaba el caso. Fix: cuando el head del segundo conjunto es un NOUN que tiene un `amod` propio, se usa ese `amod` como "primer conjunto" real para la comparación de POS, en vez de usar ciegamente el head-del-head.
 
 ---
 
@@ -1807,7 +1806,7 @@ After implementation, verify with the validation corpus that:
 
 - [ ] `biber_es()` returns exactly **67 columns** with `f_` prefix
 - [ ] No feature numbered above f_67 exists in output (no f_68, f_69, f_70, etc.)
-- [ ] The 10 zero-output columns exist and **always return 0**: `f_09_pronoun_it`, `f_12_proverb_do`, `f_15_gerunds`, `f_28_present_participle_whiz`, `f_31_wh_subj`, `f_32_wh_obj`, `f_59_contractions`, `f_60_that_deletion`, `f_61_stranded_preposition`, `f_62_split_infinitive` (`f_31`/`f_32` se des-fusionaron brevemente en una primera ronda de la revisión de Hernán y luego se **revirtieron** a cero en la segunda ronda (v2); `f_15` se activó en la Fase 3 y luego se **revirtió** a cero)
+- [ ] The 10 zero-output columns exist and **always return 0**: `f_09_pronoun_it`, `f_12_proverb_do`, `f_15_gerunds`, `f_28_present_participle_whiz`, `f_31_wh_subj`, `f_32_wh_obj`, `f_59_contractions`, `f_60_that_deletion`, `f_61_stranded_preposition`, `f_62_split_infinitive` (`f_31`/`f_32` se des-fusionaron brevemente en una primera ronda de la revisión y luego se **revirtieron** a cero en la segunda ronda (v2); `f_15` se activó en la Fase 3 y luego se **revirtió** a cero)
 - [ ] No duplicate columns with `_rate`, `_count`, or `_raw` suffix
 - [ ] Column order matches `pseudobibeR.fr` output for cross-language compatibility
 
@@ -1842,7 +1841,7 @@ After implementation, verify with the validation corpus that:
 
 The following are documented limitations, not bugs:
 
-1. **Zero-output columns are by design, not bugs** (see §1 and §2.6): the 10 columns `f_09, f_12, f_15, f_28, f_31, f_32, f_59, f_60, f_61, f_62` always return 0 because they represent untranslatable features, or (for `f_31`/`f_32`) features fused into another column by user decision. They exist for surface-parity with `pseudobibeR.fr`. Their consistent zero values are the correct output. (`f_31`/`f_32` se des-fusionaron brevemente en una primera ronda de la revisión de Hernán y volvieron a fusionarse — a cero — por decisión del usuario en la segunda ronda; `f_15` se activó y luego se revirtió.)
+1. **Zero-output columns are by design, not bugs** (see §1 and §2.6): the 10 columns `f_09, f_12, f_15, f_28, f_31, f_32, f_59, f_60, f_61, f_62` always return 0 because they represent untranslatable features, or (for `f_31`/`f_32`) features fused into another column by user decision. They exist for surface-parity with `pseudobibeR.fr`. Their consistent zero values are the correct output. (`f_31`/`f_32` se des-fusionaron brevemente en una primera ronda de la revisión y volvieron a fusionarse — a cero — por decisión del usuario en la segunda ronda; `f_15` se activó y luego se revirtió.)
 
 2. **f_18 by-passives may include causal false positives**: `spanish-gsd` does not emit `obl:agent`, so the *por*-agent and the *por*-cause (*"causado por la lluvia"*) are structurally indistinguishable (both `obl`). A number-agreement heuristic between the passive subject and the *por*-phrase was evaluated and discarded (see §3, f_18): it fails on legitimate agents with mismatched number (*"los proyectos fueron aprobados por el comité"*, *"el informe fue aprobado por los ingenieros"*) and does not filter the causal case it targeted.
 
@@ -1863,8 +1862,8 @@ The following are documented limitations, not bugs:
 
 8. **Frequencies not interlingually comparable**: f_43, f_44, f_29, f_30, f_33, f_67 systematically differ from English values for structural reasons. Use within-language Z-scores for cross-linguistic comparison.
 
-9. ~~**f_22 in copular constructions**: UDPipe does not always tag the head of *que* as `ADJ`...~~ **RESUELTO** (revisión de Hernán): el problema no era una limitación del parser sino de la regla — *que* nunca marca el ADJ directamente, siempre marca el verbo de su cláusula; el ADJ vive en el head de ese verbo (el "abuelo" de *que*). Corregido examinando ese segundo nivel. Ver §3 f_21/f_22.
+9. ~~**f_22 in copular constructions**: UDPipe does not always tag the head of *que* as `ADJ`...~~ **RESUELTO**: el problema no era una limitación del parser sino de la regla — *que* nunca marca el ADJ directamente, siempre marca el verbo de su cláusula; el ADJ vive en el head de ese verbo (el "abuelo" de *que*). Corregido examinando ese segundo nivel. Ver §3 f_21/f_22.
 
 10. **f_50 noise without positional filter**: discourse particles (*bueno, pues*) appearing in non-initial positions are counted, inflating values slightly. The user decision authorizes this tradeoff for higher recall (see §f_50).
 
-11. **f_57 lemmatization limit**: UDPipe lemmatizes diphthongized forms of *recomendar* (e→ie) irregularly and unpredictably, not to the infinitive (*recomienda*→*recomienda*, *recomiendan*→*recomiendar*, *recomiendo*→*recomir*), so sentences like *"El jefe recomienda que trabajen más"* are not counted despite `recomendar` being in the dictionary. A surface-form fallback was evaluated and rejected as too unpredictable to patch case by case; documented as a model limitation (revisión de Hernán, v2). See §3, f_57.
+11. **f_57 lemmatization limit**: UDPipe lemmatizes diphthongized forms of *recomendar* (e→ie) irregularly and unpredictably, not to the infinitive (*recomienda*→*recomienda*, *recomiendan*→*recomiendar*, *recomiendo*→*recomir*), so sentences like *"El jefe recomienda que trabajen más"* are not counted despite `recomendar` being in the dictionary. A surface-form fallback was evaluated and rejected as too unpredictable to patch case by case; documented as a model limitation (revisión v2). See §3, f_57.
