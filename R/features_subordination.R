@@ -316,25 +316,31 @@ block_relatives_es <- function(tokens, doc_ids, head_lookup) {
     ) %>%
     dplyr::filter(!dplyr::coalesce(.data$is_obj_relcl, FALSE))
 
-  # REVISION HERNAN (Fase 2): DES-FUSION. quien/quienes/cual/cuales dejan de
-  # absorberse en f_29/f_30 y pasan a f_31/f_32. Solo se separan los casos que
-  # spanish-gsd etiqueta como PRON PronType=Rel con deprel recuperable
-  # (verificado en test-udpipe-tag-verification.R). Los oblicuos con
-  # preposicion (a/por/con quien|cual) van a f_33 por precedencia del
-  # pied-piping (regla 3 del spec); por eso f_31/f_32 solo toman nsubj y
-  # obj/iobj (roles sin preposicion). "que" sigue siendo heuristico y no
-  # separable con fiabilidad -> queda en f_29/f_30.
+  # REVISION HERNAN v2: REVERT de la des-fusion de la Fase 2, a pedido
+  # explicito del usuario. quien/quienes/cual/cuales vuelven a absorberse en
+  # f_29/f_30 (fusion original segun biber_espanol_completo.md); f_31/f_32
+  # regresan a columnas siempre-cero (ver parse_functions.R). El colapso
+  # formal en superficie ("que" cubre tanto "that" como "who/which" en
+  # posicion de sujeto/objeto de relativa) hacia imposible distinguirlos de
+  # forma fiable, y esa es la razon original de la fusion.
   wh_pronouns   <- c("quien", "quienes", "cual", "cuales")
-  wh_subj_roles <- c("nsubj", "nsubj:pass")
-  wh_obj_roles  <- c("obj", "iobj")
+
+  f29_wh <- rel_tokens %>%
+    dplyr::filter(
+      .data$lemma %in% wh_pronouns,
+      dplyr::coalesce(.data$dep_rel, "") %in% rel_subj_roles
+    )
 
   # Phase 2f: select() preserva las columnas E1 antes del bind_rows; el
-  # dedup y la evidencia los hace count_feature_traced.
+  # dedup y la evidencia los hace count_feature_traced (mismo dedup que
+  # el distinct anterior, ahora con .keep_all = TRUE para conservar
+  # token/lemma/pos/feats).
   rel_evidence_cols <- c("doc_id", "sentence_id", "token_id_int",
                          "token", "lemma", "pos", "feats", "head_token_id_int")
   f29 <- dplyr::bind_rows(
     f29_que       %>% dplyr::select(dplyr::all_of(rel_evidence_cols)),
-    f29_que_sconj %>% dplyr::select(dplyr::all_of(rel_evidence_cols))
+    f29_que_sconj %>% dplyr::select(dplyr::all_of(rel_evidence_cols)),
+    f29_wh        %>% dplyr::select(dplyr::all_of(rel_evidence_cols))
   ) %>%
     count_feature_traced("f_29_that_subj")
 
@@ -383,30 +389,21 @@ block_relatives_es <- function(tokens, doc_ids, head_lookup) {
              "head_token_id_int" = "acl_head_id")
     )
 
+  f30_wh <- rel_tokens %>%
+    dplyr::filter(
+      .data$lemma %in% wh_pronouns,
+      dplyr::coalesce(.data$dep_rel, "") %in% rel_obj_roles
+    )
+
   f30 <- dplyr::bind_rows(
     f30_que     %>% dplyr::select(dplyr::all_of(rel_evidence_cols)),
-    f30_que_obj %>% dplyr::select(dplyr::all_of(rel_evidence_cols))
+    f30_que_obj %>% dplyr::select(dplyr::all_of(rel_evidence_cols)),
+    f30_wh      %>% dplyr::select(dplyr::all_of(rel_evidence_cols))
   ) %>%
     count_feature_traced("f_30_that_obj")
 
-  # -- f_31  Relativa con quien/el cual en función de SUJETO ------------------
-  f31 <- rel_tokens %>%
-    dplyr::filter(
-      .data$lemma %in% wh_pronouns,
-      dplyr::coalesce(.data$dep_rel, "") %in% wh_subj_roles
-    ) %>%
-    dplyr::select(dplyr::all_of(rel_evidence_cols)) %>%
-    count_feature_traced("f_31_wh_subj")
-
-  # -- f_32  Relativa con quien/el cual en función de COMPLEMENTO DIRECTO -----
-  # Los oblicuos ("a/por/con quien|cual") caen en f_33 (pied-piping), no aquí.
-  f32 <- rel_tokens %>%
-    dplyr::filter(
-      .data$lemma %in% wh_pronouns,
-      dplyr::coalesce(.data$dep_rel, "") %in% wh_obj_roles
-    ) %>%
-    dplyr::select(dplyr::all_of(rel_evidence_cols)) %>%
-    count_feature_traced("f_32_wh_obj")
+  # f_31 y f_32 absorbidos en f_29 y f_30 respectivamente (REVERT a pedido
+  # del usuario). No se generan columnas independientes en el output.
 
   # -- f_33  Pied-piping (preposicion + pronombre relativo) ------------------
   # En español el patrón típico de pied-piping en UDPipe Spanish-GSD es:
@@ -517,19 +514,17 @@ block_relatives_es <- function(tokens, doc_ids, head_lookup) {
   ) %>%
     count_feature_traced("f_34_sentence_relatives")
 
-  # REVISION HERNAN (Fase 2): f_31/f_32 ya no se absorben; son columnas propias.
+  # f_31 y f_32 han sido absorbidos en f_29 y f_30 respectivamente
+  # (fusion segun biber_espanol_completo.md); no se generan columnas separadas.
   counts <- doc_ids %>%
     dplyr::left_join(f29$counts, by = "doc_id") %>%
     dplyr::left_join(f30$counts, by = "doc_id") %>%
-    dplyr::left_join(f31$counts, by = "doc_id") %>%
-    dplyr::left_join(f32$counts, by = "doc_id") %>%
     dplyr::left_join(f33$counts, by = "doc_id") %>%
     dplyr::left_join(f34$counts, by = "doc_id") %>%
     dplyr::mutate(
       dplyr::across(-dplyr::any_of("doc_id"), ~ dplyr::coalesce(., 0L))
     )
-  evidence <- bind_evidence(f29$evidence, f30$evidence, f31$evidence,
-                            f32$evidence, f33$evidence, f34$evidence)
+  evidence <- bind_evidence(f29$evidence, f30$evidence, f33$evidence, f34$evidence)
   make_block_result(counts = counts, evidence = evidence)
 }
 
@@ -860,7 +855,7 @@ block_clause_embedding_es <- function(tokens, doc_ids, head_lookup,
   # como SCONJ o CCONJ (en "mientras que" → mientras=CCONJ/mark, que=SCONJ/
   # fixed). Se añade rama CCONJ restringida a una allowlist de lemas
   # subordinantes para no capturar coordinantes (y/o/pero/ni).
-  adv_sub_cconj <- c("mientras", "conforme", "según", "segun")
+  adv_sub_cconj <- c("mientras", "conforme", "seg\u00fan", "segun")
 
   f38 <- tokens %>%
     dplyr::filter(

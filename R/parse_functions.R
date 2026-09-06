@@ -617,15 +617,15 @@ parse_biber_features <- function(tokens, measure, normalize,
   if (length(ext_cols) > 0) {
     biber_counts <- dplyr::select(biber_counts, -dplyr::all_of(ext_cols))
   }
-  # Inyectar columnas constantes-cero para los rasgos no-detectables en
+  # Inyectar columnas constantes-cero para los 10 rasgos no-detectables en
   # espanol (paridad superficial con FR).
-  # REVISION HERNAN (Fase 2): f_31/f_32 (quien/el cual) salen de la lista
-  # siempre-cero; ahora los pobla block_relatives_es.
-  # f_15 (revertido a pedido del usuario): vuelve a la lista siempre-cero;
-  # ver nota en features_subordination.R (block_participial_clauses_es).
+  # REVISION HERNAN v2: f_31/f_32 vuelven a esta lista (revert de la Fase 2
+  # a pedido del usuario) -- quien/el cual se re-absorben en f_29/f_30 dentro
+  # de block_relatives_es. f_15 (revertido previamente) ya estaba aqui.
   surface_only_zero <- c(
     "f_09_pronoun_it", "f_12_proverb_do", "f_15_gerunds",
     "f_28_present_participle_whiz",
+    "f_31_wh_subj", "f_32_wh_obj",
     "f_59_contractions", "f_60_that_deletion",
     "f_61_stranded_preposition", "f_62_split_infinitive"
   )
