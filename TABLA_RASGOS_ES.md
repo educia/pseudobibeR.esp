@@ -172,7 +172,7 @@ solo la intención teórica.
 ## Limitaciones conocidas (resumen)
 
 Situaciones que reflejan límites del modelo `spanish-gsd`, no errores del
-extractor. No se fuerzan (§1.2/§10 de las instrucciones):
+extractor. No se fuerzan (metodología del proyecto):
 
 - **`se` argumental vs. pasiva refleja/impersonal** (f_08, f_17): morfológicamente
   idénticos (`Reflex=Yes`, `iobj`). f_08 excluye todo `se`; f_17 usa la presencia

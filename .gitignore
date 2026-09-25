@@ -44,5 +44,8 @@ vignettes/*.pdf
 # udpipe models
 data-raw/*.udpipe
 tests/testthat/text-samples/*.udpipe
+# Documentación interna y configuración local de agentes (no se publican)
 docs
-.claude/worktrees/keen-curie-b9df64/
+.claude/
+CLAUDE.md
+AGENTS.md

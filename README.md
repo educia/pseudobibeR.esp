@@ -27,8 +27,7 @@ La función principal devuelve siempre **67 columnas de rasgo**, organizadas en 
 
 > **Nota:** el comportamiento real de cada rasgo sobre el
 > modelo `spanish-gsd`, con sus etiquetas nuevas y limitaciones documentadas,
-> está en [`TABLA_RASGOS_ES.md`](TABLA_RASGOS_ES.md); la comparación
-> antes/después, en [`TABLA_COMPARATIVA_ES.md`](TABLA_COMPARATIVA_ES.md).
+> está en [`TABLA_RASGOS_ES.md`](TABLA_RASGOS_ES.md).
 
 ## Instalación
 

@@ -9,9 +9,10 @@
 ^CONTRIBUTING\.md$
 ^.*\.Rproj$
 ^\.Rproj\.user$
-^audit$
 ^validation$
-^biber_espanol_completo\.md$
+^TABLA_RASGOS_ES\.md$
+^CLAUDE\.md$
+^AGENTS\.md$
 ^spanish-gsd-ud-2\.5-191206\.udpipe$
 ^app\.R$
 ^\.claude$
